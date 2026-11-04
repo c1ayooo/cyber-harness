@@ -135,6 +135,9 @@ func runCLI(ctx context.Context, args []string, stdin io.Reader, stdout, stderr 
 		}
 	}
 	logger := telemetry.GlobalLogger(telemetry.LogConfig{Debug: option.Debug, Quiet: option.Quiet, Output: stderr, Color: !option.NoColor})
+	if names := excludedToolList(); len(names) > 0 {
+		logger.Warnf("agent excluded tools: %v", names)
+	}
 	if !(parsed.Action != nil && parsed.Action.Persistent) && option.Timeout > 0 {
 		var cancel context.CancelFunc
 		ctx, cancel = context.WithTimeout(ctx, time.Duration(option.Timeout)*time.Second)
