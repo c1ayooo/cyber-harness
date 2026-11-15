@@ -245,15 +245,14 @@ llm:
 }
 
 func TestLoadAndApplyConfigDefaultFile(t *testing.T) {
-	dir := t.TempDir()
+	c := isolatedContext(t)
+	dir := c.Directory
 	writeTestConfig(t, dir, `
 llm:
   provider: found-provider
 `)
 
-	t.Chdir(dir)
-
-	option := Option{}
+	option := Option{Context: c}
 	path, err := LoadAndApplyConfig(&option)
 	if err != nil {
 		t.Fatal(err)
@@ -390,7 +389,15 @@ llm:
 }
 
 func TestResolveRuntimeConfigEnvOverridesConfig(t *testing.T) {
-	dir := t.TempDir()
+	c := isolatedContext(t)
+	dir := c.Directory
+	environment := map[string]string{
+		"CYBER_MODEL":     "env-model",
+		"CYBER_BASE_URL":  "https://env.example/v1",
+		"CYBER_API_KEY":   "env-key",
+		"CYBER_LLM_PROXY": "http://env-proxy:7890",
+	}
+	c.LookupEnv = func(key string) (string, bool) { value, ok := environment[key]; return value, ok }
 	writeTestConfig(t, dir, `
 llm:
   provider: openai
@@ -399,14 +406,8 @@ llm:
   model: config-model
   proxy: http://config-proxy:7890
 `)
-	t.Setenv("CYBER_MODEL", "env-model")
-	t.Setenv("CYBER_BASE_URL", "https://env.example/v1")
-	t.Setenv("CYBER_API_KEY", "env-key")
-	t.Setenv("CYBER_LLM_PROXY", "http://env-proxy:7890")
 
-	t.Chdir(dir)
-
-	option := Option{}
+	option := Option{Context: c}
 	if _, err := ResolveRuntimeConfig(&option); err != nil {
 		t.Fatal(err)
 	}
@@ -426,18 +427,20 @@ llm:
 }
 
 func TestResolveRuntimeConfigCLIWinsOverEnv(t *testing.T) {
-	dir := t.TempDir()
+	c := isolatedContext(t)
+	dir := c.Directory
+	environment := map[string]string{
+		"CYBER_MODEL":    "env-model",
+		"CYBER_BASE_URL": "https://env.example/v1",
+		"CYBER_API_KEY":  "env-key",
+	}
+	c.LookupEnv = func(key string) (string, bool) { value, ok := environment[key]; return value, ok }
 	writeTestConfig(t, dir, `
 llm:
   model: config-model
 `)
-	t.Setenv("CYBER_MODEL", "env-model")
-	t.Setenv("CYBER_BASE_URL", "https://env.example/v1")
-	t.Setenv("CYBER_API_KEY", "env-key")
 
-	t.Chdir(dir)
-
-	option := Option{}
+	option := Option{Context: c}
 	option.Model = "cli-model"
 	option.BaseURL = "https://cli.example/v1"
 	option.APIKey = "cli-key"
@@ -450,18 +453,20 @@ llm:
 }
 
 func TestResolveRuntimeConfigUsesOpenAIEnvironment(t *testing.T) {
-	t.Setenv("OPENAI_BASE_URL", "https://openai-proxy.example/v1")
-	t.Setenv("OPENAI_MODEL", "gpt-env")
-	t.Setenv("OPENAI_API_KEY", "openai-key")
-
-	dir := t.TempDir()
+	c := isolatedContext(t)
+	dir := c.Directory
+	environment := map[string]string{
+		"OPENAI_BASE_URL": "https://openai-proxy.example/v1",
+		"OPENAI_MODEL":    "gpt-env",
+		"OPENAI_API_KEY":  "openai-key",
+	}
+	c.LookupEnv = func(key string) (string, bool) { value, ok := environment[key]; return value, ok }
 	writeTestConfig(t, dir, `
 llm:
   provider: ""
 `)
-	t.Chdir(dir)
 
-	option := Option{}
+	option := Option{Context: c}
 	if _, err := ResolveRuntimeConfig(&option); err != nil {
 		t.Fatal(err)
 	}
@@ -492,18 +497,20 @@ func TestApplyEnvironmentUsesSharedLLMConfiguration(t *testing.T) {
 }
 
 func TestResolveRuntimeConfigUsesAnthropicEnvironment(t *testing.T) {
-	t.Setenv("ANTHROPIC_BASE_URL", "https://anthropic-proxy.example/v1")
-	t.Setenv("ANTHROPIC_MODEL", "claude-env")
-	t.Setenv("ANTHROPIC_API_KEY", "anthropic-key")
-
-	dir := t.TempDir()
+	c := isolatedContext(t)
+	dir := c.Directory
+	environment := map[string]string{
+		"ANTHROPIC_BASE_URL": "https://anthropic-proxy.example/v1",
+		"ANTHROPIC_MODEL":    "claude-env",
+		"ANTHROPIC_API_KEY":  "anthropic-key",
+	}
+	c.LookupEnv = func(key string) (string, bool) { value, ok := environment[key]; return value, ok }
 	writeTestConfig(t, dir, `
 llm:
   provider: ""
 `)
-	t.Chdir(dir)
 
-	option := Option{}
+	option := Option{Context: c}
 	if _, err := ResolveRuntimeConfig(&option); err != nil {
 		t.Fatal(err)
 	}
@@ -513,15 +520,16 @@ llm:
 }
 
 func TestResolveRuntimeConfigRejectsUnsupportedProvider(t *testing.T) {
-	t.Setenv("CYBER_PROVIDER", "")
-	t.Setenv("CYBER_API_KEY", "")
-	t.Setenv("ANTHROPIC_API_KEY", "")
-	t.Setenv("OPENAI_API_KEY", "openai-compatible-key")
+	c := isolatedContext(t)
+	environment := map[string]string{
+		"CYBER_PROVIDER":    "",
+		"CYBER_API_KEY":     "",
+		"ANTHROPIC_API_KEY": "",
+		"OPENAI_API_KEY":    "openai-compatible-key",
+	}
+	c.LookupEnv = func(key string) (string, bool) { value, ok := environment[key]; return value, ok }
 
-	dir := t.TempDir()
-	t.Chdir(dir)
-
-	option := Option{LLMOptions: LLMOptions{Provider: "bogus-vendor"}}
+	option := Option{Context: c, LLMOptions: LLMOptions{Provider: "bogus-vendor"}}
 	if _, err := ResolveRuntimeConfig(&option); err == nil || !strings.Contains(err.Error(), "unsupported provider") {
 		t.Fatalf("ResolveRuntimeConfig() error = %v", err)
 	}
@@ -580,7 +588,12 @@ func TestApplyEnvironmentCentralizesRuntimeValues(t *testing.T) {
 // (cyber's own namespace) keeps overriding; the fallback provider env only fills
 // an empty slot.
 func TestResolveRuntimeConfigConfigModelBeatsFallbackProviderModelEnv(t *testing.T) {
-	dir := t.TempDir()
+	c := isolatedContext(t)
+	dir := c.Directory
+	environment := map[string]string{
+		"ANTHROPIC_MODEL": "claude-opus-4-8",
+	}
+	c.LookupEnv = func(key string) (string, bool) { value, ok := environment[key]; return value, ok }
 	writeTestConfig(t, dir, `
 llm:
   provider: anthropic
@@ -588,12 +601,9 @@ llm:
   api_key: config-key
   model: kimi-for-coding
 `)
-	t.Setenv("ANTHROPIC_MODEL", "claude-opus-4-8")
 
 	{
-		t.Chdir(dir)
-
-		option := Option{}
+		option := Option{Context: c}
 		if _, err := ResolveRuntimeConfig(&option); err != nil {
 			t.Fatal(err)
 		}
@@ -604,11 +614,12 @@ llm:
 
 	// With no model in the config, the fallback provider env still fills the gap.
 	{
-		emptyDir := t.TempDir()
+		emptyContext := isolatedContext(t)
+		emptyContext.LookupEnv = c.LookupEnv
+		emptyDir := emptyContext.Directory
 		writeTestConfig(t, emptyDir, "llm:\n  provider: anthropic\n  base_url: https://kiro.example/v1\n  api_key: config-key\n")
-		t.Chdir(emptyDir)
 
-		option := Option{}
+		option := Option{Context: emptyContext}
 		if _, err := ResolveRuntimeConfig(&option); err != nil {
 			t.Fatal(err)
 		}
@@ -624,7 +635,13 @@ llm:
 // base URL / key the user saved via the Settings UI (the config file) — otherwise
 // "启动本地 Agent … 模型/密钥沿用当前配置" silently uses the inherited env instead.
 func TestResolveRuntimeConfigConfigBaseURLAndKeyBeatFallbackProviderEnv(t *testing.T) {
-	dir := t.TempDir()
+	c := isolatedContext(t)
+	dir := c.Directory
+	environment := map[string]string{
+		"ANTHROPIC_BASE_URL": "https://fallback.example/v1",
+		"ANTHROPIC_API_KEY":  "fallback-key",
+	}
+	c.LookupEnv = func(key string) (string, bool) { value, ok := environment[key]; return value, ok }
 	writeTestConfig(t, dir, `
 llm:
   provider: anthropic
@@ -632,13 +649,9 @@ llm:
   api_key: config-key
   model: kimi-for-coding
 `)
-	t.Setenv("ANTHROPIC_BASE_URL", "https://fallback.example/v1")
-	t.Setenv("ANTHROPIC_API_KEY", "fallback-key")
 
 	{
-		t.Chdir(dir)
-
-		option := Option{}
+		option := Option{Context: c}
 		if _, err := ResolveRuntimeConfig(&option); err != nil {
 			t.Fatal(err)
 		}
@@ -653,11 +666,12 @@ llm:
 	// With no base_url / api_key in the config, the fallback provider env still
 	// fills the gap (unchanged fallback behavior).
 	{
-		emptyDir := t.TempDir()
+		emptyContext := isolatedContext(t)
+		emptyContext.LookupEnv = c.LookupEnv
+		emptyDir := emptyContext.Directory
 		writeTestConfig(t, emptyDir, "llm:\n  provider: anthropic\n  model: kimi-for-coding\n")
-		t.Chdir(emptyDir)
 
-		option := Option{}
+		option := Option{Context: emptyContext}
 		if _, err := ResolveRuntimeConfig(&option); err != nil {
 			t.Fatal(err)
 		}
@@ -671,13 +685,8 @@ llm:
 }
 
 func TestResolveRuntimeConfigUsesStagedProfileAndExplicitCLIOverrides(t *testing.T) {
-	for _, key := range []string{
-		"CYBER_PROVIDER", "CYBER_MODEL", "CYBER_BASE_URL", "CYBER_API_KEY",
-		"OPENAI_MODEL", "OPENAI_BASE_URL", "OPENAI_API_KEY",
-	} {
-		t.Setenv(key, "")
-	}
-	dir := t.TempDir()
+	c := isolatedContext(t)
+	dir := c.Directory
 	writeTestConfig(t, dir, `
 llm:
   active_profile: staged
@@ -694,7 +703,7 @@ llm:
 `)
 	path := filepath.Join(dir, "cyber.yaml")
 
-	staged := Option{MiscOptions: MiscOptions{ConfigFile: path}}
+	staged := Option{Context: c, MiscOptions: MiscOptions{ConfigFile: path}}
 	if _, err := ResolveRuntimeConfig(&staged); err != nil {
 		t.Fatal(err)
 	}
@@ -703,6 +712,7 @@ llm:
 	}
 
 	explicit := Option{
+		Context:     c,
 		MiscOptions: MiscOptions{ConfigFile: path},
 		LLMOptions:  LLMOptions{Provider: "openai", Model: "cli-model", APIKey: "cli-key"},
 	}

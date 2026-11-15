@@ -265,6 +265,19 @@ covered it. Do not keep a patch just because it has been there for a while.
     still strips them, so provider behavior and secret handling are unchanged.
     Test: `go test ./cmd/aiscan -run TestInboxHostRejectsRemoteTransport`.
 
+14. **Isolate configuration-precedence tests from operator state** (2026-11-16)
+    `pkg/config/loader_test.go`.
+    Changing only the working directory still overlays the real user
+    `~/.cyber/cyber.yaml`. Environment fallback tests therefore inherited an
+    active profile, failed on developer machines, and could print operator
+    credentials in assertion output. Reuse the existing `isolatedContext`
+    fixture for project, home, executable and environment discovery; supply
+    only each test's synthetic environment through `Context.LookupEnv`.
+    No provider selection or runtime configuration behavior changes. Tests:
+    `go test ./pkg/config ./agent/session -count=1`.
+    Rollback: restore the previous `pkg/config/loader_test.go`; no executable
+    rebuild, configuration change or project migration is required.
+
 ## Superseded patches
 
 These commits were on `tianwu/fixes` and are intentionally **not** carried after
