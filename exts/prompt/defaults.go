@@ -90,7 +90,10 @@ func RenderEnvironment(_ context.Context, input agentprompt.Context) (string, er
 		out.WriteString(input.Agent.Arch)
 	}
 	if !input.Agent.Now.IsZero() {
-		out.WriteString("\nCurrent Time: ")
+		// Session-stable, not wall-clock time: a system prompt rebuilt at every
+		// run must not differ byte-for-byte, or the provider's prefix cache misses
+		// on every wake. The current time belongs in the new user turn.
+		out.WriteString("\nSession Started: ")
 		out.WriteString(input.Agent.Now.Format("2006-01-02T15:04:05Z07:00"))
 	}
 	if input.Agent.Hostname != "" {

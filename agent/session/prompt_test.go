@@ -4,6 +4,7 @@ import (
 	"context"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/chainreactors/cyber/agent"
 	agentprompt "github.com/chainreactors/cyber/agent/prompt"
@@ -46,6 +47,41 @@ func TestResolveSystemPromptUsesConfigResolver(t *testing.T) {
 	result, err = rt.resolveSystemPrompt(t.Context(), &agent.Config{PromptResolver: fixedPromptResolver("config")})
 	if err != nil || result != "config" {
 		t.Fatalf("config resolver result = %q, %v", result, err)
+	}
+}
+
+type capturePromptResolver struct{ at time.Time }
+
+func (r *capturePromptResolver) Build(_ context.Context, input agentprompt.Context) agentprompt.Result {
+	r.at = input.Agent.Now
+	return agentprompt.Result{Prompt: input.Agent.Now.Format(time.RFC3339Nano)}
+}
+
+// The system prompt is rebuilt at the start of every run. Using the wall clock
+// there made every wake a different prefix, so the provider cache missed the
+// whole history. The session creation time is stable across runs.
+func TestSystemPromptTimeIsSessionStable(t *testing.T) {
+	started := time.Date(2026, 11, 15, 22, 0, 0, 0, time.UTC)
+	resolver := &capturePromptResolver{}
+	rt := &Runtime{
+		agentConfig: agent.Config{PromptResolver: resolver},
+		Logger:      telemetry.NopLogger(),
+		startedAt:   started,
+	}
+	first, err := rt.resolveSystemPrompt(t.Context(), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	time.Sleep(5 * time.Millisecond)
+	second, err := rt.resolveSystemPrompt(t.Context(), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if first != second {
+		t.Fatalf("system prompt changed between runs: %q vs %q", first, second)
+	}
+	if !resolver.at.Equal(started) {
+		t.Fatalf("prompt time = %s, want session start %s", resolver.at, started)
 	}
 }
 

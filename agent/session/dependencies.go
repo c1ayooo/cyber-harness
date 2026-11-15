@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	eventjsonl "github.com/chainreactors/cyber/core/events/jsonl"
 	"github.com/chainreactors/cyber/core/telemetry"
@@ -68,7 +69,8 @@ func NewResource(config Config) (*Resource, error) {
 	return &Resource{runtime: &Runtime{
 		commandIndex: index,
 		Logger:       config.Logger, config: config,
-		sessions: make(map[string]*sessionState), runs: make(map[string]*Run),
+		startedAt: time.Now(),
+		sessions:  make(map[string]*sessionState), runs: make(map[string]*Run),
 		closeDone: make(chan struct{}),
 	}}, nil
 }

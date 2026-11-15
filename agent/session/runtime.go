@@ -33,25 +33,30 @@ type Runtime struct {
 	nodeName         string
 	promptTarget     prompt.Target
 	commandName      string
-	loadedSkills     []prompt.LoadedSkill
-	heartbeat        time.Duration
-	agentConfig      agent.Config
-	resumeMessages   []*aop.Message
-	resumeSessionID  string
-	ctx              context.Context
-	cancel           context.CancelFunc
-	mu               sync.RWMutex
-	sessions         map[string]*sessionState
-	runs             map[string]*Run
-	closeOnce        sync.Once
-	closeDone        chan struct{}
-	closeErr         error
-	lifecycle        sync.Mutex
-	loaded           bool
-	closing          bool
-	wg               sync.WaitGroup
-	operations       sync.WaitGroup
-	maxPending       int
+	// startedAt is the session's creation time, not the current wall clock.
+	// The system prompt is rebuilt at the start of every run; using time.Now()
+	// there changed the system bytes on every wake and invalidated the provider's
+	// prefix cache. Current time belongs in the new user turn, after history.
+	startedAt       time.Time
+	loadedSkills    []prompt.LoadedSkill
+	heartbeat       time.Duration
+	agentConfig     agent.Config
+	resumeMessages  []*aop.Message
+	resumeSessionID string
+	ctx             context.Context
+	cancel          context.CancelFunc
+	mu              sync.RWMutex
+	sessions        map[string]*sessionState
+	runs            map[string]*Run
+	closeOnce       sync.Once
+	closeDone       chan struct{}
+	closeErr        error
+	lifecycle       sync.Mutex
+	loaded          bool
+	closing         bool
+	wg              sync.WaitGroup
+	operations      sync.WaitGroup
+	maxPending      int
 }
 
 type Config struct {
@@ -270,10 +275,16 @@ func (rt *Runtime) resolveSystemPrompt(ctx context.Context, config *agent.Config
 		return "", nil
 	}
 	hostname, _ := os.Hostname()
+	now := rt.startedAt
+	if now.IsZero() {
+		// Test/legacy Runtime values have no creation time. One call still gets a
+		// real clock; production runtimes are initialized in New.
+		now = time.Now()
+	}
 	input := prompt.Context{Target: rt.promptTarget, Agent: prompt.AgentContext{
 		NodeName: rt.nodeName, CommandName: rt.commandName,
 		OS: runtime.GOOS, Arch: runtime.GOARCH, Hostname: hostname,
-		Now: time.Now(), Windows: runtime.GOOS == "windows",
+		Now: now, Windows: runtime.GOOS == "windows",
 		LoadedSkills: append([]prompt.LoadedSkill(nil), rt.loadedSkills...),
 	}}
 	if config != nil {

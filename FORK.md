@@ -239,6 +239,32 @@ covered it. Do not keep a patch just because it has been there for a while.
     suite and focused manifest checks. No scanner/dependency runtime behavior
     is changed; missing crawl resources still need validation in the dependency.
 
+12. **Session-stable system prompt for prefix caching** (2026-11-15, Tianwu cache audit)
+    `agent/session/runtime.go`, `agent/session/dependencies.go`,
+    `exts/prompt/defaults.go`, `agent/session/prompt_test.go`.
+    `resolveSystemPrompt` used `time.Now()` for the Environment `Current Time`
+    field at the start of every run. A long-lived commander session therefore
+    rebuilt a different system prompt on every wake, and the provider's prefix
+    cache missed the entire history (first request of wake 2: 86k input,
+    cache_read 0; subsequent requests in the same run hit 90%+ because the
+    system was resolved once). The system now carries `Session Started`
+    (Runtime creation time), and Tianwu injects the current time in the new
+    user turn, after the stable prefix. Test:
+    `go test ./agent/session -run TestSystemPromptTimeIsSessionStable`.
+    Rollback: restore the prior fork revision and rebuild the executor; no
+    session data or ledger migration is involved.
+
+13. **Accept Tianwu-owned provider metadata** (2026-11-15)
+    `pkg/config/options.go`.
+    Tianwu stores `paused`, `tier`, `fallback`, `max_concurrency` and
+    `api_keys` beside the harness fields in the operator's
+    `~/.cyber/cyber.yaml`. A standalone `aiscan` (or a test that reads the real
+    file) failed the strict config validator with
+    `unknown configuration field llm.providers[0].paused`. The struct now
+    accepts those keys and ignores them; Tianwu's filtered per-host runtime copy
+    still strips them, so provider behavior and secret handling are unchanged.
+    Test: `go test ./cmd/aiscan -run TestInboxHostRejectsRemoteTransport`.
+
 ## Superseded patches
 
 These commits were on `tianwu/fixes` and are intentionally **not** carried after

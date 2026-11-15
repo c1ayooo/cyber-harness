@@ -64,6 +64,16 @@ type LLMProviderEntry struct {
 	Images        *bool  `config:"images" yaml:"images,omitempty"`
 	MaxTokens     int    `config:"max_tokens" yaml:"max_tokens,omitempty"`
 	ContextWindow int    `config:"context_window" yaml:"context_window,omitempty"`
+	// Tianwu-owned profile metadata. The control plane stores these beside the
+	// harness fields in the operator's file; the harness must tolerate them when
+	// it reads that file directly (a standalone aiscan run, tests), but must not
+	// act on them. Tianwu's per-host runtime copy strips them before a real
+	// harness parse, so accepting them here changes no provider behavior.
+	Paused         bool     `config:"paused" yaml:"paused,omitempty"`
+	Tier           string   `config:"tier" yaml:"tier,omitempty"`
+	Fallback       string   `config:"fallback" yaml:"fallback,omitempty"`
+	MaxConcurrency int      `config:"max_concurrency" yaml:"max_concurrency,omitempty"`
+	APIKeys        []string `config:"api_keys" yaml:"api_keys,omitempty"`
 }
 
 type TrafficOptions struct {
