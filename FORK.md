@@ -1,7 +1,7 @@
 # Fork notes (kksty/cyber-harness)
 
 This checkout is the **fork** `kksty/cyber-harness` of
-`chainreactors/cyber-harness`. Tianwu consumes the `aiscan-full` binary built
+`chainreactors/cyber-harness`. Tianwu consumes the `cyber-harness` Hub and `cyber-scan` node built
 from this tree; upstream code is never edited in the tianwu repository.
 
 ## Remotes and branches
@@ -26,6 +26,21 @@ history, not additional maintained remote branches. Before replacing the old
 patch tip, verify its 12 patches remain equivalent and use a force-with-lease
 that names the exact fetched remote tip. Preserve the prior local tips for
 rollback; do not push or merge into the upstream project.
+
+## rc10 split (2026-11-16)
+
+Rebased all 16 fork commits onto upstream `21e62cfd` (rc10). The tool-exclusion
+patch now belongs to `cmd/cyber-scan`; the Hub stays profile-neutral. Session
+rotation preserves SingleTask while retaining upstream's compact/resume history
+snapshot handling. The prior tip is retained locally as
+`codex/before-rc10-20261116` for rollback. Tianwu starts a Hub + scan node pair
+for one shared model gateway connection, configures the model on the Hub, and
+pins AOP to the node's hex id. IOA accepts that same registered node id.
+
+Build `./cmd/cyber-harness` and `./cmd/cyber-scan` with sqlite resource tags;
+only the Hub uses `full`. The scan command includes its complete scanner
+profile without that tag. No combined `aiscan web` executable is used by this
+version of Tianwu.
 
 ## Sync upstream
 

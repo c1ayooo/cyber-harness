@@ -8,10 +8,10 @@ import (
 	ioatools "github.com/chainreactors/cyber/tools/ioa"
 )
 
-// loadAIScan builds, loads and returns one profile plus its session runtime.
-func loadAIScan(t *testing.T, c config) (*aiscanProfile, *agentsession.Runtime) {
+// loadCyberScan builds, loads and returns one profile plus its session runtime.
+func loadCyberScan(t *testing.T, c config) (*cyberScanProfile, *agentsession.Runtime) {
 	t.Helper()
-	profile, err := buildAIScanProfile(c)
+	profile, err := buildCyberScanProfile(c)
 	if err != nil {
 		t.Fatalf("construct: %v", err)
 	}
@@ -72,13 +72,13 @@ func TestExcludedToolsParsing(t *testing.T) {
 // must remove the model-facing tool without breaking the composition.
 func TestExcludedSubagentRemovesSessionTool(t *testing.T) {
 	t.Setenv(excludeToolsEnv, "")
-	_, defRuntime := loadAIScan(t, minimalConfig(&agentsession.Config{}))
+	_, defRuntime := loadCyberScan(t, minimalConfig(&agentsession.Config{}))
 	if !hasTool(defRuntime, "subagent") {
 		t.Fatal("the default profile must compose the native subagent tool")
 	}
 
 	t.Setenv(excludeToolsEnv, "subagent")
-	_, excludedRuntime := loadAIScan(t, minimalConfig(&agentsession.Config{}))
+	_, excludedRuntime := loadCyberScan(t, minimalConfig(&agentsession.Config{}))
 	if hasTool(excludedRuntime, "subagent") {
 		t.Fatal("CYBER_EXCLUDE_TOOLS=subagent did not remove the native subagent tool")
 	}
@@ -91,7 +91,7 @@ func TestExcludedSubagentKeepsEngineComposition(t *testing.T) {
 	t.Setenv(excludeToolsEnv, "subagent")
 	c := minimalConfig(&agentsession.Config{})
 	c.Base.SkipEngines = false
-	_, runtime := loadAIScan(t, c)
+	_, runtime := loadCyberScan(t, c)
 	if hasTool(runtime, "subagent") {
 		t.Fatal("engine composition re-exposed the subagent tool")
 	}
@@ -104,7 +104,7 @@ func TestExcludedIOAOmitsAgentSurface(t *testing.T) {
 	t.Setenv(excludeToolsEnv, "ioa")
 	c := minimalConfig(&agentsession.Config{})
 	c.IOA = &ioatools.Config{NodeName: "test-node"}
-	_, runtime := loadAIScan(t, c)
+	_, runtime := loadCyberScan(t, c)
 	if registry := runtime.CommandRegistry(); registry != nil && registry.Has("ioa") {
 		t.Fatal("CYBER_EXCLUDE_TOOLS=ioa still registered the ioa command")
 	}

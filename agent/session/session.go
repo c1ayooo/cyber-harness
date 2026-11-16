@@ -1188,7 +1188,7 @@ func (s *Session) rotate(ctx context.Context, reason SessionCloseReason, parentS
 	continuation, err := rt.OpenSession(ctx, SessionOptions{
 		ID: newID, LogicalID: logicalID, TaskID: oldState.taskID, ParentSessionID: parentSessionID,
 		SingleTask: oldState.singleTask,
-		AgentName: agentName, Messages: messages, HistorySnapshot: reason == SessionCloseCompacted || reason == SessionCloseResumed, Config: &config, providers: providers,
+		AgentName:  agentName, Messages: messages, HistorySnapshot: reason == SessionCloseCompacted || reason == SessionCloseResumed, Config: &config, providers: providers,
 	})
 	if err != nil {
 		return nil, err
