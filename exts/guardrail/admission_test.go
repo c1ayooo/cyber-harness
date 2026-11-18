@@ -359,7 +359,10 @@ func TestLLMUsageIsReportedAsAOPUsageFact(t *testing.T) {
 // service is involved.
 func TestHybridUsagesKeepTheirJudgeEmitters(t *testing.T) {
 	llmServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-		fmt.Fprint(w, llmAnswerWithUsage("REVIEW", map[string]any{"prompt_tokens": 100, "completion_tokens": 7, "total_tokens": 107}))
+		// Only an explicit, confident REVIEW escalates under the
+		// uncertainty-is-allow policy; keep that shape so this test still
+		// exercises both judges' independent usage accounting.
+		fmt.Fprint(w, llmAnswerWithUsage(`{"action":"REVIEW","reason":"maybe","confidence":0.9}`, map[string]any{"prompt_tokens": 100, "completion_tokens": 7, "total_tokens": 107}))
 	}))
 	defer llmServer.Close()
 	jevServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {

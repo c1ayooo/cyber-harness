@@ -420,10 +420,29 @@ covered it. Do not keep a patch just because it has been there for a while.
     instead of being summed or estimated (the usage block is parsed separately
     from the verdict so malformed accounting cannot turn a completed judgment
     into a provider failure).
+    Semantics amendment (2026-11-18, P6-M "uncertain means allow"): the LLM
+    prompt was reduced from three options to `ALLOW` / `BLOCK: reason` only -
+    default allow, and anything the judge cannot establish from the invocation
+    itself is `ALLOW` (record); only clear and hard-to-recover damage to
+    availability, data integrity or system configuration is `BLOCK`. `REVIEW`
+    is no longer requested, but the parser keeps it for abnormal model output.
+    Mapping now implements uncertainty-is-allow: an explicit `confidence` below
+    0.7 maps to `ALLOW` regardless of the reported token; `REVIEW` without a
+    confidence (or with a low one) also maps to `ALLOW`; an explicit `BLOCK`
+    without a low-confidence signal stays `BLOCK`; only a high-confidence
+    `REVIEW` is preserved (auto intercepts it, safe asks a human). Hybrid
+    therefore escalates only an explicit `REVIEW`; a low-confidence ALLOW never
+    triggers JEV. `on_error` is unchanged (default `review`): transport
+    failures, timeouts, non-200 and unparsable answers are not silently
+    allowed, and the configuration table distinguishes "uncertain => ALLOW"
+    from "failure => on_error". JEV stays the harness-native implementation and
+    is untouched in this amendment: no `jev.go` judgment or two-stage changes,
+    hybrid only calls the existing `Policy`.
     Tests:
     `go build ./...`; `go vet ./exts/guardrail/... ./cmd/cyber-scan/...`;
     `go test ./exts/guardrail ./cmd/cyber-scan -count=1 -timeout 10m` covers a
-    fake OpenAI server (ALLOW/REVIEW/BLOCK/timeout/status/parse failures,
+    fake OpenAI server (ALLOW/BLOCK, abnormal REVIEW compatibility,
+    uncertainty/confidence mapping, timeout/status/parse failures,
     three on_error states, concurrency cap, cancellation, redirect, oversized
     evidence), scope/shadow/allow_prefixes admission, hybrid escalation with
     two injected fake policies, provider enumeration, the LLM provider without

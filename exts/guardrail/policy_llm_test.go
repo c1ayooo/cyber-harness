@@ -78,70 +78,117 @@ func TestLLMVerdictParsing(t *testing.T) {
 	}
 }
 
-func TestLLMJudgeRequestShapeAndThreeWay(t *testing.T) {
+func TestLLMJudgeRequestShape(t *testing.T) {
+	var requests atomic.Int32
+	var systems []string
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		requests.Add(1)
+		if r.Method != http.MethodPost || r.URL.Path != "/v1/chat/completions" {
+			t.Errorf("request = %s %s", r.Method, r.URL.Path)
+		}
+		if got := r.Header.Get("Authorization"); got != "Bearer fixture-key" {
+			t.Errorf("authorization = %q", got)
+		}
+		if got := r.Header.Get("Content-Type"); got != "application/json" {
+			t.Errorf("content type = %q", got)
+		}
+		var request llmJudgeRequest
+		if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+			t.Fatal(err)
+		}
+		if request.Model != "fixture-judge" || request.Temperature != 0 || request.MaxTokens != defaultLLMMaxTokens || request.Stream {
+			t.Errorf("unexpected request controls: %+v", request)
+		}
+		if len(request.Messages) != 2 || request.Messages[0].Role != "system" || request.Messages[1].Role != "user" {
+			t.Fatalf("unexpected messages: %+v", request.Messages)
+		}
+		system := request.Messages[0].Content
+		systems = append(systems, system)
+		if strings.Contains(system, "REVIEW") {
+			t.Errorf("system prompt still requests REVIEW: %s", system)
+		}
+		for _, want := range []string{"ALLOW", "BLOCK", "/etc/shadow", "authorized enterprise penetration test", "uncertain"} {
+			if !strings.Contains(system, want) {
+				t.Errorf("system prompt missing %q", want)
+			}
+		}
+		user := request.Messages[1].Content
+		for _, want := range []string{"shell", "curl", "target"} {
+			if !strings.Contains(user, want) {
+				t.Errorf("user message missing %q: %s", want, user)
+			}
+		}
+		for _, secret := range []string{"dummysecret", "dummykey"} {
+			if strings.Contains(user, secret) {
+				t.Errorf("judge request leaked %q", secret)
+			}
+		}
+		fmt.Fprint(w, llmAnswer("ALLOW"))
+	}))
+	defer server.Close()
+	policy := testLLMPolicy(server.URL+"/v1", "review", time.Second)
+	policy.config.APIKey = "fixture-key"
+	for _, stage := range []string{"screen", "consequence"} {
+		var decision *Decision
+		var err error
+		if stage == "screen" {
+			decision, err = policy.Check(t.Context(), call())
+		} else {
+			decision, err = policy.Confirm(t.Context(), call())
+		}
+		if err != nil {
+			t.Fatal(err)
+		}
+		if decision.Action != Action_ACTION_RECORD || !strings.Contains(decision.Reason, "LLM fixture-judge") {
+			t.Fatalf("%s decision=%+v", stage, decision)
+		}
+	}
+	if requests.Load() != 2 || len(systems) != 2 {
+		t.Fatalf("requests=%d stages=%d", requests.Load(), len(systems))
+	}
+	if !strings.Contains(systems[1], "consequence judge") {
+		t.Fatalf("consequence stage used the wrong prompt: %q", systems[1])
+	}
+}
+
+// TestLLMDecisionUncertaintyMapsToAllow pins the "no certainty, no stop" rule:
+// low-confidence answers and unsupported REVIEW verdicts become ALLOW (record);
+// an explicit BLOCK is still honored, and a high-confidence REVIEW is preserved
+// as an abnormal output for compatibility.
+func TestLLMDecisionUncertaintyMapsToAllow(t *testing.T) {
 	for _, test := range []struct {
 		name   string
 		answer string
 		want   Action
 	}{
-		{name: "allow", answer: "ALLOW", want: Action_ACTION_RECORD},
-		{name: "review", answer: "REVIEW", want: Action_ACTION_REVIEW},
-		{name: "block", answer: "BLOCK: destructive", want: Action_ACTION_BLOCK},
+		{name: "plain_allow", answer: "ALLOW", want: Action_ACTION_RECORD},
+		{name: "plain_block", answer: "BLOCK: wipe the database", want: Action_ACTION_BLOCK},
+		{name: "fenced_block", answer: "```\nBLOCK: wipe the database\n```", want: Action_ACTION_BLOCK},
+		{name: "json_block_high_confidence", answer: `{"action":"BLOCK","reason":"clear wipe","confidence":0.95}`, want: Action_ACTION_BLOCK},
+		{name: "json_block_without_confidence", answer: `{"action":"BLOCK","reason":"clear wipe"}`, want: Action_ACTION_BLOCK},
+		{name: "json_block_low_confidence", answer: `{"action":"BLOCK","reason":"maybe","confidence":0.2}`, want: Action_ACTION_RECORD},
+		{name: "json_review_high_confidence", answer: `{"action":"REVIEW","reason":"uncertain","confidence":0.9}`, want: Action_ACTION_REVIEW},
+		{name: "json_review_low_confidence", answer: `{"action":"REVIEW","reason":"uncertain","confidence":0.2}`, want: Action_ACTION_RECORD},
+		{name: "json_review_without_confidence", answer: `{"action":"REVIEW","reason":"uncertain"}`, want: Action_ACTION_RECORD},
+		{name: "plain_review", answer: "REVIEW", want: Action_ACTION_RECORD},
+		{name: "json_allow_low_confidence", answer: `{"action":"ALLOW","confidence":0.1}`, want: Action_ACTION_RECORD},
+		{name: "plain_allow_text_confidence_low", answer: "ALLOW (confidence: 0.2)", want: Action_ACTION_RECORD},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			var requests atomic.Int32
-			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				requests.Add(1)
-				if r.Method != http.MethodPost || r.URL.Path != "/v1/chat/completions" {
-					t.Errorf("request = %s %s", r.Method, r.URL.Path)
-				}
-				if got := r.Header.Get("Authorization"); got != "Bearer fixture-key" {
-					t.Errorf("authorization = %q", got)
-				}
-				if got := r.Header.Get("Content-Type"); got != "application/json" {
-					t.Errorf("content type = %q", got)
-				}
-				var request llmJudgeRequest
-				if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-					t.Fatal(err)
-				}
-				if request.Model != "fixture-judge" || request.Temperature != 0 || request.MaxTokens != defaultLLMMaxTokens || request.Stream {
-					t.Errorf("unexpected request controls: %+v", request)
-				}
-				if len(request.Messages) != 2 || request.Messages[0].Role != "system" || request.Messages[1].Role != "user" {
-					t.Fatalf("unexpected messages: %+v", request.Messages)
-				}
-				system := request.Messages[0].Content
-				for _, want := range []string{"ALLOW", "REVIEW", "BLOCK", "/etc/shadow", "authorized enterprise penetration test"} {
-					if !strings.Contains(system, want) {
-						t.Errorf("system prompt missing %q", want)
-					}
-				}
-				user := request.Messages[1].Content
-				for _, want := range []string{"shell", "curl", "target"} {
-					if !strings.Contains(user, want) {
-						t.Errorf("user message missing %q: %s", want, user)
-					}
-				}
-				for _, secret := range []string{"dummysecret", "dummykey"} {
-					if strings.Contains(user, secret) {
-						t.Errorf("judge request leaked %q", secret)
-					}
-				}
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 				fmt.Fprint(w, llmAnswer(test.answer))
 			}))
 			defer server.Close()
-			policy := testLLMPolicy(server.URL+"/v1", "review", time.Second)
-			policy.config.APIKey = "fixture-key"
+			policy := testLLMPolicy(server.URL, "review", time.Second)
 			decision, err := policy.Check(t.Context(), call())
 			if err != nil {
 				t.Fatal(err)
 			}
-			if decision.Action != test.want || !strings.Contains(decision.Reason, "LLM fixture-judge") {
-				t.Fatalf("decision=%+v", decision)
+			if decision.Action != test.want {
+				t.Fatalf("answer %q -> decision=%+v want=%v", test.answer, decision, test.want)
 			}
-			if requests.Load() != 1 {
-				t.Fatalf("requests=%d", requests.Load())
+			if (test.want == Action_ACTION_RECORD && test.answer != "ALLOW") && !strings.Contains(decision.Reason, "treated as ALLOW") && !strings.Contains(decision.Reason, "no clear harm") {
+				t.Fatalf("uncertain mapping reason = %q", decision.Reason)
 			}
 		})
 	}

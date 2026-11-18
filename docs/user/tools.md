@@ -54,9 +54,9 @@ Guardrail 的判定来源可配置为 `none`、`jev`、`llm` 或 `hybrid`，配�
 | `none` | 不检查，直接执行 |
 | `jev` | JEV 首判；`auto` 模式再判定实际后果，`safe` 模式进入人工审批 |
 | `llm` | OpenAI 兼容裁判首判；`auto` 模式再判定实际后果，`safe` 模式进入人工审批；裁判不可用时按 `on_error`（默认 `review`）处理 |
-| `hybrid` | 小模型先判，只有 `review` 或低置信 `allow` 才交 JEV 复核：JEV `record` 直接执行、`block` 拒绝、`review` 进入人工审批 |
+| `hybrid` | 小模型先判，**仅明确的高置信 `REVIEW`** 才交 JEV 复核（JEV `record` 直接执行、`block` 拒绝、`review` 进入人工审批）；低置信/不确定的 LLM 结果按 `ALLOW` 放行，不触发 JEV |
 
-`llm` 不依赖 JEV 凭据；`hybrid` 需要同时配置 LLM 与 JEV。LLM 只收到本次调用的工具名、参数和工作目录（常见凭据会脱敏），不会收到对话历史。
+`llm` 不依赖 JEV 凭据；`hybrid` 需要同时配置 LLM 与 JEV。LLM 只收到本次调用的工具名、参数和工作目录（常见凭据会脱敏），不会收到对话历史。LLM 裁判遵循“没把握就允许”：判断不确定（含低置信/缺 confidence）按 `ALLOW` 记录；**不确定不等于失败**，只有传输失败/超时/无法解析才按 `on_error` 处理（默认 `review`，可显式 `allow`/`block`）。
 
 ```yaml
 extensions:

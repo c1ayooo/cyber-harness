@@ -10,16 +10,19 @@ import (
 )
 
 // confidencePolicy is an optional Policy capability. A policy that can express
-// its own confidence lets hybrid distinguish a decisive ALLOW from a guess.
+// its own confidence lets hybrid recognize an on_error decision (negative
+// confidence) and keep it final instead of escalating it.
 type confidencePolicy interface {
 	Policy
 	CheckWithConfidence(context.Context, toolhooks.CallEvent) (*Decision, float64, error)
 }
 
 // hybridPolicy runs the cheap LLM judge first and spends a JEV review only for
-// REVIEW decisions and low-confidence ALLOWs. It is the same Policy interface,
-// so the runtime and configuration remain provider-agnostic. Both stages are
-// injected, which keeps hybrid tests independent of any real provider.
+// an explicit REVIEW decision. Low-confidence or uncalibrated answers are
+// already mapped to ALLOW by the LLM policy's uncertainty-is-allow rule, so they
+// never trigger JEV. It is the same Policy interface, so the runtime and
+// configuration remain provider-agnostic. Both stages are injected, which keeps
+// hybrid tests independent of any real provider.
 type hybridPolicy struct {
 	llm Policy
 	jev Policy
@@ -29,10 +32,10 @@ func newHybridPolicy(llm, jev Policy) *hybridPolicy {
 	return &hybridPolicy{llm: llm, jev: jev}
 }
 
-// Check implements the documented escalation table: a confident ALLOW and a
-// BLOCK are final, everything else is confirmed by JEV. The JEV decision maps
-// straight through: record permits execution, block denies it, review reaches
-// the human (or auto-mode rejection).
+// Check implements the documented escalation table: ALLOW and BLOCK from the
+// LLM are final, and only an explicit REVIEW is confirmed by JEV. The JEV
+// decision maps straight through: record permits execution, block denies it,
+// review reaches the human (or auto-mode rejection).
 func (h *hybridPolicy) Check(ctx context.Context, ev toolhooks.CallEvent) (*Decision, error) {
 	llmDecision, confidence, err := hybridLLMDecision(h.llm, ctx, ev)
 	if err != nil {
@@ -44,10 +47,7 @@ func (h *hybridPolicy) Check(ctx context.Context, ev toolhooks.CallEvent) (*Deci
 	if confidence < 0 {
 		return llmDecision, nil
 	}
-	if llmDecision.Action == Action_ACTION_BLOCK {
-		return llmDecision, nil
-	}
-	if llmDecision.Action == Action_ACTION_RECORD && confidence >= llmConfidenceThreshold {
+	if llmDecision.Action != Action_ACTION_REVIEW {
 		return llmDecision, nil
 	}
 	reviewed, err := h.jev.Check(ctx, ev)
@@ -58,11 +58,7 @@ func (h *hybridPolicy) Check(ctx context.Context, ev toolhooks.CallEvent) (*Deci
 		return nil, errors.New("JEV review returned no decision")
 	}
 	out := proto.Clone(reviewed).(*Decision)
-	escalation := "review"
-	if llmDecision.Action == Action_ACTION_RECORD {
-		escalation = "low confidence"
-	}
-	out.Reason = fmt.Sprintf("%s\nHybrid JEV review (%s): %s", llmDecision.Reason, escalation, reviewed.Reason)
+	out.Reason = fmt.Sprintf("%s\nHybrid JEV review (explicit REVIEW): %s", llmDecision.Reason, reviewed.Reason)
 	return out, nil
 }
 

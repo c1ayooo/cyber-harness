@@ -161,11 +161,11 @@ extensions:
 | `none`（默认） | 不判定，所有调用直接执行 | 无 |
 | `jev` | JEV 两阶段判定：首判；`auto` 模式对被标记调用再做后果复核 | `extensions.jev` 的凭据（`TYPESAFE_API_KEY` 或 `jev.api_key`） |
 | `llm` | OpenAI 兼容 `/chat/completions` 裁判；`auto` 模式对被标记调用再做一次后果判定 | `guardrail.llm.base_url`、`guardrail.llm.model`，可选 `api_key` |
-| `hybrid` | 小模型先判；仅 `REVIEW` 或低置信 `ALLOW` 交 JEV 复核（JEV `record`→执行、`block`→拒绝、仍 `review`→人工） | LLM 与 JEV 两套配置；JEV 凭据仍由 `extensions.jev` 提供 |
+| `hybrid` | 小模型先判；仅**明确的 `REVIEW`**（高置信异常输出）才交 JEV 复核（JEV `record`→执行、`block`→拒绝、仍 `review`→人工）；低置信/不确定的 LLM 结果按 `ALLOW` 直接放行，不触发 JEV | LLM 与 JEV 两套配置；JEV 凭据仍由 `extensions.jev` 提供 |
 
-`provider=llm` 不加载 JEV 客户端，也不需要 JEV 凭据；`provider=hybrid` 必须同时具备 LLM 配置与 JEV 凭据。
+`provider=llm` 不加载 JEV 客户端，也不需要 JEV 凭据；`provider=hybrid` 必须同时具备 LLM 配置与 JEV 凭据。**JEV 采用 harness 原生实现，本 fork 未修改其判定与两阶段逻辑**；自定义扩展集中在 LLM 审批裁判（`policy_llm.go`），hybrid 仅通过既有 `Policy` 接口调用 JEV。
 
-LLM 裁判请求固定 `temperature: 0`、`max_tokens: 128`、非流式；系统提示词要求只输出 `ALLOW`、`REVIEW`、`BLOCK: 理由` 三档之一，并带有强 `ALLOW` 偏置：只拦破坏可用性、数据完整性或系统配置的调用，只读敏感文件（含渗透场景读取 `/etc/shadow`）不算 `block`。解析对大小写、代码围栏、额外文本和 JSON 形式（含可选 `confidence`）都稳健。裁判失败（超时、网络错误、非 200、无法解析）按 `on_error` 处理。
+LLM 裁判请求固定 `temperature: 0`、`max_tokens: 128`、非流式；系统提示词只要求输出 `ALLOW` 或 `BLOCK: 理由` 两档，并带有强 `ALLOW` 偏置：**默认允许；无法从调用本身确定后果时一律 `ALLOW`（record）**；只有明确会破坏可用性、数据完整性或系统配置且难以恢复时才 `BLOCK`。提示词不再要求 `REVIEW`，只读敏感文件（含渗透场景读取 `/etc/shadow`）不算 `block`。解析仍兼容 `REVIEW`（属于异常模型输出）以及大小写、代码围栏、额外文本、JSON 形式（含可选 `confidence`）。
 
 ```yaml
 extensions:
@@ -199,6 +199,19 @@ extensions:
       on_error: block
 ```
 
+### LLM 判定语义（没把握就允许）
+
+| 模型输出 / 情形 | 决策 | 说明 |
+| --- | --- | --- |
+| `ALLOW`、无法确定后果、或明确表达不确定 | `record`（放行） | 提示词要求不确定时直接 `ALLOW` |
+| 显式 `confidence` < 0.7（无论伴随 `ALLOW`/`REVIEW`/`BLOCK`） | `record`（放行） | 低置信 = 不确定，不得升级为 `review`/`block` |
+| `BLOCK: 理由`（未声明低置信） | `block` | 明确破坏可用性/数据完整性/系统配置 |
+| `REVIEW` 且无 `confidence` 或 `confidence` < 0.7 | `record`（放行） | 提示词不再要求 `REVIEW`，视为不确定 |
+| `REVIEW` 且 `confidence` ≥ 0.7 | `review`（异常输出） | 兼容保留；`auto` 模式拦截并记录，`safe` 模式进人工审批 |
+| 传输失败、超时、非 200、无法解析 | 按 `on_error` | 默认 `review`，可显式 `allow`/`block`；**失败不等于“不确定”** |
+
+即：**判断不确定 = ALLOW；裁判调用失败/超时 = `on_error`（默认 `review`，不会静默放行）**。
+
 ### 配置项
 
 | 配置项（`extensions.guardrail` 下） | 默认值 | 含义 |
@@ -208,7 +221,7 @@ extensions:
 | `review_timeout` | `5m` | 人工审批最长等待时间，须为正的 duration |
 | `scope` | 空（全部工具） | 只判定列出的工具名；空表示全部判定。见下方绕过面说明 |
 | `allow_prefixes` | 空 | 仅 `mode=safe` 生效；命令文本按字面前缀命中时直接放行，不进入人工审批 |
-| `on_error` | `review` | 仅 llm/hybrid：裁判失败时 `allow` 放行、`review` 进入人工判定、`block` 拒绝 |
+| `on_error` | `review` | 仅 llm/hybrid：裁判**调用失败**（超时/网络/非 200/无法解析）时 `allow` 放行、`review` 进入人工判定、`block` 拒绝；模型“判断不确定”按 `ALLOW`，不算失败 |
 | `timeout` | `3s` | LLM 单次请求超时，须为正的 duration |
 | `concurrency` | `8` | LLM 最大并发请求数（1–1024），超出者按 `on_error` 处理 |
 | `shadow` | `false` | 只判定并记录 AOP 决策事件，永远放行；用于灰度统计 |
@@ -237,7 +250,7 @@ LLM 裁判同样只接收脱敏后的本次工具名、参数和工作目录，�
 
 ### 风险与绕过面
 
-- **fail-open**：`on_error: allow` 在裁判不可用时放行工具调用，加载时会打 WARN。只应在能接受该风险的灰度环境使用；生产默认 `review`，需要严格失败关闭时用 `block`。
+- **fail-open**：`on_error: allow` 在裁判**调用失败**时放行工具调用，加载时会打 WARN。只应在能接受该风险的灰度环境使用；生产默认 `review`，需要严格失败关闭时用 `block`。注意与“判断不确定”区分：不确定的 LLM 结果本来就按 `ALLOW` 记录，不经过 `on_error`；只有传输/解析失败才触发 `on_error`。
 - **shadow**：`shadow: true` 时不会产生人工审批、也不会拒绝调用，只在 AOP 中记录判定结果。适合先观察 LLM 误判率，再切到 `review`/`auto`；shadow 不覆盖调用取消，取消仍会终止调用。
 - **scope 只按工具名过滤**：它不是安全边界。`bash` 可以执行任意命令、`subagent` 可以驱动子会话、MCP 或命令适配层可能按新名称暴露工具；使用未列入的工具即可绕过判定。`scope` 用于降低判定成本、减少审批噪音，不能替代宿主权限、沙箱或网络边界。未命中的工具不产生判定事件。
 - **allow_prefixes 只是字面前缀**：不做语义分析。`ls` 会命中 `lsof`；需要边界时写带空格的 `"ls "`。命令拼接（例如 `ls; rm -rf /`）仍以 `ls ` 开头。只应放入确定低风险、无副作用的前缀，并与 `mode=safe` 一起使用。

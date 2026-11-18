@@ -3,6 +3,9 @@ package guardrail
 import (
 	"context"
 	"errors"
+	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"strings"
 	"sync/atomic"
 	"testing"
@@ -63,13 +66,12 @@ func TestHybridEscalationTable(t *testing.T) {
 		wantJEV        bool
 		wantEscalation string
 	}{
-		{name: "confident_allow", llmAction: Action_ACTION_RECORD, confidence: 1, plainLLM: true, want: Action_ACTION_RECORD},
+		{name: "allow", llmAction: Action_ACTION_RECORD, confidence: 1, plainLLM: true, want: Action_ACTION_RECORD},
 		{name: "block", llmAction: Action_ACTION_BLOCK, confidence: 1, want: Action_ACTION_BLOCK},
-		{name: "review_jev_record", llmAction: Action_ACTION_REVIEW, confidence: 1, jevAction: Action_ACTION_RECORD, want: Action_ACTION_RECORD, wantJEV: true, wantEscalation: "review"},
-		{name: "review_jev_block", llmAction: Action_ACTION_REVIEW, confidence: 1, jevAction: Action_ACTION_BLOCK, want: Action_ACTION_BLOCK, wantJEV: true, wantEscalation: "review"},
-		{name: "review_jev_review", llmAction: Action_ACTION_REVIEW, confidence: 1, jevAction: Action_ACTION_REVIEW, want: Action_ACTION_REVIEW, wantJEV: true, wantEscalation: "review"},
-		{name: "low_confidence_allow_jev_block", llmAction: Action_ACTION_RECORD, confidence: 0.4, jevAction: Action_ACTION_BLOCK, want: Action_ACTION_BLOCK, wantJEV: true, wantEscalation: "low confidence"},
-		{name: "low_confidence_allow_jev_record", llmAction: Action_ACTION_RECORD, confidence: 0.4, jevAction: Action_ACTION_RECORD, want: Action_ACTION_RECORD, wantJEV: true, wantEscalation: "low confidence"},
+		{name: "review_jev_record", llmAction: Action_ACTION_REVIEW, confidence: 1, jevAction: Action_ACTION_RECORD, want: Action_ACTION_RECORD, wantJEV: true, wantEscalation: "explicit REVIEW"},
+		{name: "review_jev_block", llmAction: Action_ACTION_REVIEW, confidence: 1, jevAction: Action_ACTION_BLOCK, want: Action_ACTION_BLOCK, wantJEV: true, wantEscalation: "explicit REVIEW"},
+		{name: "review_jev_review", llmAction: Action_ACTION_REVIEW, confidence: 1, jevAction: Action_ACTION_REVIEW, want: Action_ACTION_REVIEW, wantJEV: true, wantEscalation: "explicit REVIEW"},
+		{name: "low_confidence_allow_is_final", llmAction: Action_ACTION_RECORD, confidence: 0.4, want: Action_ACTION_RECORD},
 		{name: "high_confidence_allow", llmAction: Action_ACTION_RECORD, confidence: 0.9, want: Action_ACTION_RECORD},
 	} {
 		t.Run(test.name, func(t *testing.T) {
@@ -98,6 +100,56 @@ func TestHybridEscalationTable(t *testing.T) {
 				t.Fatal("JEV consulted without escalation")
 			}
 		})
+	}
+}
+
+// TestHybridDoesNotEscalateUncertainLLMAnswers exercises the real llmPolicy
+// against a fake OpenAI server plus a fake JEV double: low-confidence or
+// unsupported answers must become a final ALLOW and must never consume a JEV
+// review.
+func TestHybridDoesNotEscalateUncertainLLMAnswers(t *testing.T) {
+	for _, answer := range []string{
+		"ALLOW",
+		`{"action":"ALLOW","confidence":0.3}`,
+		`{"action":"REVIEW","confidence":0.2}`,
+		"REVIEW",
+	} {
+		t.Run(answer, func(t *testing.T) {
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+				fmt.Fprint(w, llmAnswer(answer))
+			}))
+			defer server.Close()
+			llm := testLLMPolicy(server.URL, "review", time.Second)
+			jev := &scriptedPolicy{check: fixedDecision(Action_ACTION_BLOCK, "jev would block")}
+			decision, err := newHybridPolicy(llm, jev).Check(t.Context(), call())
+			if err != nil {
+				t.Fatal(err)
+			}
+			if decision.Action != Action_ACTION_RECORD || jev.checks.Load() != 0 {
+				t.Fatalf("uncertain answer %q escalated: decision=%+v JEV calls=%d", answer, decision, jev.checks.Load())
+			}
+		})
+	}
+}
+
+// TestHybridEscalatesExplicitHighConfidenceReview keeps the documented JEV
+// escalation path for an explicit, confident REVIEW.
+func TestHybridEscalatesExplicitHighConfidenceReview(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		fmt.Fprint(w, llmAnswer(`{"action":"REVIEW","reason":"maybe","confidence":0.9}`))
+	}))
+	defer server.Close()
+	llm := testLLMPolicy(server.URL, "review", time.Second)
+	jev := &scriptedPolicy{check: fixedDecision(Action_ACTION_RECORD, "jev record")}
+	decision, err := newHybridPolicy(llm, jev).Check(t.Context(), call())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if decision.Action != Action_ACTION_RECORD || jev.checks.Load() != 1 {
+		t.Fatalf("explicit REVIEW was not escalated: decision=%+v JEV calls=%d", decision, jev.checks.Load())
+	}
+	if !strings.Contains(decision.Reason, "Hybrid JEV review (explicit REVIEW)") {
+		t.Fatalf("hybrid reason = %q", decision.Reason)
 	}
 }
 
