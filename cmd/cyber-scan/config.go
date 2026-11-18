@@ -11,6 +11,7 @@ import (
 	agentsession "github.com/chainreactors/cyber/agent/session"
 	"github.com/chainreactors/cyber/core/telemetry"
 	ioaclient "github.com/chainreactors/cyber/exts/ioa/client"
+	mcpext "github.com/chainreactors/cyber/exts/mcp"
 	scannerext "github.com/chainreactors/cyber/exts/scanner"
 	searchext "github.com/chainreactors/cyber/exts/search"
 	cfg "github.com/chainreactors/cyber/pkg/config"
@@ -20,13 +21,16 @@ import (
 // appConfig selects the reusable capability packs in the reference
 // distribution. Runtime capabilities are owned by their extensions.
 type appConfig struct {
-	Resolved          *cfg.Resolved
-	DataDir           string
-	Provider          provider.StartupConfig
-	Scanner           scannerext.Config
-	Recon             passiveconfig.ReconOptions
-	ReconCredentials  map[string]string
-	TavilyKeys        string
+	Resolved         *cfg.Resolved
+	DataDir          string
+	Provider         provider.StartupConfig
+	Scanner          scannerext.Config
+	Recon            passiveconfig.ReconOptions
+	ReconCredentials map[string]string
+	TavilyKeys       string
+	// MCP is empty unless the operator configured external MCP servers; the
+	// extension is only appended when it has servers to start.
+	MCP               mcpext.Config
 	PlaywrightSession string
 	OptionalTools     []string
 	MitmCapture       *bool
@@ -60,6 +64,10 @@ func configFromOption(option *cfg.Option, providerMode provider.StartupMode, ses
 	if err != nil {
 		return config{}, err
 	}
+	mcpConfig, err := mcpext.ReadConfig(option)
+	if err != nil {
+		return config{}, err
+	}
 	return config{
 		Option: option, IOA: ioaConfig, Session: sessionConfig,
 		Base: appConfig{
@@ -78,6 +86,7 @@ func configFromOption(option *cfg.Option, providerMode provider.StartupMode, ses
 			},
 			Recon: recon, ReconCredentials: passiveconfig.UncoverCredentials(envLookup(option)),
 			TavilyKeys:        tavilyKeys(recon.TavilyKey, searchKeys),
+			MCP:               mcpConfig,
 			PlaywrightSession: option.PlaywrightSession, OptionalTools: option.Tools,
 			MitmCapture: hub.Mitm, TrafficStorage: option.TrafficOptions,
 			Logger: logger, CLISkillPaths: cfg.LocalSkillPaths(option.Skills),

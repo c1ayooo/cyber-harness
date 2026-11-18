@@ -45,6 +45,41 @@ Web 在工具所属轮次内显示审批卡片与处理结果，侧栏标记需�
 
 Guardrail 是工具调用的检查边界。已启动子进程内部的操作和原始 PTY 输入仍受宿主权限与环境控制。JEV 会收到脱敏后的工具参数和调用上下文；常见凭据会被遮盖，但任意命名或编码的秘密不保证被识别。运行前应按实际数据范围配置凭据、网络和执行环境。
 
+## 裁判来源、范围与灰度
+
+Guardrail 的判定来源可配置为 `none`、`jev`、`llm` 或 `hybrid`，配置方法见[工具审批配置](../configuration.md#工具审批配置)。
+
+| `provider` | 被标记调用的处理 |
+| --- | --- |
+| `none` | 不检查，直接执行 |
+| `jev` | JEV 首判；`auto` 模式再判定实际后果，`safe` 模式进入人工审批 |
+| `llm` | OpenAI 兼容裁判首判；`auto` 模式再判定实际后果，`safe` 模式进入人工审批；裁判不可用时按 `on_error`（默认 `review`）处理 |
+| `hybrid` | 小模型先判，只有 `review` 或低置信 `allow` 才交 JEV 复核：JEV `record` 直接执行、`block` 拒绝、`review` 进入人工审批 |
+
+`llm` 不依赖 JEV 凭据；`hybrid` 需要同时配置 LLM 与 JEV。LLM 只收到本次调用的工具名、参数和工作目录（常见凭据会脱敏），不会收到对话历史。
+
+```yaml
+extensions:
+  guardrail:
+    provider: hybrid
+    mode: safe
+    scope: [bash, subagent]
+    allow_prefixes: ["ls ", "cat "]
+    on_error: review
+    llm:
+      base_url: https://gateway.example/v1
+      model: judge-small
+```
+
+以下配置能降低误报干扰和判定成本：
+
+- `scope: [bash, subagent]` 只判定列出的工具名，空表示全部。**它只按工具名过滤，不是安全边界**：未列入的工具（或其他入口、命令适配层、子会话）仍可能执行同样的操作；`bash` 内部也可以执行任意命令。scope 用于减少调用量和审批噪音，不能替代宿主权限与环境隔离。
+- `allow_prefixes: ["ls ", "cat "]` 只在 `mode=safe` 生效，命令文本按**字面前缀**命中时直接放行，不进入人工审批。它不做语义分析：`ls` 会命中 `lsof`，需要边界时写带空格的 `"ls "`；命令拼接（`ls; rm -rf /`）同样以 `ls ` 开头。只应放入确定低风险的前缀。
+- `on_error: allow` 是显式 **fail-open**：裁判超时、网络失败或返回无法解析时放行调用，加载时会打印 WARN。生产建议保持默认 `review`，或在严格场景使用 `block`。
+- `shadow: true` 只判定并记录，永远放行且不创建审批。适合先用灰度观察 LLM/hybrid 的误判率，再切回 `auto` 或 `safe`；取消调用仍会终止执行。
+
+JEV 响应携带 usage 时，Guardrail 会把真实 token 用量以 AOP usage 事件上报；响应没有 usage 时不会估算或伪造。
+
 ## 后台任务
 
 较长的命令可以在等待一段时间后转入后台，使 Agent 继续处理其他工作。以下是模型调用 `bash` 时的参数形态：

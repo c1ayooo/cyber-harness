@@ -154,18 +154,93 @@ extensions:
 
 `extensions.jev` 提供共享凭据、模型和请求超时，`jev.mode` 控制 Reflex 加速；Guardrail 独立选择策略，将 `jev.mode` 设为 `off` 后仍可执行工具检查。`guardrail.provider` 默认 `none`，仅配置凭据不会启用策略。
 
+### 裁判来源
+
+| `provider` | 判定方式 | 额外依赖 |
+| --- | --- | --- |
+| `none`（默认） | 不判定，所有调用直接执行 | 无 |
+| `jev` | JEV 两阶段判定：首判；`auto` 模式对被标记调用再做后果复核 | `extensions.jev` 的凭据（`TYPESAFE_API_KEY` 或 `jev.api_key`） |
+| `llm` | OpenAI 兼容 `/chat/completions` 裁判；`auto` 模式对被标记调用再做一次后果判定 | `guardrail.llm.base_url`、`guardrail.llm.model`，可选 `api_key` |
+| `hybrid` | 小模型先判；仅 `REVIEW` 或低置信 `ALLOW` 交 JEV 复核（JEV `record`→执行、`block`→拒绝、仍 `review`→人工） | LLM 与 JEV 两套配置；JEV 凭据仍由 `extensions.jev` 提供 |
+
+`provider=llm` 不加载 JEV 客户端，也不需要 JEV 凭据；`provider=hybrid` 必须同时具备 LLM 配置与 JEV 凭据。
+
+LLM 裁判请求固定 `temperature: 0`、`max_tokens: 128`、非流式；系统提示词要求只输出 `ALLOW`、`REVIEW`、`BLOCK: 理由` 三档之一，并带有强 `ALLOW` 偏置：只拦破坏可用性、数据完整性或系统配置的调用，只读敏感文件（含渗透场景读取 `/etc/shadow`）不算 `block`。解析对大小写、代码围栏、额外文本和 JSON 形式（含可选 `confidence`）都稳健。裁判失败（超时、网络错误、非 200、无法解析）按 `on_error` 处理。
+
+```yaml
+extensions:
+  guardrail:
+    provider: llm
+    mode: auto
+    on_error: review        # allow | review（默认）| block
+    timeout: 3s
+    concurrency: 8
+    llm:
+      base_url: https://gateway.example/v1
+      model: judge-small
+      api_key: ""
+      temperature: 0
+      max_tokens: 128
+```
+
+```yaml
+extensions:
+  guardrail:
+    provider: hybrid
+    mode: safe
+    scope: [bash, subagent]      # 只判定这些工具；空=全部
+    allow_prefixes: ["ls ", "cat "]  # 仅 safe 模式生效
+    on_error: review
+    llm:
+      base_url: https://gateway.example/v1
+      model: judge-small
+    jev:
+      level: standard
+      on_error: block
+```
+
+### 配置项
+
 | 配置项（`extensions.guardrail` 下） | 默认值 | 含义 |
 | --- | --- | --- |
-| `provider` | `none` | `jev` 启用 JEV 检查，`none` 关闭策略 |
+| `provider` | `none` | `none`、`jev`、`llm` 或 `hybrid`，见上表 |
 | `mode` | `auto` | 自动判断后果；`safe` 等待人工审批 |
 | `review_timeout` | `5m` | 人工审批最长等待时间，须为正的 duration |
+| `scope` | 空（全部工具） | 只判定列出的工具名；空表示全部判定。见下方绕过面说明 |
+| `allow_prefixes` | 空 | 仅 `mode=safe` 生效；命令文本按字面前缀命中时直接放行，不进入人工审批 |
+| `on_error` | `review` | 仅 llm/hybrid：裁判失败时 `allow` 放行、`review` 进入人工判定、`block` 拒绝 |
+| `timeout` | `3s` | LLM 单次请求超时，须为正的 duration |
+| `concurrency` | `8` | LLM 最大并发请求数（1–1024），超出者按 `on_error` 处理 |
+| `shadow` | `false` | 只判定并记录 AOP 决策事件，永远放行；用于灰度统计 |
 | `jev.level` | `standard` | 风险预设：`permissive`、`standard`、`strict` |
 | `jev.on_error` | `block` | 首次检查失败时使用 `review` 或 `block` 判断；后果判断失败始终拒绝 |
 | `jev.criteria` | 对应 level 的预设 | 按 `record`、`review`、`block` 覆盖首次检查标准，值须为非空文本 |
+| `llm.base_url` | 必填 | OpenAI 兼容端点；可写完整 `/chat/completions` 端点，否则自动补路径 |
+| `llm.model` | 必填 | 裁判模型名 |
+| `llm.api_key` | 空 | 可选 Bearer token；本地网关可不填 |
+| `llm.temperature` | `0` | 采样温度（0–2） |
+| `llm.max_tokens` | `128` | 输出上限（1–4096） |
+
+所有新增字段在配置解析时校验，非法值会以中文原因让启动失败；例如 `allow_prefixes` 必须配合 `mode=safe`，`on_error` 只能用于 llm/hybrid。
 
 `standard` 将本地分析和授权的低频探测归为 `record`，目标修改、高强度或未知影响归为 `review`，明确破坏、泄露或伤害归为 `block`；`strict` 对主动探测要求复核，对目标修改或未知影响使用 `block`。实际处理由 `mode` 决定，首次风险标准不会预先决定第二阶段的后果判断。
 
-JEV 接收可读工具参数及调用上下文，不发送完整对话历史。两阶段分别应用请求超时；首次失败按 `on_error` 处理，后果判断失败、调用取消或 Profile 关闭均不能放行。参数超过输入限制时也走失败策略。常见凭据做尽力脱敏，外部服务仍会接收其余工具数据。
+JEV 接收可读工具参数及调用上下文，不发送完整对话历史。两阶段分别应用请求超时；首次失败按 `on_error` 处理，后果判断失败、调用取消或 Profile 关闭均不能放行。参数超过输入限制时也走失败策略。裁判 token 统一以 AOP usage 事件上报，供天吴把裁判成本与指挥官/执行者成本分账，并按 `Emitter` 区分裁判来源：
+
+- JEV 响应携带 token usage 时，以 `Emitter=guardrail` 上报真实用量；该取值保持兼容旧控制面。
+- LLM 裁判（OpenAI 兼容 `/chat/completions`）的响应携带 `usage` 时，以 `Emitter=guardrail-llm` 上报。
+- `provider=hybrid` 下 LLM 阶段发 `guardrail-llm`、JEV 阶段发 `guardrail`，两次判定各发一条事件、互不合并；仅在真正升级到 JEV 时才出现 JEV 事件。
+
+两类事件都归入裁判（guardrail）分类，账本按 `Emitter` 再区分 JEV 与小模型裁判。响应缺少 usage、判定失败（超时、网络错误、非 200、无法解析）或调用取消时不发 usage 事件；缺失的计数字段不估算、不伪造（`prompt_tokens`/`completion_tokens`/`total_tokens` 只取供应商上报值，`cache_read` 等可选字段仅在存在时携带）。
+
+LLM 裁判同样只接收脱敏后的本次工具名、参数和工作目录，不发送对话历史；常见凭据会被遮盖，但任意命名或编码的秘密不保证被识别。
+
+### 风险与绕过面
+
+- **fail-open**：`on_error: allow` 在裁判不可用时放行工具调用，加载时会打 WARN。只应在能接受该风险的灰度环境使用；生产默认 `review`，需要严格失败关闭时用 `block`。
+- **shadow**：`shadow: true` 时不会产生人工审批、也不会拒绝调用，只在 AOP 中记录判定结果。适合先观察 LLM 误判率，再切到 `review`/`auto`；shadow 不覆盖调用取消，取消仍会终止调用。
+- **scope 只按工具名过滤**：它不是安全边界。`bash` 可以执行任意命令、`subagent` 可以驱动子会话、MCP 或命令适配层可能按新名称暴露工具；使用未列入的工具即可绕过判定。`scope` 用于降低判定成本、减少审批噪音，不能替代宿主权限、沙箱或网络边界。未命中的工具不产生判定事件。
+- **allow_prefixes 只是字面前缀**：不做语义分析。`ls` 会命中 `lsof`；需要边界时写带空格的 `"ls "`。命令拼接（例如 `ls; rm -rf /`）仍以 `ls ` 开头。只应放入确定低风险、无副作用的前缀，并与 `mode=safe` 一起使用。
 
 Web 保存模式可更新当前运行时，仅影响后续调用；首次启用、策略或凭据变更需要验证并替换 Profile。密钥留空保留已保存值，或使用服务端 `TYPESAFE_API_KEY`。日常审批操作见[工具指南](user/tools.md#工具准入与审批)。
 

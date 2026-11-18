@@ -10,6 +10,7 @@ import (
 	"github.com/chainreactors/cyber/agent/provider"
 	"github.com/chainreactors/cyber/core/telemetry"
 	ioaclient "github.com/chainreactors/cyber/exts/ioa/client"
+	mcpext "github.com/chainreactors/cyber/exts/mcp"
 	scannerext "github.com/chainreactors/cyber/exts/scanner"
 	searchext "github.com/chainreactors/cyber/exts/search"
 	cfg "github.com/chainreactors/cyber/pkg/config"
@@ -35,6 +36,9 @@ func TestApplicationConfigMatchesRawAndResolvedSections(t *testing.T) {
 			searchext.ConfigKey:          {"tavily_keys": "search-key"},
 			scannerext.ScanConfigKey:     {"verify": "on"},
 			ioaclient.ConfigKey:          {"url": "https://ioa.test", "space": "team", "node_name": "worker"},
+			mcpext.ConfigKey: {"mcpServers": map[string]any{
+				"ida": map[string]any{"command": "ida-mcp", "args": []any{"--stdio"}},
+			}},
 		}},
 	} {
 		t.Run(test.name, func(t *testing.T) {
@@ -95,6 +99,7 @@ func TestApplicationConfigRejectsInvalidSectionValues(t *testing.T) {
 		{passiveconfig.ReconConfigKey, map[string]any{"limit": 1.5}},
 		{searchext.ConfigKey, map[string]any{"unknown": "value"}},
 		{ioaclient.ConfigKey, map[string]any{"url": "invalid"}},
+		{mcpext.ConfigKey, map[string]any{"unknown": "value"}},
 	} {
 		t.Run(test.section, func(t *testing.T) {
 			option := &cfg.Option{Extensions: cfg.Values{test.section: test.fields}}

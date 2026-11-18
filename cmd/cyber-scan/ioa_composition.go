@@ -9,6 +9,7 @@ import (
 	ioaclient "github.com/chainreactors/cyber/exts/ioa/client"
 	ioaserver "github.com/chainreactors/cyber/exts/ioa/server"
 	jevext "github.com/chainreactors/cyber/exts/jev"
+	mcpext "github.com/chainreactors/cyber/exts/mcp"
 	hostcli "github.com/chainreactors/cyber/pkg/cli"
 	cfg "github.com/chainreactors/cyber/pkg/config"
 
@@ -62,6 +63,7 @@ func declareResources(cli *hostcli.Registry, agentOptions *cfg.AgentOptions) *cf
 	mustDeclare(passiveconfig.Declare(resources))
 	mustDeclare(resourceAddReconFlags(resources))
 	mustDeclare(searchext.Declare(resources))
+	mustDeclare(mcpext.Declare(resources))
 	if agentOptions != nil {
 		mustDeclare(sessionext.Declare(resources, agentOptions))
 	}

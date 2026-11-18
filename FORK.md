@@ -293,6 +293,150 @@ covered it. Do not keep a patch just because it has been there for a while.
     Rollback: restore the previous `pkg/config/loader_test.go`; no executable
     rebuild, configuration change or project migration is required.
 
+15. **`feat(session): accept the control plane's evaluator goal on RunTurn`**
+    (2026-11-18, Tianwu evaluator goal contract)
+    `agent/session/protocol.go`, `agent/session/session.go`,
+    `agent/session/run_goal_test.go`.
+    Root cause: the evaluator always derived its goal from the turn input text
+    (`evaluator.NewLoopConfigWithInput` uses `provider.MessageText(input)`). That
+    is right for a standalone agent, but a control plane that owns the intent
+    has a short goal and an acceptance criterion that are separate from the
+    executor's brief. Making the goal part of the prompt would leak the
+    evaluator's instructions to the executor and let the evaluator judge the
+    executor's own wording. `RunTurnRequest` now accepts the fork extension
+    `type.googleapis.com/tianwu.RunGoal` with JSON
+    `{"goal":"...","eval_rounds":"..."}`; `RunAOPTurn` carries it into
+    `RunInput.EvalGoal` (and `EvalRounds` when the extension supplies pacing,
+    overriding `AgentRunOptions.eval_rounds`). `session.go`'s eval branch uses
+    that goal as `EvalLoopConfig.Goal` only when eval criteria is non-empty;
+    `InitialInput` stays the turn message. An absent extension keeps the old
+    input-derived goal and default 20-round ceiling exactly. `eval_rounds`
+    additionally accepts a JSON number so a producer that models rounds as a
+    count still delivers the goal.
+    Tests: `go test ./agent/session -run 'TestTurnRunGoalExtension|TestRunAOPTurnRunGoalShapesEvaluatorGoal'`.
+    The integration case drives `RunAOPTurn` through the real prompt resolver
+    with a scripted provider and asserts both halves of the contract: the
+    executor still receives the message, the evaluator receives the extension
+    goal and ceiling, and the no-extension case keeps the input-derived goal and
+    default ceiling.
+    Rollback: remove the extension parsing/`RunInput.EvalGoal` override and
+    rebuild the executor; old control planes never send the extension, so no
+    data or ledger migration is involved.
+
+16. **Disable the recap worker in the reference scan profile** (2026-11-18)
+    `cmd/cyber-scan/profile.go`.
+    Root cause: `exts/recap` installs a worker that summarizes on every
+    `TurnEnded` event with an extra model call (`agent/recap/model.go`, max 256
+    tokens). That call's usage is not reported in the turn's token usage, so a
+    control plane that accounts per-run spend and pauses/exhausts on quota
+    silently undercounts it. Tianwu reviews work through its decision log and
+    handoff receipts, not through recaps, so the reference scan profile no
+    longer appends `recapext.New()` and the import is gone. The `exts/recap`
+    package itself is unchanged, so embedders that want recaps can still
+    compose it explicitly.
+    Tests: `go test ./cmd/cyber-scan -run TestProfileDoesNotLinkRecapWorker`
+    pins that the reference binary no longer links the recap package;
+    `go test ./cmd/cyber-scan` and `go build ./...` cover the profile itself.
+    Rollback: re-add the `recapext` import and `recapext.New()` to the session
+    extension list in `cmd/cyber-scan/profile.go`; no configuration or stored
+    data is affected.
+
+17. **Declare external MCP servers as operator configuration** (2026-11-18)
+    `exts/mcp/config.go`, `exts/mcp/config_test.go`,
+    `cmd/cyber-scan/{config.go,extensions.go,ioa_composition.go,config_test.go,mcp_test.go}`.
+    Root cause: `exts/mcp` could expose MCP servers as native bash commands, but
+    the reference distribution had no `mcp` configuration section and never
+    composed the extension, so an operator had no way to enable it. MCP servers
+    are per-deployment configuration, not a distribution capability. `exts/mcp`
+    now declares config section `mcp` (json `mcpServers`, the same schema as MCP
+    JSON config files), plus `Declare` for validation/`--init`/settings and
+    `ReadConfig`; the cyber-scan composition root declares the section, reads it
+    and appends the extension only when at least one server is configured. An
+    absent/empty section leaves the extension graph identical to a build without
+    MCP. The Hub uses its own profile-neutral declaration graph, so its build
+    and configuration schema are unchanged; per-host config files must still
+    keep host-specific sections out of the Hub's file.
+    Tests: `go test ./exts/mcp ./cmd/cyber-scan -run 'TestConfiguration|TestExtensionsInstallMCPOnlyWhenServersAreConfigured|TestApplicationConfig'`.
+    The config test pins raw and resolved decoding to the same server map and
+    rejects unknown server fields; the composition test pins install-on-
+    non-empty-only.
+    Rollback: remove the `mcp` declaration/read and the composition append, and
+    rebuild the executor; servers are external processes, so no data is
+    migrated.
+
+18. **Pluggable guardrail judges: Policy, LLM, hybrid, shadow and scope**
+    (2026-11-18, Tianwu P4-I guardrail judge)
+    `exts/guardrail/{policy.go,policy_llm.go,policy_hybrid.go,runtime.go,extension.go,jev.go}`,
+    `exts/guardrail/{admission_test.go,policy_llm_test.go,policy_hybrid_test.go,extension_config_test.go}`,
+    `cmd/cyber-scan/{profile.go,guardrail_provider_test.go}`,
+    `docs/configuration.md`, `docs/user/tools.md`.
+    Root cause: guardrail's only judge was JEV and its stages were two bare
+    function fields in `runtime.go`. The reference deployment needed a cheap
+    OpenAI-compatible judge, a hybrid that escalates only uncertain cases to
+    JEV, and a way to trial a judge without changing admission behavior
+    (shadow) or to limit judgment by tool name (scope) and to fail explicitly
+    (on_error). There was no shared abstraction, so any LLM code would have
+    leaked into the JEV/runtime path.
+    Shape: `Policy` (`Check`/`Confirm`) in `policy.go`; `jevPolicy` implements
+    it (existing `check`/`confirm` methods remain, so `provider=jev` decisions
+    are unchanged); `runtime.Admit` invokes only `Policy` and keeps the legacy
+    function seam for the disabled provider. `policy_llm.go` is an
+    OpenAI-compatible `/chat/completions` judge (temperature 0, max_tokens 128,
+    non-streaming, 3s default timeout, semaphore 8, robust three-way parser
+    accepting case/code fences/extra text/JSON confidence, redirects not
+    followed) whose failures map to `on_error` (`allow`/`review` default/
+    `block`) instead of surfacing provider errors; an on_error decision is
+    marked with negative confidence and hybrid keeps it final.
+    `policy_hybrid.go` escalates
+    a LLM `REVIEW` or a low-confidence (`<0.7`) `ALLOW` to JEV and maps JEV
+    `record`/`block`/`review` straight through; both stages are injected
+    `Policy` values so unit tests never need a real JEV. New `guardrail` fields
+    (`scope`, `allow_prefixes` safe-mode-only, `on_error`, `timeout`,
+    `concurrency`, `shadow`, `llm.{base_url,model,api_key,temperature,max_tokens}`)
+    are decoded/validated with readable Chinese reasons; JEV config fields are
+    untouched. Admit order: scope filter (unmatched calls are not judged and
+    emit no event) → Check/Confirm → emit the existing Decision/Review events →
+    shadow (record and always allow) → safe-mode literal command-prefix
+    allowlist → existing auto/safe handling. `on_error=allow` logs a WARN at
+    load. `cmd/cyber-scan` constructs the shared JEV client for
+    `provider=jev|hybrid` (or `jev.mode!=off`); `provider=llm` needs no JEV
+    client or credentials. When the JEV response carries usage, guardrail
+    publishes an AOP usage event (`Emitter=guardrail`) with the real tokens and
+    never fabricates accounting when usage is missing.
+    Judge accounting: the LLM judge previously reported no usage even though an
+    OpenAI-compatible response carries a `usage` block, so referee token cost was
+    invisible to the ledger for `provider=llm` and for the LLM stage of
+    `provider=hybrid`. `policy_llm.go` now parses
+    `prompt_tokens`/`completion_tokens`/`total_tokens` (plus
+    `prompt_tokens_details.cached_tokens` and top-level cache counters when a
+    gateway reports them) into `aop.TokenUsage` and publishes it through the
+    injected reporter as an AOP usage event with `Emitter=guardrail-llm`. JEV
+    keeps `Emitter=guardrail` (old-control-plane compatible), so the ledger
+    classifies both as referee cost while separating the vendors. Hybrid
+    publishes one event per stage and never merges them: one `guardrail-llm`
+    event for its LLM request and, only when it actually escalates, one
+    `guardrail` event for JEV. A missing usage block, a failed or unparsable
+    judgment, and caller cancellation emit nothing; absent counters stay zero
+    instead of being summed or estimated (the usage block is parsed separately
+    from the verdict so malformed accounting cannot turn a completed judgment
+    into a provider failure).
+    Tests:
+    `go build ./...`; `go vet ./exts/guardrail/... ./cmd/cyber-scan/...`;
+    `go test ./exts/guardrail ./cmd/cyber-scan -count=1 -timeout 10m` covers a
+    fake OpenAI server (ALLOW/REVIEW/BLOCK/timeout/status/parse failures,
+    three on_error states, concurrency cap, cancellation, redirect, oversized
+    evidence), scope/shadow/allow_prefixes admission, hybrid escalation with
+    two injected fake policies, provider enumeration, the LLM provider without
+    a JEV capability, the hybrid credential gate, and JEV/LLM/hybrid usage
+    reporting (fields, emitters, missing usage, failure/cancellation).
+    Rollback: delete `policy_llm.go`/`policy_hybrid.go`, restore the
+    `Policy`-free `runtime.go`/`extension.go` from the previous fork revision
+    and rebuild; configuration with only the old fields stays valid, so no
+    stored configuration or data migration is involved. For the accounting
+    part alone, drop the LLM reporter assignment and the `usage` parsing and
+    keep JEV's `usageReporter(stream, "guardrail")`; the extra usage events
+    carry no persisted state.
+
 ## Superseded patches
 
 These commits were on `tianwu/fixes` and are intentionally **not** carried after

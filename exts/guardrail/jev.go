@@ -12,6 +12,7 @@ import (
 	"time"
 
 	jevapi "github.com/chainreactors/cyber/agent/provider/jev"
+	"github.com/chainreactors/cyber/aop"
 	toolhooks "github.com/chainreactors/cyber/core/tool/hooks"
 )
 
@@ -50,10 +51,24 @@ func (c JEVConfig) validate() error {
 type jevPolicy struct {
 	config JEVConfig
 	client *jevapi.Client
+	// reportUsage receives per-judgment vendor token usage, if the response
+	// carried it. It is nil outside the extension composition and never
+	// fabricates accounting data.
+	reportUsage func(context.Context, *aop.TokenUsage)
 }
 
 func newJEVPolicy(c JEVConfig, client *jevapi.Client) *jevPolicy {
 	return &jevPolicy{config: c.defaults(), client: client}
+}
+
+// Check and Confirm make jevPolicy an admission Policy. The function-level
+// check/confirm methods remain the concrete stages used by existing tests.
+func (e *jevPolicy) Check(ctx context.Context, ev toolhooks.CallEvent) (*Decision, error) {
+	return e.check(ctx, ev)
+}
+
+func (e *jevPolicy) Confirm(ctx context.Context, ev toolhooks.CallEvent) (*Decision, error) {
+	return e.confirm(ctx, ev)
 }
 
 func (e *jevPolicy) check(ctx context.Context, ev toolhooks.CallEvent) (*Decision, error) {
@@ -132,6 +147,11 @@ func (e *jevPolicy) judgeWith(ctx context.Context, ev toolhooks.CallEvent, stage
 	choice, err := out.Choice("action", claim)
 	if err != nil {
 		return nil, err
+	}
+	if e.reportUsage != nil {
+		// The vendor response carries usage per request; a missing block stays
+		// missing rather than being estimated.
+		e.reportUsage(ctx, out.TokenUsage())
 	}
 	slog.Debug("JEV usage", "model", e.client.Model, "usage", out.TokenUsage())
 	policy, _ := json.Marshal([]any{stage, instructions, criteria})

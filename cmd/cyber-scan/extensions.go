@@ -11,6 +11,7 @@ import (
 	loopext "github.com/chainreactors/cyber/exts/agent"
 	arsenalext "github.com/chainreactors/cyber/exts/arsenal"
 	guardrailext "github.com/chainreactors/cyber/exts/guardrail"
+	mcpext "github.com/chainreactors/cyber/exts/mcp"
 	okfext "github.com/chainreactors/cyber/exts/okf"
 	protonext "github.com/chainreactors/cyber/exts/proton"
 	scannerext "github.com/chainreactors/cyber/exts/scanner"
@@ -87,6 +88,12 @@ func extensions(config appConfig, loop agent.Loop, workDir string, proxy extensi
 	}
 	if record != nil {
 		extensions = append(extensions, record)
+	}
+	// External MCP servers are operator configuration, not a distribution
+	// capability: an empty section keeps the graph identical to a build that
+	// never linked this extension.
+	if len(config.MCP.MCPServers) > 0 {
+		extensions = append(extensions, mcpext.New(config.MCP))
 	}
 	return extensions, nil
 }

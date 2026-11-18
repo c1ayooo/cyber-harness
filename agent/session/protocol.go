@@ -47,6 +47,62 @@ func sessionWorkspace(req *aop.OpenSessionRequest) workDirExtension {
 	return workDirExtension{}
 }
 
+// runGoalExtensionURL is the Tianwu fork's per-turn evaluator goal extension on
+// RunTurnRequest. Upstream derives the evaluator goal from the user input text
+// (NewLoopConfigWithInput); a control plane that owns the intent already knows
+// the short goal the evaluator should judge and keeps the executor's own brief
+// separate. The value is JSON: {"goal":"...","eval_rounds":"..."}, where
+// eval_rounds uses the same pacing spec as AgentRunOptions.eval_rounds. An
+// absent extension keeps the upstream behavior exactly.
+const runGoalExtensionURL = "type.googleapis.com/tianwu.RunGoal"
+
+type runGoalExtension struct {
+	Goal string `json:"goal"`
+	// EvalRounds is kept raw so a producer that models the round budget as a
+	// JSON number still delivers the goal instead of failing the whole value.
+	EvalRounds json.RawMessage `json:"eval_rounds"`
+}
+
+// evalRoundsText normalizes the optional pacing spec: a string is taken as-is,
+// a number is its decimal form, and null/invalid is empty.
+func evalRoundsText(raw json.RawMessage) string {
+	if len(raw) == 0 {
+		return ""
+	}
+	var text string
+	if err := json.Unmarshal(raw, &text); err == nil {
+		return strings.TrimSpace(text)
+	}
+	var number json.Number
+	if err := json.Unmarshal(raw, &number); err == nil {
+		return number.String()
+	}
+	return ""
+}
+
+// turnRunGoal returns the goal a control plane attached to this run request.
+// Empty means "derive the goal from the input message", which keeps old control
+// planes working.
+func turnRunGoal(req *aop.RunTurnRequest) (goal, rounds string) {
+	if req == nil {
+		return "", ""
+	}
+	for _, extension := range req.GetExtensions() {
+		if extension == nil || extension.GetTypeUrl() != runGoalExtensionURL {
+			continue
+		}
+		var value runGoalExtension
+		if err := json.Unmarshal(extension.GetValue(), &value); err != nil {
+			continue
+		}
+		goal, rounds = strings.TrimSpace(value.Goal), evalRoundsText(value.EvalRounds)
+		if goal != "" || rounds != "" {
+			return goal, rounds
+		}
+	}
+	return "", ""
+}
+
 func (rt *Runtime) OpenAOPSession(req *aop.OpenSessionRequest) *aop.OpenSessionResponse {
 	response := &aop.OpenSessionResponse{}
 	if rt == nil || req == nil || strings.TrimSpace(req.SessionId) == "" {
@@ -86,9 +142,16 @@ func (rt *Runtime) RunAOPTurn(ctx context.Context, req *aop.RunTurnRequest) *aop
 	if req.Input != nil {
 		message = protobuf.CloneOf(req.Input)
 	}
+	// A control plane may separate the evaluator's goal from the executor's
+	// turn message. Its own extension wins over AgentRunOptions.eval_rounds
+	// when both carry a pacing spec.
+	evalGoal, evalRounds := turnRunGoal(req)
+	if evalRounds == "" {
+		evalRounds = options.EvalRounds
+	}
 	_, err := rt.RunSession(ctx, req.SessionId, RunInput{
 		TurnID: req.TurnId, Message: message, Continue: req.ContinueSession,
-		MaxTurns: int(req.MaxTurns), EvalCriteria: options.EvalCriteria, EvalRounds: options.EvalRounds,
+		MaxTurns: int(req.MaxTurns), EvalCriteria: options.EvalCriteria, EvalRounds: evalRounds, EvalGoal: evalGoal,
 	})
 	if err != nil {
 		response.Outcome = &aop.RunTurnResponse_Rejected{Rejected: rejection("FAILED_PRECONDITION", err.Error())}

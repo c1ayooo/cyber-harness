@@ -33,7 +33,6 @@ import (
 	otelext "github.com/chainreactors/cyber/exts/otel"
 	proxyext "github.com/chainreactors/cyber/exts/proxy"
 	ptyext "github.com/chainreactors/cyber/exts/pty"
-	recapext "github.com/chainreactors/cyber/exts/recap"
 	sessionext "github.com/chainreactors/cyber/exts/session"
 	subagentext "github.com/chainreactors/cyber/exts/subagent"
 	tuiext "github.com/chainreactors/cyber/exts/tui"
@@ -137,7 +136,10 @@ func buildCyberScanProfile(config config) (*cyberScanProfile, error) {
 	// first. The observers follow it: they subscribe to hooks and to the event
 	// stream, both of which fire at run time rather than during load.
 	values := []extension.Extension{nodeext.New()}
-	if guardrailValue.Provider == "jev" || (jevConfig.Mode != "" && jevConfig.Mode != "off") {
+	// The LLM-only judge has no JEV dependency. JEV and hybrid need the shared
+	// client because hybrid escalates low-confidence/review judgments to JEV.
+	guardrailNeedsJEV := guardrailValue.Provider == "jev" || guardrailValue.Provider == "hybrid"
+	if guardrailNeedsJEV || (jevConfig.Mode != "" && jevConfig.Mode != "off") {
 		if strings.TrimSpace(jevConfig.APIKey) == "" {
 			return nil, fmt.Errorf("JEV requires jev.api_key or TYPESAFE_API_KEY")
 		}
@@ -260,7 +262,13 @@ func buildCyberScanProfile(config config) (*cyberScanProfile, error) {
 		values = append(values, ioaclient.NewConsole(ioaclient.ConsoleConfig{Space: config.IOA.Space, Endpoint: config.IOA.URL}))
 	}
 	if config.Session != nil {
-		values = append(values, ptyext.New(), recapext.New())
+		// The recap worker is intentionally not installed. It makes one extra
+		// summarization model call after every turn and does not report that
+		// call in token usage, so a control-plane that accounts per-run spend
+		// and pauses on quota would undercount it. Tianwu reviews work through
+		// its decision log and handoff receipts instead. Embedders that want
+		// recaps can still compose exts/recap explicitly.
+		values = append(values, ptyext.New())
 		agentConfig := *config.Session
 		agentConfig.BaseSkills = append([]string{"cyber"}, agentConfig.BaseSkills...)
 		agentConfig.NodeName = nodeName

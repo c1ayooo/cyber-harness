@@ -88,7 +88,10 @@ type RunInput struct {
 	MaxTurns     int
 	EvalCriteria string
 	EvalRounds   string
-	Continue     bool
+	// EvalGoal is the evaluator's goal when a control plane sent one instead of
+	// reusing the executor's input message. Empty derives the goal from Message.
+	EvalGoal string
+	Continue bool
 
 	automatic bool
 }
@@ -1388,6 +1391,11 @@ func (s *sessionState) executeRun(ctx context.Context, turnID string, input RunI
 	if input.EvalCriteria != "" {
 		config := s.agent.ConfigSnapshot()
 		evalConfig := evaluator.NewLoopConfigWithInput(config.Provider, config.Model, config.Logger, config.PromptResolver, message, input.EvalCriteria, input.EvalRounds)
+		// The turn message stays the executor's first input; only the goal the
+		// evaluator judges changes when the control plane sent its own.
+		if input.EvalGoal != "" {
+			evalConfig.Goal = input.EvalGoal
+		}
 		evalConfig.TurnID = turnID
 		result, _, err := evaluator.RunWithEval(ctx, s.agent, evalConfig,
 			agent.WithTurnID(turnID), agent.WithRunMaxTurns(input.MaxTurns))
