@@ -161,7 +161,7 @@ http:
 	}
 
 	proxyURL := "http://" + listener.Addr().String()
-	loaded, err := loadNeutronTemplatePaths([]string{path}, proxyURL)
+	loaded, _, err := loadNeutronTemplatePaths([]string{path}, proxyURL)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -255,5 +255,56 @@ func TestNeutronResultFromExecutionCarriesExchange(t *testing.T) {
 	}
 	if decoded["request"] != op.Request || decoded["response"] != op.Response {
 		t.Fatalf("exchange missing from JSON output: %#v", decoded)
+	}
+}
+
+// A template file can parse and still be dropped at compile time (protocol the
+// engine does not implement). The coverage count is what turns that silent drop
+// into a number the caller can see and report.
+func TestLoadNeutronTemplatePathsReportsCompileTimeDrops(t *testing.T) {
+	dir := t.TempDir()
+	write := func(name, body string) {
+		t.Helper()
+		if err := os.WriteFile(filepath.Join(dir, name), []byte(body), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	write("http.yaml", `id: fixture-http
+info:
+  name: fixture-http
+  severity: low
+http:
+  - method: GET
+    path:
+      - "{{BaseURL}}/"
+    matchers:
+      - type: word
+        words:
+          - fixture
+`)
+	write("unsupported.yaml", `id: fixture-javascript
+info:
+  name: fixture-javascript
+  severity: low
+javascript:
+  - code: |
+      log("fixture")
+`)
+
+	loaded, coverage, err := loadNeutronTemplatePaths([]string{dir}, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if coverage.Paths != 1 {
+		t.Fatalf("paths = %d, want 1", coverage.Paths)
+	}
+	if coverage.Parsed != 2 {
+		t.Fatalf("parsed = %d, want 2 (both files parse; one protocol is unsupported)", coverage.Parsed)
+	}
+	if coverage.Compiled != 1 || len(loaded) != 1 {
+		t.Fatalf("compiled = %d loaded = %d, want 1 (unsupported protocol dropped)", coverage.Compiled, len(loaded))
+	}
+	if loaded[0].Id != "fixture-http" {
+		t.Fatalf("loaded = %v, want fixture-http", loaded[0].Id)
 	}
 }

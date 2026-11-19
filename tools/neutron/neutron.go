@@ -21,6 +21,7 @@ import (
 	"github.com/chainreactors/neutron/templates"
 	sdkneutron "github.com/chainreactors/sdk/neutron"
 	"github.com/chainreactors/sdk/pkg/association"
+	"github.com/chainreactors/sdk/pkg/provider"
 	sdktypes "github.com/chainreactors/sdk/pkg/types"
 	goflags "github.com/jessevdk/go-flags"
 )
@@ -162,9 +163,20 @@ func (c *Command) Run(ctx context.Context, execution *coretool.Execution) (_ any
 	// compile time, so a zero-proxy loader would let an explicit template dial
 	// the target directly even though the command itself has a proxy configured.
 	proxyURL := coretool.ResolveExecutionEgress(execution, c.Proxy).ProxyURL
-	loadedTemplates, err := loadNeutronTemplatePaths(flags.Templates, proxyURL)
+	loadedTemplates, coverage, err := loadNeutronTemplatePaths(flags.Templates, proxyURL)
 	if err != nil {
 		return nil, err
+	}
+	// A template file can parse and still be dropped at compile time (protocol
+	// the engine does not implement). Without this line the difference between
+	// "the library had nothing for this target" and "the template never ran"
+	// stays invisible, which is exactly how a POC library silently stops
+	// contributing.
+	if coverage.Parsed != coverage.Compiled {
+		c.Logger.Warnf("neutron action=template-coverage paths=%d parsed=%d compiled=%d dropped=%d reason=\"unsupported protocol or invalid template body dropped at compile time; one bad YAML fails the whole -t load\"",
+			coverage.Paths, coverage.Parsed, coverage.Compiled, coverage.Parsed-coverage.Compiled)
+	} else if coverage.Parsed > 0 {
+		c.Logger.Infof("neutron action=template-coverage paths=%d parsed=%d compiled=%d", coverage.Paths, coverage.Parsed, coverage.Compiled)
 	}
 
 	opts := neutronExecuteOptions{
@@ -339,23 +351,40 @@ func readNeutronTargets(inputs []string, input, listFile string) ([]string, erro
 	return out, scanner.Err()
 }
 
-func loadNeutronTemplatePaths(paths []string, proxyURL string) ([]*templates.Template, error) {
+// templateCoverage counts what -t handed in versus what the engine can run.
+// A parsed template may still be dropped at compile time.
+type templateCoverage struct {
+	Paths    int
+	Parsed   int
+	Compiled int
+}
+
+func loadNeutronTemplatePaths(paths []string, proxyURL string) ([]*templates.Template, templateCoverage, error) {
 	if len(paths) == 0 {
-		return nil, nil
+		return nil, templateCoverage{}, nil
 	}
 	cfg := sdkneutron.NewConfig().WithProxy(proxyURL)
 	engine, err := sdkneutron.NewEngine(cfg.WithTemplates([]*templates.Template{minimalCompilableTemplate()}))
 	if err != nil {
-		return nil, fmt.Errorf("neutron: initialize template loader: %w", err)
+		return nil, templateCoverage{}, fmt.Errorf("neutron: initialize template loader: %w", err)
 	}
 	defer engine.Close()
+	var coverage templateCoverage
 	for _, path := range paths {
 		path = strings.TrimSpace(path)
 		if path == "" {
 			continue
 		}
-		if err := engine.AddPocsFile(path); err != nil {
-			return nil, fmt.Errorf("neutron: load templates %s: %w", path, err)
+		// Parse first so the parsed count is observable: AddPocsFile hides it,
+		// and without the input number a compile-time drop cannot be reported.
+		pocs, err := provider.NewFileProvider("", path).POCs(context.Background())
+		if err != nil {
+			return nil, templateCoverage{}, fmt.Errorf("neutron: load templates %s: %w", path, err)
+		}
+		coverage.Paths++
+		coverage.Parsed += len(pocs)
+		if err := engine.AddPocs(pocs); err != nil {
+			return nil, templateCoverage{}, fmt.Errorf("neutron: compile templates %s: %w", path, err)
 		}
 	}
 
@@ -366,7 +395,8 @@ func loadNeutronTemplatePaths(paths []string, proxyURL string) ([]*templates.Tem
 		}
 		loaded = append(loaded, tmpl)
 	}
-	return nonNilSortedTemplates(loaded), nil
+	coverage.Compiled = len(loaded)
+	return nonNilSortedTemplates(loaded), coverage, nil
 }
 
 const minimalTemplateID = "__cyber_neutron_loader__"
