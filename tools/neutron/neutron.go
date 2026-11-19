@@ -217,6 +217,7 @@ func (c *Command) Run(ctx context.Context, execution *coretool.Execution) (_ any
 		if result != "" {
 			fmt.Fprint(execution.Stdout, result)
 		}
+		emitCoverage(execution, coverage)
 		return nil, wErr
 	}
 
@@ -268,6 +269,7 @@ func (c *Command) Run(ctx context.Context, execution *coretool.Execution) (_ any
 		sb.WriteString(line)
 		fmt.Fprint(execution.Stdout, line)
 	}
+	emitCoverage(execution, coverage)
 	_, wErr := c.writeOrReturn(flags.OutputFile, sb.String())
 	return results, wErr
 }
@@ -357,6 +359,28 @@ type templateCoverage struct {
 	Paths    int
 	Parsed   int
 	Compiled int
+}
+
+func (c templateCoverage) Dropped() int {
+	if c.Parsed <= c.Compiled {
+		return 0
+	}
+	return c.Parsed - c.Compiled
+}
+
+// emitCoverage puts the compile-time drop count into the tool result itself, so
+// the model reads it in this turn and can write it down. The host log alone
+// leaves the difference between "the library had nothing" and "the template
+// never ran" invisible to the operator.
+//
+// It goes to stderr on purpose: stdout may be JSON lines (-j) or a redirected
+// file, and a notice line there would break the records the caller parses.
+func emitCoverage(execution *coretool.Execution, coverage templateCoverage) {
+	if execution == nil || execution.Stderr == nil || coverage.Dropped() == 0 {
+		return
+	}
+	fmt.Fprintf(execution.Stderr, "[neutron] template coverage: parsed=%d compiled=%d dropped=%d — unsupported protocol or invalid template body dropped at compile time; the -t set and the templates this run could use differ.\n",
+		coverage.Parsed, coverage.Compiled, coverage.Dropped())
 }
 
 func loadNeutronTemplatePaths(paths []string, proxyURL string) ([]*templates.Template, templateCoverage, error) {

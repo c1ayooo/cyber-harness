@@ -308,3 +308,25 @@ javascript:
 		t.Fatalf("loaded = %v, want fixture-http", loaded[0].Id)
 	}
 }
+
+// The drop count must reach the model through the tool result, not only the
+// host log; a clean run must print nothing.
+func TestEmitCoverageWritesOnlyWhenTemplatesAreDropped(t *testing.T) {
+	var dropped bytes.Buffer
+	emitCoverage(&coretool.Execution{Stderr: &dropped}, templateCoverage{Paths: 1, Parsed: 3, Compiled: 2})
+	line := dropped.String()
+	for _, want := range []string{"parsed=3", "compiled=2", "dropped=1", "unsupported protocol", "invalid template body"} {
+		if !strings.Contains(line, want) {
+			t.Fatalf("coverage notice missing %q: %q", want, line)
+		}
+	}
+
+	var clean bytes.Buffer
+	emitCoverage(&coretool.Execution{Stderr: &clean}, templateCoverage{Paths: 1, Parsed: 2, Compiled: 2})
+	if clean.Len() != 0 {
+		t.Fatalf("clean coverage wrote a notice: %q", clean.String())
+	}
+
+	// A direct caller may leave stderr unset; that must not panic.
+	emitCoverage(&coretool.Execution{}, templateCoverage{Parsed: 2, Compiled: 1})
+}
