@@ -86,10 +86,15 @@ func New(cfg Config) *Evaluator {
 	return &Evaluator{cfg: cfg}
 }
 
-func (e *Evaluator) Evaluate(ctx context.Context, req Request) (*Verdict, error) {
+// Evaluate judges one round and returns the tokens that judgement cost. The
+// usage is returned rather than logged away: an evaluator call is a model call
+// on the same connection, so leaving it out of the run's usage makes every
+// reported cost systematically low. A nil usage stays nil — an unknown figure
+// must read as unknown, not as a fabricated zero.
+func (e *Evaluator) Evaluate(ctx context.Context, req Request) (*Verdict, *aop.TokenUsage, error) {
 	trace := buildTrace(req.Messages, req.Output, req.Turns, req.ContextTokens, e.cfg.ContextWindow)
 	if e.cfg.Prompts == nil {
-		return nil, fmt.Errorf("evaluator prompt resolver is nil")
+		return nil, nil, fmt.Errorf("evaluator prompt resolver is nil")
 	}
 	input := prompt.Context{Evaluation: prompt.EvaluationContext{
 		Goal: req.Goal, Criteria: req.Criteria, Progress: buildProgress(req), Trace: trace,
@@ -104,10 +109,14 @@ func (e *Evaluator) Evaluate(ctx context.Context, req Request) (*Verdict, error)
 	requestPrompt := requestResult.Prompt
 
 	var lastErr error
+	var usage *aop.TokenUsage
 	for attempt := 0; attempt < e.cfg.MaxRetries; attempt++ {
-		v, err := e.call(ctx, systemResult.Prompt, requestPrompt)
+		v, attemptUsage, err := e.call(ctx, systemResult.Prompt, requestPrompt)
+		// Every attempt that reached the provider consumed tokens, including the
+		// failed ones: a retry is not free.
+		usage = addTokenUsage(usage, attemptUsage)
 		if err == nil {
-			return v, nil
+			return v, usage, nil
 		}
 		lastErr = err
 		e.cfg.Logger.Warnf("evaluate attempt %d failed: %s", attempt+1, err)
@@ -115,11 +124,31 @@ func (e *Evaluator) Evaluate(ctx context.Context, req Request) (*Verdict, error)
 			select {
 			case <-time.After(time.Duration(attempt+1) * time.Second):
 			case <-ctx.Done():
-				return nil, ctx.Err()
+				return nil, usage, ctx.Err()
 			}
 		}
 	}
-	return nil, fmt.Errorf("evaluate failed after %d attempts: %w", e.cfg.MaxRetries, lastErr)
+	return nil, usage, fmt.Errorf("evaluate failed after %d attempts: %w", e.cfg.MaxRetries, lastErr)
+}
+
+// addTokenUsage sums two usage records. A nil next leaves total untouched, so
+// "the provider did not report usage" and "usage was zero" stay distinguishable.
+func addTokenUsage(total, next *aop.TokenUsage) *aop.TokenUsage {
+	if next == nil {
+		return total
+	}
+	if total == nil {
+		total = &aop.TokenUsage{Detail: map[string]uint64{}}
+	}
+	if total.Detail == nil {
+		total.Detail = map[string]uint64{}
+	}
+	total.InputTokens += next.InputTokens
+	total.OutputTokens += next.OutputTokens
+	total.TotalTokens += next.TotalTokens
+	total.Detail["cache_read"] += next.Detail["cache_read"]
+	total.Detail["cache_write"] += next.Detail["cache_write"]
+	return total
 }
 
 var verdictTool = func() *aop.ToolDefinition {
@@ -142,7 +171,7 @@ var verdictTool = func() *aop.ToolDefinition {
 	}
 }()
 
-func (e *Evaluator) call(ctx context.Context, systemPrompt, userPrompt string) (*Verdict, error) {
+func (e *Evaluator) call(ctx context.Context, systemPrompt, userPrompt string) (*Verdict, *aop.TokenUsage, error) {
 	temp := float64(0)
 	resp, err := e.cfg.Provider.ChatCompletion(ctx, &provider.ChatCompletionRequest{
 		Model: e.cfg.Model,
@@ -155,22 +184,22 @@ func (e *Evaluator) call(ctx context.Context, systemPrompt, userPrompt string) (
 		Temperature: &temp,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("LLM call: %w", err)
+		return nil, nil, fmt.Errorf("LLM call: %w", err)
 	}
 	if len(resp.Choices) == 0 {
-		return nil, fmt.Errorf("no choices returned")
+		return nil, resp.Usage, fmt.Errorf("no choices returned")
 	}
 
 	for _, call := range provider.MessageToolCalls(resp.Choices[0].Message) {
 		if call.Name == "verdict" {
 			var v Verdict
 			if err := json.Unmarshal(call.GetArguments().GetData(), &v); err != nil {
-				return nil, fmt.Errorf("unmarshal verdict: %w", err)
+				return nil, resp.Usage, fmt.Errorf("unmarshal verdict: %w", err)
 			}
-			return &v, nil
+			return &v, resp.Usage, nil
 		}
 	}
-	return nil, fmt.Errorf("model did not call verdict tool")
+	return nil, resp.Usage, fmt.Errorf("model did not call verdict tool")
 }
 
 // buildProgress shows the evaluator what its earlier rounds asked for and what

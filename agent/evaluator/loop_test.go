@@ -135,6 +135,53 @@ func TestRunWithEvalPreservesInitialInputAndEmitsCanonicalUserMessage(t *testing
 	}
 }
 
+// The evaluator is a model call like any other: its tokens must land in the
+// run's usage, or every evaluated turn is reported cheaper than it was.
+func TestRunWithEvalCountsEvaluatorTokensInRunUsage(t *testing.T) {
+	agentProvider := &fixedProvider{response: &provider.ChatCompletionResponse{
+		Choices: []provider.Choice{{Message: provider.TextMessage("assistant", "done")}},
+		Usage:   &aop.TokenUsage{InputTokens: 1000, OutputTokens: 100, TotalTokens: 1100, Detail: map[string]uint64{"cache_read": 200}},
+	}}
+	verdictProvider := &fixedProvider{response: &provider.ChatCompletionResponse{
+		Choices: []provider.Choice{{Message: &aop.Message{
+			Role: "assistant",
+			Content: []*aop.Content{
+				{Value: &aop.Content_ToolCall{ToolCall: &aop.ToolCall{
+					Id:   "verdict-1",
+					Name: "verdict",
+					Kind: "function",
+					Arguments: &aop.EncodedValue{
+						Data:      []byte(`{"pass":true,"reason":"done","feedback":"","inherit_context":true}`),
+						MediaType: aop.JSONMediaType,
+					},
+				}}},
+			},
+		}}},
+		Usage: &aop.TokenUsage{InputTokens: 50, OutputTokens: 10, TotalTokens: 60, Detail: map[string]uint64{}},
+	}}
+	ag := agent.NewAgent(agent.Config{Loop: agent.StandardLoop{}, Provider: agentProvider, Model: "test"})
+	result, verdict, err := RunWithEval(context.Background(), ag,
+		NewLoopConfig(verdictProvider, "test", nil, evaluatorTestPrompts{}, "finish the task", "finish the task", "1"))
+	if err != nil {
+		t.Fatalf("RunWithEval() error = %v", err)
+	}
+	if verdict == nil || !verdict.Pass {
+		t.Fatalf("verdict = %+v", verdict)
+	}
+	if result == nil || result.TotalUsage == nil {
+		t.Fatalf("run carried no usage: %+v", result)
+	}
+	if got := result.TotalUsage.InputTokens; got != 1050 {
+		t.Fatalf("input tokens = %d, want 1050 (agent 1000 + evaluator 50)", got)
+	}
+	if got := result.TotalUsage.OutputTokens; got != 110 {
+		t.Fatalf("output tokens = %d, want 110 (agent 100 + evaluator 10)", got)
+	}
+	if got := result.TotalUsage.Detail["cache_read"]; got != 200 {
+		t.Fatalf("cache_read = %d, want 200", got)
+	}
+}
+
 // scriptedProvider answers with a queued response per call, repeating the last
 // one once the script runs out.
 type scriptedProvider struct {

@@ -120,7 +120,7 @@ func RunWithEval(ctx context.Context, a *agent.Agent, cfg EvalLoopConfig, opts .
 
 		a.EmitStatus(types.EvalStateStart, &types.EvalDetail{Round: uint32(round), MaxRounds: uint32(cfg.Budget.Ceiling)}, cfg.TurnID)
 
-		verdict, evalErr := cfg.Evaluator.Evaluate(ctx, Request{
+		verdict, evalUsage, evalErr := cfg.Evaluator.Evaluate(ctx, Request{
 			Goal:          cfg.Goal,
 			Criteria:      cfg.Criteria,
 			Messages:      result.Messages,
@@ -132,6 +132,10 @@ func RunWithEval(ctx context.Context, a *agent.Agent, cfg EvalLoopConfig, opts .
 			Guidance:      cfg.Budget.Guidance,
 			History:       history,
 		})
+		// The evaluator is a model call on the same connection: its tokens belong
+		// to this run's usage even when the judgement failed. Without this the
+		// cost we report for every evaluated turn is systematically low.
+		accumulate(evalUsage)
 
 		if evalErr != nil {
 			evalErrors++
