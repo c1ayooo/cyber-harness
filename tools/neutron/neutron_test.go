@@ -52,6 +52,19 @@ func TestUsageIsGeneratedFromNeutronFlags(t *testing.T) {
 	}
 }
 
+// The template-set default belongs to the tool: without -t only the built-in
+// set runs, and a -t load replaces that set instead of adding to it. A control
+// plane that had to restate the flag in its own prompt because the quick
+// reference was silent duplicated this contract and could drift from it.
+func TestQuickReferenceStatesTemplateSetDefault(t *testing.T) {
+	quick := New(nil, nil).QuickReference()
+	for _, want := range []string{"replace the built-in set", "built-in set only"} {
+		if !strings.Contains(quick, want) {
+			t.Fatalf("QuickReference missing template-set default %q: %s", want, quick)
+		}
+	}
+}
+
 func TestSelectNeutronTemplatesFiltersByCommonMetadata(t *testing.T) {
 	engine := newTestNeutronEngine(t,
 		testTemplate("critical-cve", "critical", "cve,rce", "nginx"),

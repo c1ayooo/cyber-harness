@@ -105,7 +105,8 @@ func (c *Command) Usage() string {
 func (c *Command) QuickReference() string {
 	return `### neutron — POC/vulnerability scanner (nuclei-style)
   -i, -u <target>  Target URL/host (repeatable, -l for list file)
-  -t <path>        Extra template file or directory
+  -t <path>        Template file or directory; given ones replace the built-in set,
+                   omitted means the built-in set only
   --finger <name>  Only run templates matching these fingerprints
   --tags <tags>    Filter templates by tag;  -s <sev>  Filter by severity
   --id <ids>       Run specific template IDs;  --template-list  List and exit

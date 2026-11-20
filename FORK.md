@@ -456,6 +456,26 @@ covered it. Do not keep a patch just because it has been there for a while.
     keep JEV's `usageReporter(stream, "guardrail")`; the extra usage events
     carry no persisted state.
 
+19. **`docs(neutron): state the template-set default in the quick reference`**
+    (2026-11-20, Tianwu duplicate-submission cleanup)
+    `tools/neutron/neutron.go`, `tools/neutron/neutron_test.go`.
+    Root cause: `QuickReference()` listed `-t <path>` as "Extra template file or
+    directory" and said nothing about the default, while the engine treats a `-t`
+    load as the whole template set (`RestrictToTemplates` is set whenever
+    templates were loaded). A control plane that has to know which templates run
+    therefore restated the flag and its default inside its own dispatch prompt,
+    creating a second copy of the tool contract that drifts as soon as either
+    side changes. The quick reference now states that the given templates
+    replace the built-in set and that omitting `-t` means the built-in set only;
+    the example commands, the flags and the selection behavior are unchanged.
+    Test: `go test ./tools/neutron -count=1`. The new
+    `TestQuickReferenceStatesTemplateSetDefault` fails if that sentence is
+    removed; the existing `TestUsageIsGeneratedFromNeutronFlags` flag assertions
+    are kept.
+    Rollback: restore the previous fork revision and rebuild the executor. This
+    is quick-reference text only, so no session data, configuration or ledger
+    migration is involved.
+
 ## Superseded patches
 
 These commits were on `tianwu/fixes` and are intentionally **not** carried after
