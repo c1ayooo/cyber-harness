@@ -8,6 +8,8 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -78,5 +80,64 @@ func TestRunCommandChild(t *testing.T) {
 	fmt.Printf("%s:%s:%s", os.Getenv("RUN_COMMAND_VALUE"), input, dir)
 	if os.Getenv("RUN_COMMAND_FAIL") == "7" {
 		os.Exit(7)
+	}
+}
+
+func TestPosixDrivePath(t *testing.T) {
+	cases := []struct {
+		in   string
+		want string
+		ok   bool
+	}{
+		{"/c/Windows/System32/curl.exe", `C:\Windows\System32\curl.exe`, true},
+		{"/D/tools/x.exe", `D:\tools\x.exe`, true},
+		{"/tmp/f.json", "", false},         // not a drive path
+		{"/c", "", false},                  // too short to be a path
+		{"/cc/x", "", false},               // second char after the slash must be one letter
+		{"C:/Windows/curl.exe", "", false}, // already native
+		{"curl", "", false},
+	}
+	for _, tc := range cases {
+		got, ok := posixDrivePath(tc.in)
+		if runtime.GOOS != "windows" {
+			if ok {
+				t.Fatalf("posixDrivePath(%q) converted on %s", tc.in, runtime.GOOS)
+			}
+			continue
+		}
+		if ok != tc.ok || got != tc.want {
+			t.Errorf("posixDrivePath(%q) = %q,%v want %q,%v", tc.in, got, ok, tc.want, tc.ok)
+		}
+	}
+}
+
+// An MSYS-style absolute path must reach the real program on Windows: the
+// shell is POSIX but the binaries are native (2026-11-20: /c/WINDOWS/system32/
+// curl.exe failed while C:\WINDOWS\system32\curl.exe worked).
+func TestRunCommandAcceptsPosixDrivePath(t *testing.T) {
+	if runtime.GOOS != "windows" {
+		t.Skip("drive-letter mapping is a Windows path rule")
+	}
+	root := os.Getenv("SystemRoot")
+	if root == "" {
+		t.Skip("no SystemRoot")
+	}
+	native := filepath.Join(root, "System32", "cmd.exe")
+	if _, err := os.Stat(native); err != nil {
+		t.Skipf("cmd.exe not found: %v", err)
+	}
+	// C:\Windows\System32\cmd.exe -> /c/Windows/System32/cmd.exe
+	drive := strings.ToLower(string(root[0]))
+	posix := "/" + drive + strings.ReplaceAll(root[2:], `\`, "/") + "/System32/cmd.exe"
+
+	var output bytes.Buffer
+	_, err := RunCommand(t.Context(), nil, []string{posix, "/c", "echo", "mapped"}, &Execution{
+		Dir: t.TempDir(), Stdout: &output, Stderr: &output,
+	})
+	if err != nil {
+		t.Fatalf("run %s: %v", posix, err)
+	}
+	if !strings.Contains(strings.ToLower(output.String()), "mapped") {
+		t.Fatalf("output = %q", output.String())
 	}
 }

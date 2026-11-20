@@ -84,6 +84,8 @@ Supported options:
   -m, --max-time <s>           Overall timeout, seconds
       --http2                  Prefer HTTP/2
       --http1.1                Force HTTP/1.1
+      --tlsv1, --tlsv1.0       Require at least TLS 1.0
+      --tlsv1.1/.2/.3          Require at least that TLS version
       --resolve host:port:addr Route a host/port to an explicit address
       --connect-to h1:p1:h2:p2  Connect to h2:p2 while preserving the URL host and TLS name
       --path-as-is             Preserve dot segments in the URL path

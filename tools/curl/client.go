@@ -230,6 +230,12 @@ func isTimeoutError(err error) bool {
 
 func (c *Command) buildClient(proxyURL, caPath string, req *Request) (*http.Client, error) {
 	tlsConfig := &tls.Config{MinVersion: tls.VersionTLS12}
+	// --tlsv1[.0-.3] lowers (or raises) the handshake floor; it is a minimum,
+	// so a server offering a newer version still handshakes. The zero value
+	// keeps the 1.2 default.
+	if req.TLSMinVersion != 0 {
+		tlsConfig.MinVersion = req.TLSMinVersion
+	}
 	switch {
 	case req.Insecure:
 		tlsConfig.InsecureSkipVerify = true

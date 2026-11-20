@@ -1,6 +1,7 @@
 package curl
 
 import (
+	"crypto/tls"
 	"fmt"
 	"math"
 	"strconv"
@@ -79,6 +80,11 @@ type Request struct {
 
 	ConnectTimeout time.Duration // --connect-timeout
 	MaxTime        time.Duration // --max-time
+
+	// TLSMinVersion is the handshake floor selected by --tlsv1[.0-.3]. Zero
+	// means the client default (TLS 1.2). curl's flags are a minimum, not a
+	// pin, so a server offering a newer version is still acceptable.
+	TLSMinVersion uint16
 }
 
 // ResolveEntry describes one --resolve mapping. Addresses are tried in order
@@ -395,6 +401,16 @@ func (r *Request) applyLong(name string, need func() (string, error)) error {
 	case "http1.1":
 		r.HTTP2 = false
 		r.HTTP11 = true
+	case "tlsv1", "tlsv1.0":
+		// curl's --tlsv1 selects TLS 1.0 or later; --tlsv1.0 is its explicit
+		// spelling. Both are a floor, not a pin, so they only lower MinVersion.
+		r.TLSMinVersion = tls.VersionTLS10
+	case "tlsv1.1":
+		r.TLSMinVersion = tls.VersionTLS11
+	case "tlsv1.2":
+		r.TLSMinVersion = tls.VersionTLS12
+	case "tlsv1.3":
+		r.TLSMinVersion = tls.VersionTLS13
 	case "path-as-is":
 		r.PathAsIs = true
 	case "resolve":

@@ -3,6 +3,7 @@ package curl
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -45,7 +46,7 @@ func TestGetWritesBody(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	out, _, err := run(t, []string{srv.URL}, "", "")
+	out, _, err := run(t, []string{"-k", srv.URL}, "", "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -105,7 +106,7 @@ func TestDefaultBrowserHeaders(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	if _, _, err := run(t, []string{srv.URL}, "", ""); err != nil {
+	if _, _, err := run(t, []string{"-k", srv.URL}, "", ""); err != nil {
 		t.Fatal(err)
 	}
 	if ua := got.Get("User-Agent"); !strings.Contains(ua, "Chrome/") {
@@ -230,6 +231,72 @@ func TestFollowRedirect(t *testing.T) {
 	}
 	if out != "final 200 1 "+srv.URL+"/b" {
 		t.Fatalf("expected followed body, got %q", out)
+	}
+}
+
+// --tlsv1[.0-.3] sets the handshake floor. A server capped at TLS 1.2 proves
+// the floor is applied: the default client still connects, --tlsv1.3 must fail.
+// (Lowering below 1.2 is covered by the transport wiring test, because Go no
+// longer serves TLS 1.0/1.1.)
+func TestTLSVersionFlagRaisesHandshakeFloor(t *testing.T) {
+	srv := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("capped"))
+	}))
+	srv.TLS = &tls.Config{MaxVersion: tls.VersionTLS12}
+	srv.StartTLS()
+	defer srv.Close()
+
+	if out, _, err := run(t, []string{"-k", srv.URL}, "", ""); err != nil || out != "capped" {
+		t.Fatalf("default floor output=%q err=%v", out, err)
+	}
+	if _, _, err := run(t, []string{"-k", "--tlsv1.3", srv.URL}, "", ""); err == nil {
+		t.Fatalf("--tlsv1.3 accepted a TLS 1.2-only server")
+	}
+}
+
+func TestTLSVersionFlagWiresTransport(t *testing.T) {
+	cases := map[string]uint16{
+		"":          tls.VersionTLS12, // client default
+		"--tlsv1.1": tls.VersionTLS11,
+		"--tlsv1.2": tls.VersionTLS12,
+		"--tlsv1.3": tls.VersionTLS13,
+	}
+	for flag, want := range cases {
+		args := []string{"https://example.test/"}
+		if flag != "" {
+			args = append([]string{flag}, args...)
+		}
+		req, err := Parse(args)
+		if err != nil {
+			t.Fatalf("%s parse: %v", flag, err)
+		}
+		client, err := New().buildClient("", "", req)
+		if err != nil {
+			t.Fatalf("%s client: %v", flag, err)
+		}
+		transport, ok := client.Transport.(*http.Transport)
+		if !ok || transport.TLSClientConfig == nil {
+			t.Fatalf("%s: no TLS transport", flag)
+		}
+		if got := transport.TLSClientConfig.MinVersion; got != want {
+			t.Errorf("%s MinVersion = %#x, want %#x", flag, got, want)
+		}
+	}
+}
+
+func TestTLSVersionFlagsParse(t *testing.T) {
+	cases := map[string]uint16{
+		"--tlsv1":   tls.VersionTLS10,
+		"--tlsv1.0": tls.VersionTLS10,
+		"--tlsv1.1": tls.VersionTLS11,
+		"--tlsv1.2": tls.VersionTLS12,
+		"--tlsv1.3": tls.VersionTLS13,
+	}
+	for flag, want := range cases {
+		req, err := Parse([]string{flag, "https://example.test/"})
+		if err != nil || req.TLSMinVersion != want {
+			t.Errorf("%s = %#x, err=%v; want %#x", flag, req.TLSMinVersion, err, want)
+		}
 	}
 }
 
