@@ -3,6 +3,7 @@ package aopws
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -27,6 +28,37 @@ type Options struct {
 	PongTimeout  time.Duration
 }
 
+// CloseReason names why this side ends the stream. The reason travels on the
+// close frame, so the far side can tell an intentional shutdown from a socket
+// that stopped working without reading the transport error. It is a fixed set,
+// not free-form text: a peer that has to parse prose to decide whether the link
+// is unstable is back to guessing.
+type CloseReason uint8
+
+const (
+	// CloseGoingAway: this side shuts the stream down on purpose.
+	CloseGoingAway CloseReason = iota
+	// CloseReadFailed: this side stopped receiving from the peer.
+	CloseReadFailed
+	// CloseWriteFailed: this side could not deliver to the peer.
+	CloseWriteFailed
+)
+
+// closeFrameTimeout bounds the last write a dying connection gets. A socket that
+// already failed takes no frame, so this only decides how long Close may wait.
+const closeFrameTimeout = time.Second
+
+func (r CloseReason) frame() []byte {
+	switch r {
+	case CloseReadFailed:
+		return websocket.FormatCloseMessage(websocket.CloseInternalServerErr, "read failed")
+	case CloseWriteFailed:
+		return websocket.FormatCloseMessage(websocket.CloseInternalServerErr, "write failed")
+	default:
+		return websocket.FormatCloseMessage(websocket.CloseGoingAway, "host closing")
+	}
+}
+
 // Stream owns WebSocket framing, liveness and serialized writes for one AOP
 // connection. The caller retains responsibility for dialing or upgrading it.
 type Stream struct {
@@ -38,6 +70,15 @@ type Stream struct {
 	writeMu   sync.Mutex
 	closeOnce sync.Once
 	done      chan struct{}
+
+	// stateMu guards the close plan: the first local failure, not the later
+	// Close call, is the real reason the stream ends; a peer that opened the
+	// close handshake itself gets no frame from us (the protocol echo already
+	// went out on the read path).
+	stateMu   sync.Mutex
+	failure   CloseReason
+	failed    bool
+	peerClose bool
 }
 
 func New(ctx context.Context, conn *websocket.Conn, options Options) (*Stream, error) {
@@ -76,6 +117,12 @@ func New(ctx context.Context, conn *websocket.Conn, options Options) (*Stream, e
 func (s *Stream) Recv() (*aop.Envelope, error) {
 	_, data, err := s.conn.ReadMessage()
 	if err != nil {
+		var peerClose *websocket.CloseError
+		if errors.As(err, &peerClose) {
+			s.markPeerClose()
+		} else {
+			s.markFailure(CloseReadFailed)
+		}
 		return nil, err
 	}
 	envelope := new(aop.Envelope)
@@ -118,10 +165,46 @@ func (s *Stream) Send(envelope *aop.Envelope) error {
 	}
 	if s.writeTimeout > 0 {
 		if err := s.conn.SetWriteDeadline(time.Now().Add(s.writeTimeout)); err != nil {
+			s.markFailure(CloseWriteFailed)
 			return err
 		}
 	}
-	return s.conn.WriteMessage(frame, data)
+	err = s.conn.WriteMessage(frame, data)
+	if err != nil {
+		s.markFailure(CloseWriteFailed)
+	}
+	return err
+}
+
+// markFailure records the first local transport failure this stream saw.
+func (s *Stream) markFailure(reason CloseReason) {
+	s.stateMu.Lock()
+	defer s.stateMu.Unlock()
+	if !s.failed {
+		s.failure, s.failed = reason, true
+	}
+}
+
+// markPeerClose records that the peer started the close handshake.
+func (s *Stream) markPeerClose() {
+	s.stateMu.Lock()
+	defer s.stateMu.Unlock()
+	s.peerClose = true
+}
+
+// closePlan says what to put on our close frame, and whether to send one at
+// all. A peer-initiated close gets none: sending a second frame would describe
+// an ending the peer already caused.
+func (s *Stream) closePlan() (CloseReason, bool) {
+	s.stateMu.Lock()
+	defer s.stateMu.Unlock()
+	if s.peerClose {
+		return 0, false
+	}
+	if s.failed {
+		return s.failure, true
+	}
+	return CloseGoingAway, true
 }
 
 func (s *Stream) Close() error {
@@ -131,6 +214,13 @@ func (s *Stream) Close() error {
 	var err error
 	s.closeOnce.Do(func() {
 		close(s.done)
+		// Tell the peer why this side is going away before dropping the socket:
+		// a bare FIN carries no reason, and the far side cannot then tell a
+		// shutdown from a broken link. Best effort by design — a socket that
+		// already failed takes no frame.
+		if reason, send := s.closePlan(); send {
+			_ = s.conn.WriteControl(websocket.CloseMessage, reason.frame(), time.Now().Add(closeFrameTimeout))
+		}
 		err = s.conn.Close()
 	})
 	return err
@@ -175,7 +265,11 @@ func (s *Stream) ping() error {
 	if s.writeTimeout > 0 {
 		deadline = time.Now().Add(s.writeTimeout)
 	}
-	return s.conn.WriteControl(websocket.PingMessage, nil, deadline)
+	err := s.conn.WriteControl(websocket.PingMessage, nil, deadline)
+	if err != nil {
+		s.markFailure(CloseWriteFailed)
+	}
+	return err
 }
 
 var _ aop.EnvelopeStream = (*Stream)(nil)
