@@ -58,7 +58,7 @@ type neutronFlags struct {
 	MatchOnly         bool     `long:"match-only" description:"Only print matched templates"`
 	AllResults        bool     `long:"all" description:"Print both matched and unmatched templates"`
 	TemplateList      bool     `long:"template-list" description:"List selected templates and exit"`
-	RestrictTemplates bool     `long:"restrict-templates" description:"Use only templates from --templates instead of merging with embedded templates"`
+	RestrictTemplates bool     `long:"restrict-templates" description:"Run only the templates named by --templates (already implied when --templates is given); alone, with no --templates, it selects nothing"`
 	Debug             bool     `long:"debug" description:"Enable debug logging"`
 }
 
