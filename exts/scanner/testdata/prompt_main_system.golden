@@ -12,6 +12,7 @@ Operating System: linux/amd64
 Session Started: 2026-01-01T00:00:00Z
 Hostname: test-host
 Node: node-1
+Shell: the bash tool runs an embedded POSIX interpreter, not a system bash; external programs it starts still run on this host, so they are reached through PATH (/usr/bin and friends) and the working directory is a POSIX absolute path.
 
 ## Available Tools
 
