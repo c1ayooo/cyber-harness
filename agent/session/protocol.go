@@ -103,6 +103,45 @@ func turnRunGoal(req *aop.RunTurnRequest) (goal, rounds string) {
 	return "", ""
 }
 
+// toolEnvExtensionURL is the control plane's per-turn tool environment extension
+// on RunTurnRequest: JSON {"env":{"KEY":"VALUE",…}}. The host gives the names no
+// meaning beyond passing them to every tool subprocess of the turn, so a session
+// shell can reach the control plane's API without the model guessing URLs. The
+// values are not logged, journaled, or echoed. A host that predates it ignores
+// the unknown extension.
+const toolEnvExtensionURL = "type.googleapis.com/tianwu.ToolEnv"
+
+type toolEnvExtension struct {
+	Env map[string]string `json:"env"`
+}
+
+// turnToolEnv returns the per-turn tool environment as KEY=VALUE pairs.
+func turnToolEnv(req *aop.RunTurnRequest) []string {
+	if req == nil {
+		return nil
+	}
+	for _, extension := range req.GetExtensions() {
+		if extension == nil || extension.GetTypeUrl() != toolEnvExtensionURL {
+			continue
+		}
+		var value toolEnvExtension
+		if err := json.Unmarshal(extension.GetValue(), &value); err != nil {
+			continue
+		}
+		if len(value.Env) == 0 {
+			return nil
+		}
+		env := make([]string, 0, len(value.Env))
+		for key, val := range value.Env {
+			if key != "" {
+				env = append(env, key+"="+val)
+			}
+		}
+		return env
+	}
+	return nil
+}
+
 func (rt *Runtime) OpenAOPSession(req *aop.OpenSessionRequest) *aop.OpenSessionResponse {
 	response := &aop.OpenSessionResponse{}
 	if rt == nil || req == nil || strings.TrimSpace(req.SessionId) == "" {
@@ -152,6 +191,7 @@ func (rt *Runtime) RunAOPTurn(ctx context.Context, req *aop.RunTurnRequest) *aop
 	_, err := rt.RunSession(ctx, req.SessionId, RunInput{
 		TurnID: req.TurnId, Message: message, Continue: req.ContinueSession,
 		MaxTurns: int(req.MaxTurns), EvalCriteria: options.EvalCriteria, EvalRounds: evalRounds, EvalGoal: evalGoal,
+		ToolEnv: turnToolEnv(req),
 	})
 	if err != nil {
 		response.Outcome = &aop.RunTurnResponse_Rejected{Rejected: rejection("FAILED_PRECONDITION", err.Error())}

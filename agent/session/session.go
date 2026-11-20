@@ -92,6 +92,10 @@ type RunInput struct {
 	// reusing the executor's input message. Empty derives the goal from Message.
 	EvalGoal string
 	Continue bool
+	// ToolEnv is the per-turn environment a control plane attached (KEY=VALUE),
+	// merged into every tool subprocess this turn starts. Empty for a turn that
+	// sent none, so nothing from a prior turn leaks into it.
+	ToolEnv []string
 
 	automatic bool
 }
@@ -1355,6 +1359,11 @@ func (s *sessionState) executeRun(ctx context.Context, turnID string, input RunI
 		}
 	}()
 	s.refreshProvider()
+	// A control plane may attach a per-turn tool environment; carry it on the run
+	// context so every tool call this turn makes inherits it, without mutating the
+	// shared BashTool base environment (that would leak one session's token to
+	// another on the same host).
+	ctx = operation.ContextWithToolEnv(ctx, input.ToolEnv)
 	if input.automatic {
 		return s.agent.Continue(ctx, agent.WithTurnID(turnID), agent.WithRunMaxTurns(input.MaxTurns))
 	}

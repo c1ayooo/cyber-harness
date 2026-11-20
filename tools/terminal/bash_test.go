@@ -22,6 +22,38 @@ import (
 	"github.com/chainreactors/utils/proc"
 )
 
+// A control plane's per-turn tool environment must reach the shell the model
+// actually runs in — the embedded interpreter, not a real bash — and must not
+// survive into a later turn. This is the path that failed when the session init
+// was delivered only through BASH_ENV, which the interpreter never sources.
+func TestExecuteCarriesPerTurnToolEnvIntoTheInterpreter(t *testing.T) {
+	tool := NewBashTool(t.TempDir(), 10, nil)
+	defer tool.Close()
+	args, err := json.Marshal(map[string]any{"command": `printf '%s|%s' "$TW_BATTLE" "$TW_AUTH"`})
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := operation.ContextWithToolEnv(context.Background(), []string{
+		"TW_BATTLE=http://127.0.0.1:1234/p/proj/api",
+		"TW_AUTH=Authorization: Bearer tok-abc",
+	})
+	res, err := tool.Execute(ctx, string(args))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := coretool.ResultText(res); !strings.Contains(got, "http://127.0.0.1:1234/p/proj/api|Authorization: Bearer tok-abc") {
+		t.Fatalf("tool environment did not reach the interpreter: %q", got)
+	}
+	// A turn without the environment must not inherit the previous turn's values.
+	res, err = tool.Execute(context.Background(), string(args))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := coretool.ResultText(res); strings.Contains(got, "tok-abc") || strings.Contains(got, "127.0.0.1:1234") {
+		t.Fatalf("per-turn tool environment leaked into a later turn: %q", got)
+	}
+}
+
 func TestBackgroundOutputPublishesBoundedCompletionAndOriginalFile(t *testing.T) {
 	dir := t.TempDir()
 	tool := NewBashTool(dir, 5, nil)

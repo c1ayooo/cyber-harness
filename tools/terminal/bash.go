@@ -362,7 +362,7 @@ func (t *BashTool) start(ctx context.Context, command string, options BashExecOp
 	if len(script.Stmts) == 0 {
 		return nil, fmt.Errorf("empty command")
 	}
-	env := t.runEnv(options.Env)
+	env := t.runEnv(mergeToolEnv(operation.ToolEnvFromContext(ctx), options.Env))
 	if options.interactive {
 		if argv, ok := t.literalExternal(script); ok {
 			execution := coretool.NewExecution(t.tasks, command, argv[1:], workDir, env)
@@ -521,6 +521,27 @@ func contains(values []string, want string) bool {
 		}
 	}
 	return false
+}
+
+// mergeToolEnv layers the per-turn tool environment beneath explicit
+// per-invocation overrides: a caller that sets BashExecOptions.Env on purpose
+// still wins, so a control plane cannot silently shadow a value the caller
+// chose. It returns nil when there is nothing to add, keeping runEnv's map
+// allocation unchanged for every call without a tool environment.
+func mergeToolEnv(turnEnv []string, overrides map[string]string) map[string]string {
+	if len(turnEnv) == 0 {
+		return overrides
+	}
+	merged := make(map[string]string, len(turnEnv)+len(overrides))
+	for _, item := range turnEnv {
+		if key, value, ok := strings.Cut(item, "="); ok && key != "" {
+			merged[key] = value
+		}
+	}
+	for key, value := range overrides {
+		merged[key] = value
+	}
+	return merged
 }
 
 func (t *BashTool) runEnv(overrides map[string]string) []string {
