@@ -247,6 +247,42 @@ func TestOutputToFile(t *testing.T) {
 	}
 }
 
+// A POSIX absolute path is not absolute on Windows: /tmp/x lands under the
+// working directory. The case directory does not always have that scratch
+// subdirectory, so writing must create it instead of failing the whole command
+// (observed on 2026-11-20: curl -o /tmp/f.json -> curl: (23)).
+func TestOutputToMissingScratchDirectory(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { w.Write([]byte("scratch")) }))
+	defer srv.Close()
+
+	dir := t.TempDir()
+	if _, err := os.Stat(filepath.Join(dir, "tmp")); !os.IsNotExist(err) {
+		t.Fatalf("fixture precondition: scratch dir already exists")
+	}
+	if _, _, err := run(t, []string{"-o", "/tmp/f.json", srv.URL}, "", dir); err != nil {
+		t.Fatal(err)
+	}
+	data, err := os.ReadFile(filepath.Join(dir, "tmp", "f.json"))
+	if err != nil || string(data) != "scratch" {
+		t.Fatalf("scratch content = %q err %v", data, err)
+	}
+}
+
+func TestCookieJarToMissingScratchDirectory(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.SetCookie(w, &http.Cookie{Name: "srv", Value: "1"})
+	}))
+	defer srv.Close()
+
+	dir := t.TempDir()
+	if _, _, err := run(t, []string{"-c", "/tmp/jar.txt", srv.URL}, "", dir); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(filepath.Join(dir, "tmp", "jar.txt")); err != nil {
+		t.Fatalf("cookie jar not written: %v", err)
+	}
+}
+
 func TestCookieRoundTrip(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if c, err := r.Cookie("sid"); err == nil {

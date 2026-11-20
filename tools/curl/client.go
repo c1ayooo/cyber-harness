@@ -506,8 +506,7 @@ func outputWriter(req *Request, workDir string, stdout io.Writer) (io.Writer, fu
 	if req.Output == "" || req.Output == "-" {
 		return stdout, func() {}, nil
 	}
-	path := resolvePath(workDir, req.Output)
-	file, err := os.Create(path)
+	file, err := createFile(workDir, req.Output)
 	if err != nil {
 		return nil, nil, fmt.Errorf("curl: (23) Failed to create %q: %w", req.Output, err)
 	}
@@ -565,7 +564,7 @@ func openASCIITrace(path, workDir string, stdout, stderr io.Writer) (*asciiTrace
 	if path == "%" {
 		return &asciiTrace{w: stderr}, nil
 	}
-	file, err := os.Create(resolvePath(workDir, path))
+	file, err := createFile(workDir, path)
 	if err != nil {
 		return nil, fmt.Errorf("curl: (23) Failed to create trace-ascii %q: %w", path, err)
 	}
@@ -727,8 +726,7 @@ func dumpResponseHeaders(req *Request, responses []http.Response, workDir string
 		}
 		return nil
 	}
-	path := resolvePath(workDir, req.DumpHeader)
-	file, err := os.Create(path)
+	file, err := createFile(workDir, req.DumpHeader)
 	if err != nil {
 		return fmt.Errorf("curl: (23) Failed to create dump-header %q: %w", req.DumpHeader, err)
 	}
@@ -851,6 +849,24 @@ func headerValue(headers []*traffic.Header, name string) string {
 		}
 	}
 	return ""
+}
+
+// createFile resolves an output path the same way every other file argument is
+// resolved and creates the missing parent directories on the way.
+//
+// A POSIX-looking absolute path like /tmp/body.json is not absolute on Windows,
+// so resolvePath anchors it under the working directory (the case). Without
+// this, the write failed whenever that scratch directory had not been created
+// yet — "Failed to create /tmp/f.json: The system cannot find the path
+// specified" — and the model lost a whole round to a path we handed it.
+func createFile(workDir, path string) (*os.File, error) {
+	resolved := resolvePath(workDir, path)
+	if dir := filepath.Dir(resolved); dir != "" && dir != "." {
+		if err := os.MkdirAll(dir, 0o755); err != nil {
+			return nil, err
+		}
+	}
+	return os.Create(resolved)
 }
 
 // resolvePath anchors a relative file path at the tool's working directory,

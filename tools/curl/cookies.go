@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -82,6 +83,13 @@ func cookieURL(domain, path string, fallback *url.URL) *url.URL {
 func writeCookieJar(jar http.CookieJar, u *url.URL, path string) error {
 	if jar == nil || u == nil {
 		return nil
+	}
+	// The jar path is already resolved; create its directory so -c /tmp/jar.txt
+	// does not fail just because the scratch directory does not exist yet.
+	if dir := filepath.Dir(path); dir != "" && dir != "." {
+		if err := os.MkdirAll(dir, 0o755); err != nil {
+			return err
+		}
 	}
 	file, err := os.Create(path)
 	if err != nil {

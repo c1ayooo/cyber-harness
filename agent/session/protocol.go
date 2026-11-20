@@ -103,6 +103,27 @@ func turnRunGoal(req *aop.RunTurnRequest) (goal, rounds string) {
 	return "", ""
 }
 
+// turnWorkDir returns the workspace a control plane attached to this turn. It
+// rides the same tianwu.WorkDir extension the session opening carries: a resumed
+// turn never re-opens its session, so a session the host re-created after a
+// restart would otherwise keep the agent's process directory as its workspace.
+func turnWorkDir(req *aop.RunTurnRequest) string {
+	if req == nil {
+		return ""
+	}
+	for _, extension := range req.GetExtensions() {
+		if extension == nil || extension.GetTypeUrl() != workDirExtensionURL {
+			continue
+		}
+		var value workDirExtension
+		if err := json.Unmarshal(extension.GetValue(), &value); err != nil {
+			continue
+		}
+		return strings.TrimSpace(value.WorkDir)
+	}
+	return ""
+}
+
 // toolEnvExtensionURL is the control plane's per-turn tool environment extension
 // on RunTurnRequest: JSON {"env":{"KEY":"VALUE",…}}. The host gives the names no
 // meaning beyond passing them to every tool subprocess of the turn, so a session
@@ -191,7 +212,7 @@ func (rt *Runtime) RunAOPTurn(ctx context.Context, req *aop.RunTurnRequest) *aop
 	_, err := rt.RunSession(ctx, req.SessionId, RunInput{
 		TurnID: req.TurnId, Message: message, Continue: req.ContinueSession,
 		MaxTurns: int(req.MaxTurns), EvalCriteria: options.EvalCriteria, EvalRounds: evalRounds, EvalGoal: evalGoal,
-		ToolEnv: turnToolEnv(req),
+		ToolEnv: turnToolEnv(req), WorkDir: turnWorkDir(req),
 	})
 	if err != nil {
 		response.Outcome = &aop.RunTurnResponse_Rejected{Rejected: rejection("FAILED_PRECONDITION", err.Error())}

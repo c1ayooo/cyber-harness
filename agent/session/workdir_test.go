@@ -1,64 +1,58 @@
 package session
 
 import (
-	"context"
+	"encoding/json"
 	"testing"
 
-	aop "github.com/chainreactors/cyber/aop"
-	"github.com/chainreactors/cyber/pkg/testutil/apptest"
 	"google.golang.org/protobuf/types/known/anypb"
+
+	"github.com/chainreactors/cyber/agent"
+	"github.com/chainreactors/cyber/aop"
 )
 
-func workDirAny(dir string) *anypb.Any {
-	return &anypb.Any{TypeUrl: workDirExtensionURL, Value: []byte(`{"work_dir":"` + dir + `"}`)}
-}
-
-func TestSessionWorkDirExtensionParsing(t *testing.T) {
-	const dir = "/data/projects/web/cases/in_1"
-	req := &aop.OpenSessionRequest{SessionId: "s1", Extensions: []*anypb.Any{
-		{TypeUrl: "type.googleapis.com/other.Extension", Value: []byte(`{"work_dir":"/tmp/wrong"}`)},
-		workDirAny(dir),
-	}}
-	if got := sessionWorkspace(req).WorkDir; got != dir {
-		t.Fatalf("sessionWorkDir = %q, want %q", got, dir)
-	}
-	if got := sessionWorkspace(&aop.OpenSessionRequest{}).WorkDir; got != "" {
-		t.Fatalf("missing extension = %q, want empty", got)
-	}
-	if got := sessionWorkspace(&aop.OpenSessionRequest{Extensions: []*anypb.Any{
-		{TypeUrl: workDirExtensionURL, Value: []byte(`not-json`)},
-	}}).WorkDir; got != "" {
-		t.Fatalf("malformed extension = %q, want empty", got)
-	}
-}
-
-// The session workspace is a property of the session: one agent process serves
-// many runs, each with its own case directory (Tianwu fork patch 4). The
-// extension is how the control plane sets it without changing the AOP schema.
-func TestOpenSessionAppliesWorkDirExtension(t *testing.T) {
-	f := apptest.NewFixture(t, nil, nil)
-	resource, err := newUnitResource(t, f, Config{})
+// A resumed turn never re-opens its session: after a host restart the session is
+// re-created and has no workspace, so the turn itself must be able to supply it.
+func TestTurnWorkDirDecodesTheTianwuExtension(t *testing.T) {
+	raw, err := json.Marshal(map[string]any{"work_dir": `C:\data\projects\p\cases\in_1`})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := resource.Start(t.Context(), t.Context()); err != nil {
+	req := &aop.RunTurnRequest{Extensions: []*anypb.Any{{TypeUrl: workDirExtensionURL, Value: raw}}}
+	if got := turnWorkDir(req); got != `C:\data\projects\p\cases\in_1` {
+		t.Fatalf("turnWorkDir = %q", got)
+	}
+	if turnWorkDir(&aop.RunTurnRequest{}) != "" {
+		t.Fatal("a request without the extension must not name a workspace")
+	}
+}
+
+func TestTurnWorkDirFillsAnEmptyWorkspaceOnly(t *testing.T) {
+	ag := agent.NewAgent(agent.Config{})
+	if err := applyTurnWorkDir(ag, `C:\data\project\cases\in_1`); err != nil {
 		t.Fatal(err)
 	}
-	defer func() { _ = resource.Close(context.Background()) }()
+	if got := ag.WorkDir(); got != `C:\data\project\cases\in_1` {
+		t.Fatalf("workspace = %q, want the one the turn supplied", got)
+	}
 
-	rt := resource.Runtime()
-	const dir = "/data/projects/web/cases/in_1"
-	response := rt.OpenAOPSession(&aop.OpenSessionRequest{SessionId: "s-workdir", Extensions: []*anypb.Any{workDirAny(dir)}})
-	if response.GetAccepted() == nil {
-		t.Fatalf("open session rejected: %v", response.GetRejected())
+	// The same directory written differently is not a conflict.
+	if err := applyTurnWorkDir(ag, `C:/data/project/cases/in_1/`); err != nil {
+		t.Fatalf("same workspace reported as a conflict: %v", err)
 	}
-	rt.mu.RLock()
-	state := rt.sessions["s-workdir"]
-	rt.mu.RUnlock()
-	if state == nil {
-		t.Fatal("session was not registered")
+
+	// A different directory would move the session's relative paths mid-run.
+	if err := applyTurnWorkDir(ag, `C:\data\project\cases\in_2`); err == nil {
+		t.Fatal("a turn silently moved the session to another workspace")
 	}
-	if got := state.agent.ConfigSnapshot().WorkDir; got != dir {
-		t.Fatalf("session work dir = %q, want %q", got, dir)
+	if got := ag.WorkDir(); got != `C:\data\project\cases\in_1` {
+		t.Fatalf("workspace changed despite the refusal: %q", got)
+	}
+
+	// A turn without a workspace leaves an existing one alone.
+	if err := applyTurnWorkDir(ag, ""); err != nil {
+		t.Fatal(err)
+	}
+	if got := ag.WorkDir(); got != `C:\data\project\cases\in_1` {
+		t.Fatalf("workspace = %q after an empty turn", got)
 	}
 }

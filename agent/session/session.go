@@ -96,6 +96,10 @@ type RunInput struct {
 	// merged into every tool subprocess this turn starts. Empty for a turn that
 	// sent none, so nothing from a prior turn leaks into it.
 	ToolEnv []string
+	// WorkDir is the workspace a control plane attached to this turn. It fills an
+	// empty session workspace (a resumed turn after a host restart) and is
+	// refused when it disagrees with one the session already has.
+	WorkDir string
 
 	automatic bool
 }
@@ -1349,6 +1353,37 @@ func hasRunInput(content []*aop.Content) bool {
 	return false
 }
 
+// sameWorkspace compares two workspace paths the way the host's tools do: case
+// and separator differences are not a real change (Windows accepts both).
+func sameWorkspace(a, b string) bool {
+	normalize := func(p string) string {
+		p = strings.TrimSpace(strings.ReplaceAll(p, `\`, "/"))
+		return strings.TrimRight(p, "/")
+	}
+	return strings.EqualFold(normalize(a), normalize(b))
+}
+
+// applyTurnWorkDir gives a session without a workspace the one its control plane
+// still names — the resumed turn after a host restart, where the session was
+// re-created and never re-opened. A session that already has a different
+// workspace is refused: the tools' relative paths would silently start landing
+// somewhere else mid-run.
+func applyTurnWorkDir(a *agent.Agent, dir string) error {
+	dir = strings.TrimSpace(dir)
+	if a == nil || dir == "" {
+		return nil
+	}
+	current := strings.TrimSpace(a.WorkDir())
+	if current == "" {
+		a.SetWorkDir(dir)
+		return nil
+	}
+	if !sameWorkspace(current, dir) {
+		return fmt.Errorf("session already runs in workspace %q; the turn asked for %q", current, dir)
+	}
+	return nil
+}
+
 func (s *sessionState) executeRun(ctx context.Context, turnID string, input RunInput) (result *agent.Result, err error) {
 	// A replaceable loop may panic. Convert that failure at the session task
 	// boundary so the ordinary completion path releases the Run and queue.
@@ -1364,6 +1399,9 @@ func (s *sessionState) executeRun(ctx context.Context, turnID string, input RunI
 	// shared BashTool base environment (that would leak one session's token to
 	// another on the same host).
 	ctx = operation.ContextWithToolEnv(ctx, input.ToolEnv)
+	if err := applyTurnWorkDir(s.agent, input.WorkDir); err != nil {
+		return nil, err
+	}
 	if input.automatic {
 		return s.agent.Continue(ctx, agent.WithTurnID(turnID), agent.WithRunMaxTurns(input.MaxTurns))
 	}
