@@ -105,7 +105,7 @@ func RenderEnvironment(_ context.Context, input agentprompt.Context) (string, er
 		out.WriteString(input.Agent.NodeName)
 	}
 	if input.Agent.Windows {
-		out.WriteString("\nShell: the bash tool accepts POSIX syntax. It runs native bash when Git or MSYS bash is installed, and cmd.exe only when bash is absent. Pseudo-commands run in-process; quote literal operators so they stay arguments.")
+		out.WriteString("\nShell: the bash tool runs an embedded POSIX interpreter, not Git bash and not cmd.exe; external programs it starts still run on this host. The working directory is a Windows path, so write file paths as C:\\… — a POSIX-looking absolute path such as /tmp/x is not absolute here; use a relative path or a Windows one. There is no /usr/bin and no POSIX tool directory.")
 	}
 	return out.String(), nil
 }
