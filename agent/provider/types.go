@@ -41,7 +41,11 @@ type ChatCompletionRequest struct {
 }
 
 type ChatCompletionResponse struct {
-	ID      string
+	ID string
+	// Model is the model the endpoint reports having served the request. It can
+	// differ from the requested name when the endpoint routes, so callers that
+	// need to explain a missing usage field can record it.
+	Model   string
 	Choices []Choice
 	Usage   *aop.TokenUsage
 	Error   *APIError

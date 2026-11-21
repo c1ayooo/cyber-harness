@@ -431,6 +431,7 @@ func openAIMessageToAOP(msg *openAIResponseMessage) *aop.Message {
 func parseOpenAIResponse(data []byte) (*ChatCompletionResponse, error) {
 	var raw struct {
 		ID      string `json:"id"`
+		Model   string `json:"model"`
 		Choices []struct {
 			Message      openAIResponseMessage `json:"message"`
 			FinishReason string                `json:"finish_reason"`
@@ -444,7 +445,7 @@ func parseOpenAIResponse(data []byte) (*ChatCompletionResponse, error) {
 	if raw.Error != nil {
 		return nil, raw.Error
 	}
-	result := &ChatCompletionResponse{ID: raw.ID, Usage: raw.Usage.toProto()}
+	result := &ChatCompletionResponse{ID: raw.ID, Model: raw.Model, Usage: raw.Usage.toProto()}
 	for _, choice := range raw.Choices {
 		msg := choice.Message
 		result.Choices = append(result.Choices, Choice{

@@ -402,6 +402,7 @@ type anthropicContentBlock struct {
 type anthropicMessageResponse struct {
 	ID         string                  `json:"id"`
 	Type       string                  `json:"type"`
+	Model      string                  `json:"model,omitempty"`
 	Role       string                  `json:"role"`
 	Content    []anthropicContentBlock `json:"content"`
 	StopReason string                  `json:"stop_reason"`
@@ -431,7 +432,8 @@ func parseAnthropicResponse(data []byte) (*ChatCompletionResponse, error) {
 
 	msg := anthropicBlocksToMessage(resp.Role, resp.Content)
 	return &ChatCompletionResponse{
-		ID: resp.ID,
+		ID:    resp.ID,
+		Model: resp.Model,
 		Choices: []Choice{{
 			Message:      msg,
 			FinishReason: mapAnthropicStopReason(resp.StopReason),

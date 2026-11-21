@@ -71,7 +71,16 @@ type Request struct {
 
 type Evaluator struct {
 	cfg Config
+	// lastModel is the model the endpoint reported serving the most recent
+	// judgement. An endpoint that routes can answer with a different name than
+	// the one asked for, and that name is the only handle on why a usage field is
+	// missing. Read it through LastModel; it is not a judgement input.
+	lastModel string
 }
+
+// LastModel returns the model name the endpoint reported for the most recent
+// judgement, empty when the endpoint did not report one.
+func (e *Evaluator) LastModel() string { return e.lastModel }
 
 func New(cfg Config) *Evaluator {
 	if cfg.MaxRetries <= 0 {
@@ -186,6 +195,7 @@ func (e *Evaluator) call(ctx context.Context, systemPrompt, userPrompt string) (
 	if err != nil {
 		return nil, nil, fmt.Errorf("LLM call: %w", err)
 	}
+	e.lastModel = resp.Model
 	if len(resp.Choices) == 0 {
 		return nil, resp.Usage, fmt.Errorf("no choices returned")
 	}
