@@ -6,6 +6,8 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"os"
+	"slices"
 	"strings"
 	"sync"
 
@@ -17,6 +19,8 @@ import (
 	"github.com/chainreactors/ioa/protocols"
 	goflags "github.com/jessevdk/go-flags"
 )
+
+const disableSendEnv = "CYBER_IOA_SEND_DISABLED"
 
 // spaceBinding holds the current space ID shared across all IOA commands.
 type spaceBinding struct {
@@ -86,15 +90,16 @@ type rootCommand struct {
 func (c *rootCommand) Usage() string {
 	return `ioa - shared history and direct agent messages
 
-  ioa send <session> "message"                  Send to a Session ID or unique name
-  ioa send <session> "message" --ref-messages ID  Reply to a recorded message
-  ioa send <session> "message" --interrupt      Redirect current work; commands keep running
+  ioa send <recipient> "message"                  Send to the recipient's Session ID or unique name
+  ioa send <recipient> "message" --ref-messages ID  Reply to a recorded message
+  ioa send <recipient> "message" --interrupt      Redirect current work; commands keep running
   ioa read --all [--after ID] [--limit N]        Recover prior context
   ioa space <name> <description>                Switch the shared space
 
 The configured space is already joined. New messages arrive automatically.
 Call the inbox_wait tool to wait; no polling or extra listener is needed.
 Names are local to a node; use --ref-nodes ID to address another node.
+The current session is set automatically as the sender. Its Session ID cannot be the local recipient.
 Send returns a saved message ID, not a delivery receipt.
 
 Advanced: send --content JSON; send <protocol> --help; read --help;
@@ -111,7 +116,12 @@ func (c *rootCommand) Run(ctx context.Context, execution *coretool.Execution) (_
 	switch args[0] {
 	case "space":
 		return nil, c.runSpace(ctx, execution, args[1:])
-	case "send", "read":
+	case "send":
+		if os.Getenv(disableSendEnv) == "1" || slices.Contains(operation.ToolEnvFromContext(ctx), disableSendEnv+"=1") {
+			return nil, errors.New("direct IOA sending is disabled for this session")
+		}
+		return nil, c.dispatchCLI(ctx, execution, args)
+	case "read":
 		return nil, c.dispatchCLI(ctx, execution, args)
 	default:
 		fmt.Fprint(execution.Stdout, c.Usage())
@@ -131,7 +141,7 @@ func (c *rootCommand) dispatchCLI(ctx context.Context, execution *coretool.Execu
 	}
 	target := ""
 	var delivery struct {
-		Target    string `long:"target-session" description:"Session ID or unique name (also accepted as first positional argument)"`
+		Target    string `long:"target-session" description:"Recipient's Session ID or unique name (also accepted as first positional argument)"`
 		Interrupt bool   `long:"interrupt" description:"Redirect current work without canceling the task or running commands"`
 	}
 	opts := &ioaclient.CommandOptions{}
@@ -319,6 +329,10 @@ type sessionSender struct {
 }
 
 func (c sessionSender) Send(ctx context.Context, space string, body protocols.SendMessage) (protocols.Message, error) {
+	if c.source != "" && c.source == c.target &&
+		(body.Refs == nil || len(body.Refs.Nodes) == 0 || slices.Contains(body.Refs.Nodes, c.NodeID())) {
+		return protocols.Message{}, errors.New("recipient is the current session; specify a different recipient")
+	}
 	// The invocation owns provenance. CLI --meta may carry other applications'
 	// keys, but cannot forge lifecycle events or another session's identity.
 	meta := collaboration.Envelope{

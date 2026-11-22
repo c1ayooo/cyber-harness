@@ -9,7 +9,9 @@ generated: { by: process:okf-maintain, at: 2026-08-02T11:46:25Z }
 
 # ioa send — Collaboration Messages
 
-`ioa send <session-id-or-name> "message"` sends to an active agent. Add
+`ioa send <recipient-session-id-or-name> "message"` sends to an active agent.
+The first argument identifies the recipient. The current session is set
+automatically as the sender, and its Session ID cannot be the local recipient. Add
 `--ref-messages ID` to reply, `--interrupt` to redirect work, or `--ref-nodes ID`
 for another node. New messages arrive automatically; call `inbox_wait` to wait.
 
