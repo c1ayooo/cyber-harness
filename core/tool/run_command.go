@@ -40,6 +40,8 @@ func RunCommand(ctx context.Context, registry CommandExecutor, argv []string, pa
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", name, exec.ErrNotFound)
 	}
+	// #nosec G702 -- Running the expanded argv of a tool call is this function's contract: the model decides
+	// which external binary and which arguments to run, and there is no shell between argv and exec here.
 	cmd := exec.Command(path, argv[1:]...)
 	cmd.Dir = parent.Dir
 	cmd.Env = env

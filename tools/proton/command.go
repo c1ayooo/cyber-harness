@@ -143,8 +143,7 @@ type protonFlags struct {
 
 func (c *Command) Run(ctx context.Context, execution *coretool.Execution) (_ any, err error) {
 	defer telemetry.RecoverAsError("proton", &err)
-	args := execution.Args
-	args = c.ResolvePaths(ctx, execution, protonFileFlags)
+	args := c.ResolvePaths(ctx, execution, protonFileFlags)
 	var flags protonFlags
 	parser := goflags.NewParser(&flags, goflags.Default&^goflags.PrintErrors)
 	remaining, err := parser.ParseArgs(toolargs.NormalizeFlags(args, protonKnownFlags, map[string]string{

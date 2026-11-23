@@ -39,6 +39,8 @@ func runExternalCommand(ctx context.Context, cmd *exec.Cmd) error {
 		if job != 0 {
 			_ = windows.TerminateJobObject(job, 1)
 		} else {
+			// #nosec G702 -- The program is the fixed literal "taskkill"; the only variable is our own
+			// child's pid. This is the fallback that kills a canceled command's tree when no job object exists.
 			_ = exec.Command("taskkill", "/PID", strconv.Itoa(cmd.Process.Pid), "/T", "/F").Run()
 			_ = cmd.Process.Kill()
 		}

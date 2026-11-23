@@ -22,7 +22,7 @@ import (
 	types "github.com/chainreactors/cyber/core/types"
 )
 
-// Windows socket errnos the retry decision has to recognise by number.
+// Windows socket errnos the retry decision has to recognize by number.
 //
 // net.Error.Timeout() does not cover them: the platform reports WSAETIMEDOUT
 // (10060) for a dial whose SYN was dropped, and Errno.Timeout() on Windows accepts

@@ -14,10 +14,10 @@ import (
 // model-facing tool is removed.
 //
 // The value is a comma-separated, case-insensitive list of tool names. Empty or
-// unset means "exclude nothing", which is the historical behaviour: no host that
+// unset means "exclude nothing", which is the historical behavior: no host that
 // has not asked for this gets a different tool surface.
 //
-// Recognised names: "subagent" (the native delegation tool) and "ioa" (the IOA
+// Recognized names: "subagent" (the native delegation tool) and "ioa" (the IOA
 // collaboration surface: client commands, prompt section and console bindings).
 // "ioa" never removes an IOA server: hosts that run one (the Web host) keep their
 // message transport.

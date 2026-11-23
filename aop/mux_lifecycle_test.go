@@ -34,7 +34,7 @@ func TestNamespaceCloseCancelsAndDrains(t *testing.T) {
 		t.Fatalf("close while busy: %v", err)
 	}
 	if !errors.Is(handlerCtx.Err(), context.Canceled) {
-		t.Fatal("accepted handler was not cancelled")
+		t.Fatal("accepted handler was not canceled")
 	}
 	if handled, err := mux.Dispatch(request, nil); handled || !errors.Is(err, ErrNamespaceUnavailable) {
 		t.Fatalf("admission after close: handled=%v err=%v", handled, err)
@@ -69,7 +69,7 @@ func TestNamespaceContextLivesUntilConnectionCloses(t *testing.T) {
 		}
 	}
 	if fileCtx.Err() != nil || coreCtx.Err() != nil {
-		t.Fatal("returning from dispatch cancelled a subscription lifetime")
+		t.Fatal("returning from dispatch canceled a subscription lifetime")
 	}
 	cancel()
 	if fileCtx.Err() == nil || coreCtx.Err() == nil {

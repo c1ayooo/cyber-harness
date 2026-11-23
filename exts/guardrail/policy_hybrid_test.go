@@ -45,7 +45,7 @@ type confidentPolicy struct {
 }
 
 func (p *confidentPolicy) CheckWithConfidence(ctx context.Context, ev toolhooks.CallEvent) (*Decision, float64, error) {
-	decision, err := p.scriptedPolicy.Check(ctx, ev)
+	decision, err := p.Check(ctx, ev)
 	return decision, p.confidence, err
 }
 
@@ -155,7 +155,7 @@ func TestHybridEscalatesExplicitHighConfidenceReview(t *testing.T) {
 
 func TestHybridLLMErrorPropagates(t *testing.T) {
 	llm := &scriptedPolicy{check: func(context.Context, toolhooks.CallEvent) (*Decision, error) {
-		return nil, errors.New("cancelled")
+		return nil, errors.New("canceled")
 	}}
 	jev := &scriptedPolicy{check: fixedDecision(Action_ACTION_RECORD, "jev")}
 	if _, err := newHybridPolicy(llm, jev).Check(context.Background(), call()); err == nil {

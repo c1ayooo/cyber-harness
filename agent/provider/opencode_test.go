@@ -71,7 +71,7 @@ func TestOpenCodeStreamingAndAuxiliaryHeaders(t *testing.T) {
 			body = "data: {\"choices\":[{\"delta\":{\"role\":\"assistant\",\"content\":\"ok\"},\"finish_reason\":\"stop\"}]}\n\ndata: [DONE]\n\n"
 		} else {
 			if r.URL.Path != "/inference/go/openai/v1/models" {
-				t.Errorf("catalogue path = %q", r.URL.Path)
+				t.Errorf("catalog path = %q", r.URL.Path)
 			}
 			if auxiliary != "" && auxiliary != id {
 				t.Error("auxiliary identity changed")

@@ -161,7 +161,7 @@ func (p *OpenAIProvider) requestHeaders(ctx context.Context, completion *ChatCom
 		req.Header.Set("User-Agent", "cyber-harness/0.x")
 		id := sessionID
 		if id == "" {
-			// Catalogue, activation and other one-shot calls have no agent
+			// Catalog, activation and other one-shot calls have no agent
 			// conversation; use a separate identity for this provider instance.
 			id = p.auxiliarySessionID
 		}
