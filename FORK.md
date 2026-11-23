@@ -16,15 +16,19 @@ from this tree; upstream code is never edited in the tianwu repository.
   update it with the sync procedure before the next rebase. The 2026-11-09
   patch-branch rebase used `6d5a4a7a` (`refactor: simplify package globals and
   centralize mutations (#198)`), including upstream #196, #197 and #198.
-- `tianwu/fixes` is the patch branch on top of `master`. Keep it linear so
-  upstream updates are a rebase, not a merge chore.
+- `tianwu/fixes` is the patch branch on top of `master`. **Since 2026-11-23 it
+  moves forward only: upstream is merged in on a `chore/*` worktree branch and
+  `tianwu/fixes` is fast-forwarded to that merge.** Do not rebase it and do not
+  force-push it; the reasons are in [Sync upstream](#sync-upstream).
 
 2026-11-13 publication: the maintained fork branch is `tianwu/fixes`.
 Consolidate the validated #200 rebase, OpenCode conversation routing and scan
 test-fixture corrections there; temporary `codex/*` worktrees are review
 history, not additional maintained remote branches. Before replacing the old
 patch tip, verify its 12 patches remain equivalent and use a force-with-lease
-that names the exact fetched remote tip. Preserve the prior local tips for
+that names the exact fetched remote tip. *(Retired 2026-11-23: the branch is now
+fast-forwarded to a merge and never force-pushed — see
+[Sync upstream](#sync-upstream).)* Preserve the prior local tips for
 rollback; do not push or merge into the upstream project.
 
 ## rc10 split (2026-11-16)
@@ -62,20 +66,30 @@ normal-profile Playwright and Katana checks pass. See Tianwu's
 `docs/harness/upstream-sync-2026-11-12.md`
 for commands, ownership checks and deployment boundaries.
 
-```sh
-git fetch upstream
-git checkout master
-git merge --ff-only upstream/master
-git push origin master
+**2026-11-23 policy — merge + fast-forward, never force.** Upstream is brought
+in with a merge commit on a short-lived `chore/*` branch cut from `tianwu/fixes`;
+`tianwu/fixes` is then fast-forwarded to that merge. The earlier instruction
+below ("rebase and do not merge upstream into the patch branch") is retired: it
+required `push --force-with-lease` after every sync, and this project does not
+rewrite published history. Merging only on `tianwu/fixes` means no patch is ever
+replayed onto a different base, so the rebase's benefit (linear history) buys
+nothing here and costs traceability — every Tianwu patch and every historical
+build keeps the commit id it was built from.
 
-git checkout tianwu/fixes
-git rebase master
-git push --force-with-lease origin tianwu/fixes
+```sh
+git fetch origin upstream
+git worktree add -b chore/harness-sync <path> tianwu/fixes
+cd <path>
+git merge upstream/master          # resolve conflicts in the worktree, never on tianwu/fixes
+# rebuild + validate from Tianwu before publishing:
+#   pwsh -File scripts/gate.ps1 -harness-dir <path>     (steps 5-7: proto drift, harness build)
+#   go test ./... -p 1 -count=1                         (Tianwu)
+git push origin chore/harness-sync:tianwu/fixes   # fast-forward only; no --force
 ```
 
-If the rebase conflicts, resolve it on `tianwu/fixes`; do not merge upstream
-into the patch branch. After a successful rebase, rebuild and reinstall the
-binary (below) and rerun the Tianwu validation.
+Resolve conflicts in the worktree. Do not edit `tianwu/fixes` in place, and do
+not force-push it. After the merge, rebuild and reinstall the binary (below) and
+rerun the Tianwu validation.
 
 **When upstream ships an equivalent fix, delete our duplicate patch instead of
 keeping a second implementation.** Record the dropped commit in
