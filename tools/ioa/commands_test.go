@@ -831,6 +831,65 @@ func TestSendShortForm(t *testing.T) {
 	}
 }
 
+func TestSendRejectsCurrentSessionAsLocalRecipient(t *testing.T) {
+	client := newFakeIOAClient(protocols.SpaceInfo{ID: knownSpaceID, Name: "test-space"})
+	commands := NewCommands(client, "tester", nil)
+	joinSpace(t, commands)
+	ctx := operation.ContextWithInvocation(t.Context(), operation.Invocation{SessionID: "current"})
+	send := findSubCmd(t, commands, "send")
+
+	for _, args := range [][]string{
+		{"current", "hello"},
+		{"--target-session", "current", "--content", `{"text":"hello"}`},
+		{"current", "hello", "--ref-nodes", client.NodeID()},
+	} {
+		if err := send.Execute(ctx, args); err == nil || !strings.Contains(err.Error(), "recipient is the current session") {
+			t.Fatalf("expected a self-addressing error, got %v", err)
+		}
+	}
+	if len(client.sentSpaceIDs) != 0 {
+		t.Fatal("self-addressed message was published")
+	}
+	if err := send.Execute(ctx, []string{"current", "hello", "--ref-nodes", "other-node"}); err != nil {
+		t.Fatalf("same session identifier on another node: %v", err)
+	}
+	if len(client.sentSpaceIDs) != 1 {
+		t.Fatal("remote message was not published")
+	}
+}
+
+func TestDirectSendPolicyKeepsIOATransportAvailable(t *testing.T) {
+	resource := New(Config{}, nil)
+	if err := resource.Start(t.Context()); err != nil {
+		t.Fatal(err)
+	}
+	defer resource.Close(context.Background())
+	ctx := operation.ContextWithToolEnv(t.Context(), []string{disableSendEnv + "=1"})
+	commands := resource.Service.Commands()
+	send := findSubCmd(t, commands, "send")
+	args := []string{"recipient", "hello"}
+	if err := send.Execute(ctx, args); err == nil || !strings.Contains(err.Error(), "direct IOA sending is disabled") {
+		t.Fatalf("expected per-turn send restriction, got %v", err)
+	}
+	t.Setenv(disableSendEnv, "1")
+	if err := send.Execute(t.Context(), args); err == nil || !strings.Contains(err.Error(), "direct IOA sending is disabled") {
+		t.Fatalf("expected host send restriction, got %v", err)
+	}
+
+	client, space := resource.Service.Client(), resource.Service.ReceiveSpace()
+	if _, err := client.Send(ctx, space, protocols.SendMessage{Content: map[string]any{"text": "from transport"}}); err != nil {
+		t.Fatalf("send through the host transport: %v", err)
+	}
+	testOutput.Reset(nil)
+	if err := findSubCmd(t, commands, "read").Execute(ctx, []string{"--all"}); err != nil {
+		t.Fatalf("read through the restricted command: %v", err)
+	}
+	rows, err := client.Read(ctx, space, protocols.ReadOptions{All: true})
+	if err != nil || len(rows) != 1 || rows[0].Content["text"] != "from transport" {
+		t.Fatalf("only the host message should be recorded: %v %v", rows, err)
+	}
+}
+
 func TestSendProtocolBooleanAndHelp(t *testing.T) {
 	resource := New(Config{}, nil)
 	if err := resource.Start(t.Context()); err != nil {
