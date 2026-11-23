@@ -4,8 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net"
 	"net/http"
+	"os"
 	"strings"
+	"syscall"
 	"testing"
 	"time"
 
@@ -590,5 +593,55 @@ func TestIsRetryableNowIncludes408409(t *testing.T) {
 		if isRetryableError(&provider.APIError{StatusCode: code}) {
 			t.Errorf("status %d should NOT be retryable", code)
 		}
+	}
+}
+
+// errnoOnly hides the errno behind a net.Error whose text matches none of the
+// retry patterns: only the socket-number check can make it retryable, so this
+// shape tells the two mechanisms apart.
+type errnoOnly struct{ err error }
+
+func (e errnoOnly) Error() string   { return "read: i/o error" }
+func (e errnoOnly) Timeout() bool   { return false }
+func (e errnoOnly) Temporary() bool { return false }
+func (e errnoOnly) Unwrap() error   { return e.err }
+
+// The TSecBench 2026-11-22 journals ended 15 of 20 failed runs on Windows socket
+// errors that never reached a retry. Errno.Timeout() answers false for all three
+// numbers on Windows, which is why the errno check exists and why the text above
+// is deliberately unhelpful here.
+func TestIsRetryableWindowsSocketErrnos(t *testing.T) {
+	for _, errno := range []syscall.Errno{10060, 10061, 10054} {
+		if !isRetryableError(errnoOnly{err: &os.SyscallError{Syscall: "connectex", Err: errno}}) {
+			t.Errorf("errno %d should be retryable", errno)
+		}
+	}
+	// WSAEACCES is a permission problem: waiting cannot fix it.
+	if isRetryableError(errnoOnly{err: syscall.Errno(10013)}) {
+		t.Error("errno 10013 must NOT be retryable")
+	}
+	// Plain net.OpError chains from the transport are covered too.
+	if !isRetryableError(&net.OpError{Op: "dial", Net: "tcp", Err: &os.SyscallError{Syscall: "connectex", Err: syscall.Errno(10060)}}) {
+		t.Error("a net.OpError carrying WSAETIMEDOUT should be retryable")
+	}
+}
+
+// A wrapper that kept only the text (no errno in the chain) still has to be
+// retried: these are the production strings, verbatim from the journals.
+func TestIsRetryableByProductionSocketText(t *testing.T) {
+	cases := []string{
+		`LLM stream failed at turn 19: http request: Post "http://127.0.0.1:3425/v1/chat/completions": dial tcp 127.0.0.1:3425: connectex: A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond.`,
+		`LLM stream failed at turn 101: http request: Post "http://127.0.0.1:3425/v1/chat/completions": readfrom tcp 127.0.0.1:54713->127.0.0.1:3425: write tcp 127.0.0.1:54713->127.0.0.1:3425: wsasend: An existing connection was forcibly closed by the remote host.`,
+		`LLM stream failed at turn 39: unmarshal stream chunk: unexpected end of JSON input`,
+	}
+	for _, text := range cases {
+		if !isRetryableError(errors.New(text)) {
+			t.Errorf("production text should be retryable: %s", text)
+		}
+	}
+	// The control: a permanent failure must stay permanent, so the patterns above
+	// are not a blanket "retry everything".
+	if isRetryableError(errors.New("insufficient quota: balance exhausted")) {
+		t.Error("a quota failure must NOT be retryable")
 	}
 }

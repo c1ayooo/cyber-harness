@@ -8,8 +8,10 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"os"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/chainreactors/cyber/agent/hooks"
@@ -19,6 +21,45 @@ import (
 	"github.com/chainreactors/cyber/core/telemetry"
 	types "github.com/chainreactors/cyber/core/types"
 )
+
+// Windows socket errnos the retry decision has to recognise by number.
+//
+// net.Error.Timeout() does not cover them: the platform reports WSAETIMEDOUT
+// (10060) for a dial whose SYN was dropped, and Errno.Timeout() on Windows accepts
+// only EAGAIN/EWOULDBLOCK/ETIMEDOUT (ETIMEDOUT is 536871033 there), so a genuinely
+// timed-out dial answers Timeout()==false and looks permanent. Measured
+// 2026-11-23 against the TSecBench 2026-11-22 journals: 11 of 20 failed runs ended
+// on `dial tcp …: connectex: A connection attempt failed because the connected
+// party did not properly respond…` and 4 more on `wsasend: An existing connection
+// was forcibly closed by the remote host`, none of which matched a retry pattern,
+// so those runs died on the first attempt. Literal numbers keep this file building
+// on Linux and macOS, where they are never produced.
+const (
+	wsaeTimedout = syscall.Errno(10060) // WSAETIMEDOUT: connect got no answer
+	wsaeRefused  = syscall.Errno(10061) // WSAECONNREFUSED: listener gone (gateway restarting)
+	wsaeReset    = syscall.Errno(10054) // WSAECONNRESET: peer closed mid-stream
+)
+
+// isConnErrnoRetryable answers for the socket numbers above. A refusal is
+// included on purpose: at this layer the peer is the model gateway next door,
+// which restarts in seconds, so "nobody listening" is usually the tail of a
+// restart — unlike a target host that is really gone.
+func isConnErrnoRetryable(err error) bool {
+	var errno syscall.Errno
+	if errors.As(err, &errno) {
+		switch errno {
+		case wsaeTimedout, wsaeRefused, wsaeReset:
+			return true
+		}
+		return false
+	}
+	// Some paths wrap the errno in os.SyscallError without keeping the chain.
+	var pathErr *os.SyscallError
+	if errors.As(err, &pathErr) && pathErr.Err != nil {
+		return isConnErrnoRetryable(pathErr.Err)
+	}
+	return false
+}
 
 type imageDisabler interface {
 	DisableImages()
@@ -56,6 +97,12 @@ func isRetryableError(err error) bool {
 	if errors.As(err, &netErr) && netErr.Timeout() {
 		return true
 	}
+	// The socket-number check has to run after the net.Error branch and before the
+	// message fallback: on Windows the numbers above are the reliable signal, and a
+	// wrapper that kept only the text is covered by the patterns below.
+	if isConnErrnoRetryable(err) {
+		return true
+	}
 	var apiErr *provider.APIError
 	if errors.As(err, &apiErr) {
 		return apiErr.IsRetryable()
@@ -76,6 +123,14 @@ func isRetryableByMessage(err error) bool {
 		"connection reset",
 		"connection refused",
 		"connection closed",
+		// Windows socket text, seen in the TSecBench 2026-11-22 journals. The
+		// numbers are checked above; these cover wrappers that dropped the errno.
+		"did not properly respond",
+		"was forcibly closed",
+		"actively refused",
+		// A truncated stream chunk is the same transient class: the request can be
+		// made again.
+		"unexpected end of json input",
 		"eof",
 		"temporary failure",
 		"network is unreachable",
