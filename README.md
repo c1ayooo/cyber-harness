@@ -92,6 +92,8 @@ Start at the [documentation home](docs/README.md). The guides and references des
 
 ## Build and embed
 
+The Tianwu integration uses this fork's `tianwu/fixes` branch. See [Fork notes](FORK.md) for the upstream sync process and protocol compatibility checks.
+
 ### Prepare the source
 
 Install Git and the Go version declared in [go.mod](go.mod) (currently Go 1.26). The Makefile requires GNU Make and a POSIX shell; on Windows, install an MSYS2 toolchain and put its tools on PATH, or use the direct PowerShell build below.

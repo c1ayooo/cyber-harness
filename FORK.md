@@ -1,100 +1,50 @@
-# Fork notes (kksty/cyber-harness)
+# Tianwu fork of cyber-harness
 
-This checkout is the **fork** `kksty/cyber-harness` of
-`chainreactors/cyber-harness`. Tianwu consumes the `cyber-harness` Hub and `cyber-scan` node built
-from this tree; upstream code is never edited in the tianwu repository.
+Tianwu uses the Hub and scan node from the `tianwu/fixes` branch of
+[kksty/cyber-harness](https://github.com/kksty/cyber-harness). Upstream lives at
+[chainreactors/cyber-harness](https://github.com/chainreactors/cyber-harness).
 
 ## Remotes and branches
 
-| Remote | URL | Role |
+| Remote | Branch | Role |
 |---|---|---|
-| `upstream` | `https://github.com/chainreactors/cyber-harness.git` | original project |
-| `origin` | `https://github.com/kksty/cyber-harness.git` | our fork |
+| `upstream` | `master` | Upstream source |
+| `origin` | `tianwu/fixes` | Maintained Tianwu fork |
 
-- `master` tracks `upstream/master` and carries **no local commits**.
-  The local ref can lag the upstream base already used by the patch branch;
-  update it with the sync procedure before the next rebase. The 2026-11-09
-  patch-branch rebase used `6d5a4a7a` (`refactor: simplify package globals and
-  centralize mutations (#198)`), including upstream #196, #197 and #198.
-- `tianwu/fixes` is the patch branch on top of `master`. **Since 2026-11-23 it
-  moves forward only: upstream is merged in on a `chore/*` worktree branch and
-  `tianwu/fixes` is fast-forwarded to that merge.** Do not rebase it and do not
-  force-push it; the reasons are in [Sync upstream](#sync-upstream).
-
-2026-11-13 publication: the maintained fork branch is `tianwu/fixes`.
-Consolidate the validated #200 rebase, OpenCode conversation routing and scan
-test-fixture corrections there; temporary `codex/*` worktrees are review
-history, not additional maintained remote branches. Before replacing the old
-patch tip, verify its 12 patches remain equivalent and use a force-with-lease
-that names the exact fetched remote tip. *(Retired 2026-11-23: the branch is now
-fast-forwarded to a merge and never force-pushed — see
-[Sync upstream](#sync-upstream).)* Preserve the prior local tips for
-rollback; do not push or merge into the upstream project.
-
-## rc10 split (2026-11-16)
-
-Rebased all 16 fork commits onto upstream `21e62cfd` (rc10). The tool-exclusion
-patch now belongs to `cmd/cyber-scan`; the Hub stays profile-neutral. Session
-rotation preserves SingleTask while retaining upstream's compact/resume history
-snapshot handling. The prior tip is retained locally as
-`codex/before-rc10-20261116` for rollback. Tianwu starts a Hub + scan node pair
-for one shared model gateway connection, configures the model on the Hub, and
-pins AOP to the node's hex id. IOA accepts that same registered node id.
-
-Build `./cmd/cyber-harness` and `./cmd/cyber-scan` with sqlite resource tags;
-only the Hub uses `full`. The scan command includes its complete scanner
-profile without that tag. No combined `aiscan web` executable is used by this
-version of Tianwu.
+The local `master` tracks `upstream/master` without local patches. Its
+checkout may lag the upstream commit already integrated into `tianwu/fixes`.
+The maintained fork uses merge commits and fast-forward updates.
 
 ## Sync upstream
 
-2026-11-12 local validation: this worktree is `codex/upstream-sync-20261112`
-at `ee8776fa`, rebased onto upstream `f4b1fb2f` (#200). All 12 existing
-commits retain identical patch semantics (`git range-diff` reports `=`);
-no newly equivalent patch was found. The upstream scanner CLI/configuration
-and compaction simplifications are kept unchanged. The uncommitted OpenCode
-changes were copied from the original `codex/opencode-session` worktree, which
-remains untouched; neither remote branch has been rewritten or pushed.
-The default package checks, Windows production build and Tianwu's three real
-harness contract tests pass with isolated configuration/coreutils. The initial
-full scanner worker assertions/spray fixture panic and Windows no-netgo
-manifest assertion also reproduced at `3d84434c`; the test-only correction
-below now passes these suites with production tags. Browser tests
-retain the real USERPROFILE while Rod creates temporary browser profiles:
-a synthetic USERPROFILE makes Windows Chrome reject debugging on both bases;
-normal-profile Playwright and Katana checks pass. See Tianwu's
-`docs/harness/upstream-sync-2026-11-12.md`
-for commands, ownership checks and deployment boundaries.
-
-**2026-11-23 policy — merge + fast-forward, never force.** Upstream is brought
-in with a merge commit on a short-lived `chore/*` branch cut from `tianwu/fixes`;
-`tianwu/fixes` is then fast-forwarded to that merge. The earlier instruction
-below ("rebase and do not merge upstream into the patch branch") is retired: it
-required `push --force-with-lease` after every sync, and this project does not
-rewrite published history. Merging only on `tianwu/fixes` means no patch is ever
-replayed onto a different base, so the rebase's benefit (linear history) buys
-nothing here and costs traceability — every Tianwu patch and every historical
-build keeps the commit id it was built from.
+Fetch the two remotes separately. Compare the published fork with upstream
+before creating a review worktree. `git cherry` can identify identical
+patches. For refactored code, compare the affected behavior and its tests.
 
 ```sh
-git fetch origin upstream
-git worktree add -b chore/harness-sync <path> tianwu/fixes
-cd <path>
-git merge upstream/master          # resolve conflicts in the worktree, never on tianwu/fixes
-# rebuild + validate from Tianwu before publishing:
-#   pwsh -File scripts/gate.ps1 -harness-dir <path>     (steps 5-7: proto drift, harness build)
-#   go test ./... -p 1 -count=1                         (Tianwu)
-git push origin chore/harness-sync:tianwu/fixes   # fast-forward only; no --force
+git fetch origin
+git fetch upstream
+git rev-list --left-right --count upstream/master...origin/tianwu/fixes
+git cherry upstream/master origin/tianwu/fixes
+git worktree add -b chore/harness-sync ../harness-sync origin/tianwu/fixes
+git -C ../harness-sync merge upstream/master
 ```
 
-Resolve conflicts in the worktree. Do not edit `tianwu/fixes` in place, and do
-not force-push it. After the merge, rebuild and reinstall the binary (below) and
-rerun the Tianwu validation.
+For each merge conflict, check the upstream behavior and the contract the fork
+test protects. If upstream supersedes a patch, keep the upstream implementation
+and record the replacement in [Superseded patches](#superseded-patches).
+During review, compare the worktree with both parents and run the tests for
+the touched contracts.
 
-**When upstream ships an equivalent fix, delete our duplicate patch instead of
-keeping a second implementation.** Record the dropped commit in
-[Superseded patches](#superseded-patches) below and rerun the package tests that
-covered it. Do not keep a patch just because it has been there for a while.
+From the Tianwu checkout, compare its generated AOP files with the candidate
+fork using `go run ./cmd/tw-gate -check-aop-protos -harness-dir ../harness-sync`.
+Run the affected package tests before updating `tianwu/fixes`. Publish approved
+changes as a fast-forward of the remote fork branch.
+
+On 2026-11-24, upstream `master` at `585d8643` was an ancestor of the
+published fork at `8f61e0d4`. The merge retained the upstream search extension
+and the fork's OpenCode request routing. All 12 generated AOP files matched
+the Tianwu checkout at `425e6175`.
 
 ## Local patches
 
@@ -505,39 +455,28 @@ the 2026-11-09 rebase. Do not reintroduce them without new evidence.
   still wins, and `docs/user/tools.md` documents the EOF / `wait>0` /
   `tmux send-keys` contract. The upstream tests are
   `tools/terminal/interpreter_test.go`; verify with
-  `go test ./tools/terminal`. Tianwu's own regression history stays in
-  tianwu `docs/harness/issue-bash-stdin.md`; the build keeps one
-  implementation.
+  `go test ./tools/terminal`. The regression history is recorded in the fork commits.
 
 ## Tests
 
-All local patches are covered by tests in their packages:
+Use the regression tests listed with each patch. For provider routing and
+configuration checks, the focused suites are:
 
 ```sh
-go test ./agent ./agent/session ./agent/provider ./tools/terminal ./tools/files \
-  ./tools/playwright ./tools/curl ./tools/gogo ./tools/toolargs ./tools/scan ./cmd/aiscan
+go test ./agent/provider ./pkg/config
 ```
 
 ## Build and deploy
 
-Keep the checkout on `tianwu/fixes` (not `master`) while building: `master`
-has no local patches.
+Use the [Tianwu build scripts](https://github.com/kksty/tianwu#从源码构建与启动)
+with the same fork checkout for the Hub and scan binaries. The scripts select
+platform tags and build `cmd/cyber-harness` and `cmd/cyber-scan`. Pass the
+directory of a review worktree explicitly when checking an upstream merge.
 
-```sh
-CGO_ENABLED=0 go build -trimpath -buildvcs=false \
-  -tags "forceposix emptytemplates noembed osusergo netgo full sqlite" \
-  -o /path/to/tianwu/bin/aiscan-full.exe ./cmd/aiscan
-```
-
-Replacing the binary while a host is running requires stopping `tw` first.
-Use Tianwu build scripts to select platform tags: Windows deliberately omits
-netgo to preserve the system resolver (D125). Old binary retention or removal
-is an operator choice. The 2026-11-09 build was produced by
-`tianwu/scripts/build-harness.ps1` from the rebased `tianwu/fixes`.
+Record the fork commit and AOP check with the build. Deployment and rollback
+use [Tianwu's deployment guide](https://github.com/kksty/tianwu/blob/main/docs/02-deploy.md).
 
 ## Rule
 
-Do not reach for an upstream patch before proving our own usage, data, or
-contract is correct. When an upstream change is justified, record the root
-cause, the test, and the rollback path in the commit and in tianwu's
-`agent.md`.
+Confirm whether a bug belongs to the caller, the protocol contract or the fork.
+For each patch, record the cause, regression test and rollback notes in its commit.

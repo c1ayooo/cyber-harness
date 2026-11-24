@@ -92,6 +92,8 @@ llm:
 
 ## 构建与嵌入
 
+天吴集成使用本 fork 的 `tianwu/fixes` 分支。上游同步和协议兼容检查见 [Fork 维护说明](FORK.md)。
+
 ### 准备源码
 
 安装 Git 和 [go.mod](go.mod) 指定的 Go 版本（当前为 Go 1.26）。Makefile 需要 GNU Make 和 POSIX shell；Windows 可安装 MSYS2 工具链并加入 PATH，或使用下文的 PowerShell 直接构建命令。
