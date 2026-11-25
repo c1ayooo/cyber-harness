@@ -5,11 +5,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"net/url"
 	"strings"
 
 	aop "github.com/c1ayooo/cyber/aop"
+	"github.com/c1ayooo/cyber/core/egress"
 	"github.com/c1ayooo/cyber/core/scoperules"
 	types "github.com/c1ayooo/cyber/core/types"
+	"github.com/chainreactors/proxyclient"
 	protobuf "google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 )
@@ -177,6 +180,94 @@ func turnScopeRules(req *aop.RunTurnRequest) {
 	}
 }
 
+// egressProxyExtensionURLs is the control plane's per-turn egress proxy (the
+// project manifest "proxy" JSON: enabled/scheme/host/port/username/password
+// plus the normalized dial url). The proxy hub reads what this registers; an
+// unparsable endpoint is logged and cleared — the session falls back to the
+// node default chain rather than routing on garbage.
+var egressProxyExtensionURLs = []string{
+	"type.googleapis.com/tianwu.EgressProxy",
+	"type.googleapis.com/4zrcin.EgressProxy",
+}
+
+// egressProxyPayload mirrors the manifest's "proxy" shape. url is the control
+// plane's normalized dial URL (computed at every save, so it is authoritative);
+// the field derivation below only serves control planes older than the url
+// field, and the default-port table matches internal/project's DialURL.
+type egressProxyPayload struct {
+	Enabled  bool   `json:"enabled"`
+	Scheme   string `json:"scheme"`
+	Host     string `json:"host"`
+	Port     int    `json:"port,omitempty"`
+	Username string `json:"username,omitempty"`
+	Password string `json:"password,omitempty"`
+	URL      string `json:"url,omitempty"`
+}
+
+// turnEgressProxy binds this turn's session to the project proxy a control
+// plane attached. The binding rides every turn — a disabled draft included —
+// so a session that outlives the save learns the endpoint was switched off
+// and falls back to the node default. Registration lives in core/egress (same
+// pattern as scoperules): the session layer writes, the proxy hub reads, and
+// neither imports the other.
+//
+// NewClient needs the extra protocol factories (trojan/vmess/hysteria2/anytls/
+// clash) registered; those blank imports live in tools/proxy, which every
+// agent binary links, so the factories are in the registry by the time a turn
+// with such an endpoint arrives.
+func turnEgressProxy(req *aop.RunTurnRequest) {
+	if req == nil {
+		return
+	}
+	extension := extensionWithURL(req.GetExtensions(), egressProxyExtensionURLs)
+	if extension == nil {
+		return
+	}
+	sessionID := req.GetSessionId()
+	var payload egressProxyPayload
+	if err := json.Unmarshal(extension.GetValue(), &payload); err != nil {
+		log.Printf("aop: ignore invalid egress proxy for session %s: %v", sessionID, err)
+		egress.ClearSessionRoute(sessionID)
+		return
+	}
+	// Disabled is a stored state the operator kept, not a deletion: clearing
+	// the route is exactly how "off" reaches a session that is already live.
+	if !payload.Enabled {
+		egress.ClearSessionRoute(sessionID)
+		return
+	}
+	raw := payload.URL
+	if raw == "" {
+		// Legacy control planes without the url field: derive from the fields.
+		host := payload.Host
+		if payload.Port > 0 {
+			host = fmt.Sprintf("%s:%d", host, payload.Port)
+		}
+		u := &url.URL{Scheme: payload.Scheme, Host: host}
+		if payload.Username != "" {
+			if payload.Password != "" {
+				u.User = url.UserPassword(payload.Username, payload.Password)
+			} else {
+				u.User = url.User(payload.Username)
+			}
+		}
+		raw = u.String()
+	}
+	endpoint, err := url.Parse(raw)
+	if err != nil {
+		log.Printf("aop: ignore invalid egress proxy url for session %s: %v", sessionID, err)
+		egress.ClearSessionRoute(sessionID)
+		return
+	}
+	dial, err := proxyclient.NewClient(endpoint)
+	if err != nil {
+		log.Printf("aop: ignore undialable egress proxy for session %s: %v", sessionID, err)
+		egress.ClearSessionRoute(sessionID)
+		return
+	}
+	egress.SetSessionRoute(sessionID, egress.Dial(dial))
+}
+
 type toolEnvExtension struct {
 	Env map[string]string `json:"env"`
 }
@@ -241,8 +332,11 @@ func (rt *Runtime) RunAOPTurn(ctx context.Context, req *aop.RunTurnRequest) *aop
 		}
 	}
 	// The test-range rule set registers before the turn starts so the proxy
-	// judges this turn's requests against it.
+	// judges this turn's requests against it. The project's egress proxy binds
+	// in the same breath: the hub routes this session's outbound calls through
+	// the endpoint the manifest held at dispatch time.
 	turnScopeRules(req)
+	turnEgressProxy(req)
 	var message *aop.Message
 	if req.Input != nil {
 		message = protobuf.CloneOf(req.Input)
@@ -287,6 +381,9 @@ func (rt *Runtime) CloseAOPSession(ctx context.Context, req *aop.CloseSessionReq
 		response.Outcome = &aop.CloseSessionResponse_Rejected{Rejected: rejection("INVALID_ARGUMENT", "session_id is required")}
 		return response
 	}
+	// The session is gone: its project proxy binding must go with it, or a
+	// later session reusing the id would inherit a route nobody re-sent.
+	egress.ClearSessionRoute(req.SessionId)
 	if err := rt.CloseSession(ctx, req.SessionId, SessionCloseReason(req.Reason)); err != nil {
 		response.Outcome = &aop.CloseSessionResponse_Rejected{Rejected: rejection("FAILED_PRECONDITION", err.Error())}
 		return response

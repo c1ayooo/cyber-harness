@@ -9,6 +9,7 @@ import (
 	"sync"
 
 	operationpb "github.com/c1ayooo/cyber/aop/operation"
+	"github.com/c1ayooo/cyber/core/egress"
 	"github.com/c1ayooo/cyber/core/hooks"
 	"github.com/c1ayooo/cyber/core/operation"
 	cfg "github.com/c1ayooo/cyber/pkg/config"
@@ -87,9 +88,21 @@ func (h *ProxyHub) egress(ctx context.Context, dial proxyclient.Dial) (string, s
 	if base == "" {
 		return "", h.CAPath(), func() {}
 	}
+	invocation := operation.InvocationFromContext(ctx)
+	// Per-session egress routing (4zrcin.EgressProxy, patch 24): a session the
+	// control plane bound to its own project proxy dials through that endpoint
+	// instead of the node default. An explicit per-call dial (the `proxy <url>
+	// <cmd>` passthrough) still wins — precedence is per-call > per-session >
+	// node default. No route registered means dial stays nil and the chain in
+	// State applies, byte-identical to the pre-patch behavior.
+	if dial == nil && invocation.SessionID != "" {
+		if route := egress.LookupSessionRoute(invocation.SessionID); route != nil {
+			dial = proxyclient.Dial(route)
+		}
+	}
 	token := routeTokenPrefix + rand.Text()
 	lease := &correlationLease{
-		operation: operation.Correlation(ctx), invocation: operation.InvocationFromContext(ctx),
+		operation: operation.Correlation(ctx), invocation: invocation,
 		cancel: func(cause error) bool { return operation.RequestCancel(ctx, cause) },
 		dial:   dial,
 		done:   make(chan struct{}),
