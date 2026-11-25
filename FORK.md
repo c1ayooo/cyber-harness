@@ -1,6 +1,6 @@
-# Tianwu fork of cyber-harness
+# 4zrcin fork of cyber-harness
 
-Tianwu uses the Hub and scan node from the `tianwu/fixes` branch of
+4zrcin uses the Hub and scan node from the `tianwu/fixes` branch of
 [kksty/cyber-harness](https://github.com/kksty/cyber-harness). Upstream lives at
 [chainreactors/cyber-harness](https://github.com/chainreactors/cyber-harness).
 
@@ -9,7 +9,7 @@ Tianwu uses the Hub and scan node from the `tianwu/fixes` branch of
 | Remote | Branch | Role |
 |---|---|---|
 | `upstream` | `master` | Upstream source |
-| `origin` | `tianwu/fixes` | Maintained Tianwu fork |
+| `origin` | `tianwu/fixes` | Maintained 4zrcin fork |
 
 The local `master` tracks `upstream/master` without local patches. Its
 checkout may lag the upstream commit already integrated into `tianwu/fixes`.
@@ -36,15 +36,15 @@ and record the replacement in [Superseded patches](#superseded-patches).
 During review, compare the worktree with both parents and run the tests for
 the touched contracts.
 
-From the Tianwu checkout, compare its generated AOP files with the candidate
-fork using `go run ./cmd/tw-gate -check-aop-protos -harness-dir ../harness-sync`.
+From the 4zrcin checkout, compare its generated AOP files with the candidate
+fork using `go run ./cmd/zrcin-gate -check-aop-protos -harness-dir ../harness-sync`.
 Run the affected package tests before updating `tianwu/fixes`. Publish approved
 changes as a fast-forward of the remote fork branch.
 
 On 2026-11-24, upstream `master` at `585d8643` was an ancestor of the
 published fork at `8f61e0d4`. The merge retained the upstream search extension
 and the fork's OpenCode request routing. All 12 generated AOP files matched
-the Tianwu checkout at `425e6175`.
+the 4zrcin checkout at `425e6175`.
 
 ## Local patches
 
@@ -58,7 +58,7 @@ the Tianwu checkout at `425e6175`.
 2. **`feat(usage): report the resolved context_window with token usage`**
    `agent/retry.go`, `agent/loop.go`, `agent/loop_test.go`.
    The model window is resolved inside the agent (`ModelContextWindow`) but a
-   control plane only saw `context_tokens`, so Tianwu duplicated the model table
+   control plane only saw `context_tokens`, so 4zrcin duplicated the model table
    to place its 85% handoff line (D80) — wrong for any model whose real window
    differs from the profile fallback. `usage.detail.context_window` now carries
    the resolved window, and the transcript keeps it scalar instead of summing it
@@ -71,7 +71,7 @@ the Tianwu checkout at `425e6175`.
    `operation.WorkDirFromContext`).
    Upstream AOP has no session working directory: `OpenSessionRequest` has no
    work-dir field and one agent process serves every run, so tools resolve
-   relative paths against the agent's process directory. Tianwu sends a work-dir
+   relative paths against the agent's process directory. 4zrcin sends a work-dir
    extension on `OpenSessionRequest` (`type.googleapis.com/tianwu.WorkDir`,
    JSON `{"work_dir":"<absolute path>"}`); the agent stores it per session
    (`SessionOptions.WorkDir` → `agent.Config.WorkDir`), puts it in each tool
@@ -100,13 +100,13 @@ the Tianwu checkout at `425e6175`.
    The harness always installs the native `subagent` tool once a session
    configuration exists; `--tools` only selects search/browser/record and
    `--no-agent` removes the whole agent. A subagent child session is created
-   outside Tianwu's ledger (no run/usage/parent/cancel record), so Tianwu starts
+   outside 4zrcin's ledger (no run/usage/parent/cancel record), so 4zrcin starts
    every host with `CYBER_EXCLUDE_TOOLS=subagent` and keeps
    `--allow-native-subagent` as the explicit operator escape hatch. The
    variable is an exclusion list owned by the host process, not a prompt rule.
    Tests: `go test ./cmd/aiscan`.
 
-6. **Native command invocation directories** (2026-11-06, Tianwu D127)
+6. **Native command invocation directories** (2026-11-06, 4zrcin D127)
    The control plane and shell already pass the per-session working directory
    into Execution.Dir. Scanner commands instead resolved file flags against
    their shared startup Base.WorkDir, so a shell-created case/raw directory
@@ -126,7 +126,7 @@ the Tianwu checkout at `425e6175`.
    binding and passes on the new one. Rollback: restore the previous checkout
    and rebuild the executor; no user data migration is performed.
 
-7. **Null device arguments and environment contracts** (2026-11-06, Tianwu D129)
+7. **Null device arguments and environment contracts** (2026-11-06, 4zrcin D129)
    Touch passed `/dev/null` to the built-in curl output flag on Windows.
    The embedded shell already maps null redirection correctly; curl instead
    joined that path to the case directory. Its file resolver now maps the
@@ -141,7 +141,7 @@ the Tianwu checkout at `425e6175`.
    Rollback: restore the prior fork revision and rebuild the executor; no data
    migration or system configuration change is involved.
 
-8. **Externally scheduled AOP mailboxes** (2026-11-06, Tianwu D129)
+8. **Externally scheduled AOP mailboxes** (2026-11-06, 4zrcin D129)
    Idle native sessions can start automatic model turns on peer/background
    input. A control plane owns tracked turn admission and pause, so its
    existing workspace extension now forwards the runtime's SingleTask option.
@@ -152,12 +152,12 @@ the Tianwu checkout at `425e6175`.
    No tools are removed and no model, strategy or fee policy is introduced.
    Tests: AOP extension -> runtime -> idle delivery -> explicit execution,
    repeated manual turns, rotation, active delivery, and the existing native
-   automatic-session tests. Tianwu observes new directed commander messages
+   automatic-session tests. 4zrcin observes new directed commander messages
    and wakes its own paused-aware scheduler; historical replay never does.
    Rollback requires rebuilding both executables from matching revisions;
    there is no user-data migration.
 
-9. **`fix(provider): fail fast on quota-exhausted 429`** (2026-11-11, Tianwu D67/D95)
+9. **`fix(provider): fail fast on quota-exhausted 429`** (2026-11-11, 4zrcin D67/D95)
    `agent/provider/errors.go`, `agent/provider/types.go`, `agent/retry.go`,
    tests in `agent/retry_test.go` and `agent/provider/errors_test.go`.
    A gateway may report an exhausted account as HTTP 429 (WorkBuddy answers
@@ -173,10 +173,10 @@ the Tianwu checkout at `425e6175`.
    per D67/D95. Tests: quota 429 call count == 1 with the body preserved, plain
    429 still retryable, provider classification table.
 
-10. **OpenCode Go conversation routing** (2026-11-12, Tianwu D149)
+10. **OpenCode Go conversation routing** (2026-11-12, 4zrcin D149)
     OpenCode Go uses `https://opencode.ai/inference/go/openai/v1` and expects
     a stable `x-opencode-session` plus the client's own User-Agent. The existing
-    OpenAI adapter only set Authorization; Tianwu's AOP request has no vendor
+    OpenAI adapter only set Authorization; 4zrcin's AOP request has no vendor
     HTTP-header injection contract, so this fix belongs at the provider boundary.
     The OpenAI adapter now binds headers per request for non-streaming, SSE,
     catalogue and auxiliary requests. The exact HTTPS opencode.ai hostname is
@@ -195,7 +195,7 @@ the Tianwu checkout at `425e6175`.
     hostname boundaries, cache-key preservation and compaction rotation.
     `CYBER_TEST_OPENCODE_KEY` explicitly opts into `TestOpenCodeLiveChatAndStream`;
     it is skipped by default and never saves the key. Actual Go non-streaming
-    and streaming requests passed during Tianwu's review.
+    and streaming requests passed during 4zrcin's review.
     Rollback: retain the previous executable and rebuild without this patch;
     no schema, stored credentials or project data are migrated. The same
     OpenCode patch was validated on `codex/opencode-session` and this rebased
@@ -218,7 +218,7 @@ the Tianwu checkout at `425e6175`.
     suite and focused manifest checks. No scanner/dependency runtime behavior
     is changed; missing crawl resources still need validation in the dependency.
 
-12. **Session-stable system prompt for prefix caching** (2026-11-15, Tianwu cache audit)
+12. **Session-stable system prompt for prefix caching** (2026-11-15, 4zrcin cache audit)
     `agent/session/runtime.go`, `agent/session/dependencies.go`,
     `exts/prompt/defaults.go`, `agent/session/prompt_test.go`.
     `resolveSystemPrompt` used `time.Now()` for the Environment `Current Time`
@@ -227,20 +227,20 @@ the Tianwu checkout at `425e6175`.
     cache missed the entire history (first request of wake 2: 86k input,
     cache_read 0; subsequent requests in the same run hit 90%+ because the
     system was resolved once). The system now carries `Session Started`
-    (Runtime creation time), and Tianwu injects the current time in the new
+    (Runtime creation time), and 4zrcin injects the current time in the new
     user turn, after the stable prefix. Test:
     `go test ./agent/session -run TestSystemPromptTimeIsSessionStable`.
     Rollback: restore the prior fork revision and rebuild the executor; no
     session data or ledger migration is involved.
 
-13. **Accept Tianwu-owned provider metadata** (2026-11-15)
+13. **Accept 4zrcin-owned provider metadata** (2026-11-15)
     `pkg/config/options.go`.
-    Tianwu stores `paused`, `tier`, `fallback`, `max_concurrency` and
+    4zrcin stores `paused`, `tier`, `fallback`, `max_concurrency` and
     `api_keys` beside the harness fields in the operator's
     `~/.cyber/cyber.yaml`. A standalone `aiscan` (or a test that reads the real
     file) failed the strict config validator with
     `unknown configuration field llm.providers[0].paused`. The struct now
-    accepts those keys and ignores them; Tianwu's filtered per-host runtime copy
+    accepts those keys and ignores them; 4zrcin's filtered per-host runtime copy
     still strips them, so provider behavior and secret handling are unchanged.
     Test: `go test ./cmd/aiscan -run TestInboxHostRejectsRemoteTransport`.
 
@@ -258,7 +258,7 @@ the Tianwu checkout at `425e6175`.
     rebuild, configuration change or project migration is required.
 
 15. **`feat(session): accept the control plane's evaluator goal on RunTurn`**
-    (2026-11-18, Tianwu evaluator goal contract)
+    (2026-11-18, 4zrcin evaluator goal contract)
     `agent/session/protocol.go`, `agent/session/session.go`,
     `agent/session/run_goal_test.go`.
     Root cause: the evaluator always derived its goal from the turn input text
@@ -293,7 +293,7 @@ the Tianwu checkout at `425e6175`.
     `TurnEnded` event with an extra model call (`agent/recap/model.go`, max 256
     tokens). That call's usage is not reported in the turn's token usage, so a
     control plane that accounts per-run spend and pauses/exhausts on quota
-    silently undercounts it. Tianwu reviews work through its decision log and
+    silently undercounts it. 4zrcin reviews work through its decision log and
     handoff receipts, not through recaps, so the reference scan profile no
     longer appends `recapext.New()` and the import is gone. The `exts/recap`
     package itself is unchanged, so embedders that want recaps can still
@@ -329,7 +329,7 @@ the Tianwu checkout at `425e6175`.
     migrated.
 
 18. **Pluggable guardrail judges: Policy, LLM, hybrid, shadow and scope**
-    (2026-11-18, Tianwu P4-I guardrail judge)
+    (2026-11-18, 4zrcin P4-I guardrail judge)
     `exts/guardrail/{policy.go,policy_llm.go,policy_hybrid.go,runtime.go,extension.go,jev.go}`,
     `exts/guardrail/{admission_test.go,policy_llm_test.go,policy_hybrid_test.go,extension_config_test.go}`,
     `cmd/cyber-scan/{profile.go,guardrail_provider_test.go}`,
@@ -421,7 +421,7 @@ the Tianwu checkout at `425e6175`.
     carry no persisted state.
 
 19. **`docs(neutron): state the template-set default in the quick reference`**
-    (2026-11-20, Tianwu duplicate-submission cleanup)
+    (2026-11-20, 4zrcin duplicate-submission cleanup)
     `tools/neutron/neutron.go`, `tools/neutron/neutron_test.go`.
     Root cause: `QuickReference()` listed `-t <path>` as "Extra template file or
     directory" and said nothing about the default, while the engine treats a `-t`
@@ -456,7 +456,7 @@ the Tianwu checkout at `425e6175`.
     `core/scoperules/`, `agent/session/protocol.go`, `exts/guardrail/scoperules.go`,
     `tools/proxy/hub.go`, `tools/proxy/mitm.go`, `tools/proxy/hub_traffic.go`,
     `exts/observe/extension.go`, `exts/proxy/extension.go`.
-    The Tianwu/4zrcin control plane sends the project's machine-matchable test
+    The 4zrcin/4zrcin control plane sends the project's machine-matchable test
     range (manifest `scope_rules` JSON) as a per-turn fork extension
     (`tianwu.ScopeRules` / `4zrcin.ScopeRules`, mirrors 15/16/17). The session
     registers one set per session (`core/scoperules`, invalid sets are logged
@@ -476,6 +476,18 @@ the Tianwu checkout at `425e6175`.
     ./tools/proxy -run TestScopeJudge ./agent/session -count=1`.
     Rollback: rebuild without the judge wiring (`SetScopeJudge` call) or with
     no `scope_rules` extension sent — both leave record-only behavior.
+
+25. **`docs(fork): the control plane is zrcin`** (2026-11-26)
+    `FORK.md` only — no harness code changes.
+    The 4zrcin repository renamed its identity (`cmd/tw` → `cmd/zrcin`,
+    `TW_*` env vars → `ZRCIN_*`, the per-project `.tw` metadata directory →
+    `.zrcin`, theme utility prefix `tw-*` → `zrcin-*`). This file's prose and
+    the `cmd/tw-gate` sync command were updated to match; the fork module
+    (`github.com/c1ayooo/cyber`), the branch name (`tianwu/fixes`) and the
+    legacy `tianwu.*` type URLs stay as they are — patch 20 keeps both
+    extension namespaces recognized. Patch numbers 22/23 are reserved for the
+    control plane's embedding work (webhost `Listener`, docs/03 §11 P5); 24
+    is the egress proxy.
 
 ## Superseded patches
 
@@ -505,13 +517,13 @@ go test ./agent/provider ./pkg/config
 
 ## Build and deploy
 
-Use the [Tianwu build scripts](https://github.com/kksty/tianwu#从源码构建与启动)
+Use the [4zrcin build scripts](https://github.com/kksty/tianwu#从源码构建与启动)
 with the same fork checkout for the Hub and scan binaries. The scripts select
 platform tags and build `cmd/cyber-harness` and `cmd/cyber-scan`. Pass the
 directory of a review worktree explicitly when checking an upstream merge.
 
 Record the fork commit and AOP check with the build. Deployment and rollback
-use [Tianwu's deployment guide](https://github.com/kksty/tianwu/blob/main/docs/02-deploy.md).
+use [4zrcin's deployment guide](https://github.com/kksty/tianwu/blob/main/docs/02-deploy.md).
 
 ## Rule
 
