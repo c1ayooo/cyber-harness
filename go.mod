@@ -392,20 +392,17 @@ replace (
 	github.com/chainreactors/words => github.com/c1ayooo/words v0.0.0-20260520145736-270600e60fb4
 	github.com/chainreactors/zombie => github.com/c1ayooo/zombie v1.3.1-0.20260809133033-0d0df6fa50f5
 
-	// 子目录模块：fork 内 go.mod 仍声明 github.com/chainreactors/... 路径，
-	// replace 到 fork 会报 "module declares its path as ... but was required as ..."，
-	// 因此保留本地 third_party 副本。
-	github.com/chainreactors/gogo/v2 => ./third_party/chainreactors/gogo/v2
-	github.com/chainreactors/libcstx/go => ./third_party/chainreactors/libcstx/go
-	github.com/chainreactors/neutron/operators/full => ./third_party/chainreactors/neutron/operators/full
-	github.com/chainreactors/proxyclient/extra => ./third_party/chainreactors/proxyclient/extra
-	github.com/chainreactors/sdk/gogo => ./third_party/chainreactors/sdk/gogo
-	github.com/chainreactors/sdk/spray => ./third_party/chainreactors/sdk/spray
-	github.com/chainreactors/sdk/zombie => ./third_party/chainreactors/sdk/zombie
-	github.com/chainreactors/tui/console => ./third_party/chainreactors/tui/console
-	github.com/chainreactors/tui/readline => ./third_party/chainreactors/tui/readline
-	github.com/chainreactors/utils/cert => ./third_party/chainreactors/utils/cert
-	github.com/chainreactors/utils/mitmproxy => ./third_party/chainreactors/utils/mitmproxy
-	github.com/chainreactors/utils/parsers => ./third_party/chainreactors/utils/parsers
-	github.com/chainreactors/utils/proc => ./third_party/chainreactors/utils/proc
+	github.com/chainreactors/gogo/v2 => github.com/c1ayooo/gogo/v2 v2.15.1-0.20260728051744-a278b33d8744
+	github.com/chainreactors/libcstx/go => github.com/c1ayooo/libcstx/go v0.4.2-0.20260915062605-a4bd085cbb12
+	github.com/chainreactors/neutron/operators/full => github.com/c1ayooo/neutron/operators/full v0.1.1-0.20260704194031-f57d0a560e32
+	github.com/chainreactors/proxyclient/extra => github.com/c1ayooo/proxyclient/extra v0.0.0-20260527160727-36cf133952c3
+	github.com/chainreactors/sdk/gogo => github.com/c1ayooo/sdk/gogo v0.0.0-20260708104745-dcad8620f5e9
+	github.com/chainreactors/sdk/spray => github.com/c1ayooo/sdk/spray v0.0.0-20260708104745-dcad8620f5e9
+	github.com/chainreactors/sdk/zombie => github.com/c1ayooo/sdk/zombie v0.0.0-20260708104745-dcad8620f5e9
+	github.com/chainreactors/tui/console => github.com/c1ayooo/tui/console v0.0.0-20260712082522-2ba36ad7841f
+	github.com/chainreactors/tui/readline => github.com/c1ayooo/tui/readline v0.0.0-20261010062516-bb32632d1a4e
+	github.com/chainreactors/utils/cert => github.com/c1ayooo/utils/cert v0.0.0-20260722180147-5b1816060721
+	github.com/chainreactors/utils/mitmproxy => github.com/c1ayooo/utils/mitmproxy v0.0.0-20261002195803-fc9e07c4b4fd
+	github.com/chainreactors/utils/parsers => github.com/c1ayooo/utils/parsers v0.0.3
+	github.com/chainreactors/utils/proc => github.com/c1ayooo/utils/proc v0.0.0-20261002195803-fc9e07c4b4fd
 )
