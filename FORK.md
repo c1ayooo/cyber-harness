@@ -477,6 +477,27 @@ the 4zrcin checkout at `425e6175`.
     Rollback: rebuild without the judge wiring (`SetScopeJudge` call) or with
     no `scope_rules` extension sent — both leave record-only behavior.
 
+22. **`feat(web): the Hub becomes an embeddable library`** (2026-11-26)
+    `pkg/web/host/host.go`, `pkg/web/hubapp/` (new), `cmd/cyber-harness/main.go`.
+    The 4zrcin control plane embeds the Hub in-process (its single binary,
+    docs/04 M1), so the host must accept a listener the caller owns and the
+    command's assembly must be importable. `webhost.Config` gains an optional
+    `Listener`: when set, Serve accepts on it and ignores `Addr` (the 4zrcin
+    console already owns a loopback listener; binding a second port would be a
+    new failure surface). The command's assembly moved to `pkg/web/hubapp.App`
+    — same flag surface, same codec/store wiring, same help text; the command
+    is now a thin process shell calling it with a nil override, so its CLI
+    behavior is unchanged, and an embedding caller passes its own listener via
+    the override seam. Scan-node processes are untouched (they stay separate
+    subprocesses in both modes; CYBER_EXCLUDE_TOOLS consumers live in
+    cmd/cyber-scan, so in-process hosting never needs to set that variable
+    process-wide).
+    Tests: `go test ./pkg/web/host ./pkg/web/hubapp -count=1`; the command
+    suite `./cmd/harness` passes except the two OrderLab fixture scenarios
+    that require python on PATH (environmental, pre-existing).
+    Rollback: revert — the command regains its inline assembly and the
+    embedding form disappears.
+
 25. **`docs(fork): the control plane is zrcin`** (2026-11-26)
     `FORK.md` only — no harness code changes.
     The 4zrcin repository renamed its identity (`cmd/tw` → `cmd/zrcin`,

@@ -19,7 +19,12 @@ import (
 )
 
 type Config struct {
-	Addr       string
+	Addr string
+	// Listener is optional. When set, Serve accepts on it instead of opening
+	// Addr — a control plane that embeds the host in-process passes a
+	// listener it already owns (the 4zrcin single binary, docs/04 M1) and
+	// Addr is ignored. Serve still closes it on return.
+	Listener   net.Listener
 	Static     fs.FS
 	Management webext.Config
 	Extensions []extension.Extension
@@ -46,11 +51,15 @@ func Serve(ctx context.Context, config Config) (resultErr error) {
 	if err := set.Load(ctx); err != nil {
 		return err
 	}
-	listener, err := net.Listen("tcp", config.Addr)
-	if err != nil {
-		return fmt.Errorf("listen on %s: %w", config.Addr, err)
+	listener := config.Listener
+	if listener == nil {
+		var err error
+		listener, err = net.Listen("tcp", config.Addr)
+		if err != nil {
+			return fmt.Errorf("listen on %s: %w", config.Addr, err)
+		}
+		defer listener.Close()
 	}
-	defer listener.Close()
 	var static http.Handler
 	if config.Static != nil {
 		static = SPAFileServer(config.Static)
