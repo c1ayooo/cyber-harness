@@ -17,7 +17,7 @@ func TestProfileDoesNotLinkRecapWorker(t *testing.T) {
 		t.Fatalf("go list: %v\n%s", err, output)
 	}
 	for _, dependency := range strings.Fields(string(output)) {
-		if dependency == "github.com/chainreactors/cyber/exts/recap" {
+		if dependency == "github.com/c1ayooo/cyber/exts/recap" {
 			t.Fatal("cyber-scan links the recap worker again; it adds unreported model calls per turn")
 		}
 	}

@@ -2,7 +2,7 @@ package console
 
 import (
 	"fmt"
-	outputpkg "github.com/chainreactors/cyber/pkg/output"
+	outputpkg "github.com/c1ayooo/cyber/pkg/output"
 	"github.com/chainreactors/tui/console"
 	"github.com/chainreactors/tui/readline/inputrc"
 	"sort"

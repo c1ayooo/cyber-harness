@@ -5,10 +5,10 @@ import (
 	"context"
 	"testing"
 
-	"github.com/chainreactors/cyber/core/extension"
-	"github.com/chainreactors/cyber/core/hooks"
-	coretool "github.com/chainreactors/cyber/core/tool"
-	internal "github.com/chainreactors/cyber/pkg/internal/testutil/hosttest"
+	"github.com/c1ayooo/cyber/core/extension"
+	"github.com/c1ayooo/cyber/core/hooks"
+	coretool "github.com/c1ayooo/cyber/core/tool"
+	internal "github.com/c1ayooo/cyber/pkg/internal/testutil/hosttest"
 )
 
 func Set(t testing.TB, values ...extension.Extension) *extension.Set {

@@ -8,12 +8,12 @@ import (
 	"testing"
 	"testing/fstest"
 
-	provider "github.com/chainreactors/cyber/agent/provider"
-	aop "github.com/chainreactors/cyber/aop"
-	coretool "github.com/chainreactors/cyber/core/tool"
-	"github.com/chainreactors/cyber/pkg/testutil/hosttest"
-	"github.com/chainreactors/cyber/tools/files"
-	"github.com/chainreactors/cyber/tools/terminal"
+	provider "github.com/c1ayooo/cyber/agent/provider"
+	aop "github.com/c1ayooo/cyber/aop"
+	coretool "github.com/c1ayooo/cyber/core/tool"
+	"github.com/c1ayooo/cyber/pkg/testutil/hosttest"
+	"github.com/c1ayooo/cyber/tools/files"
+	"github.com/c1ayooo/cyber/tools/terminal"
 )
 
 func TestBasicToolFailureAllowsModelCorrection(t *testing.T) {

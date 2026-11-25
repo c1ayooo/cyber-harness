@@ -5,7 +5,7 @@
 package types
 
 import (
-	"github.com/chainreactors/cyber/aop"
+	"github.com/c1ayooo/cyber/aop"
 )
 
 const (

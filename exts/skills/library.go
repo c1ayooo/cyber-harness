@@ -2,9 +2,9 @@ package skills
 
 import (
 	"fmt"
-	"github.com/chainreactors/cyber/agent/skills"
-	"github.com/chainreactors/cyber/core/extension"
-	"github.com/chainreactors/cyber/core/resource"
+	"github.com/c1ayooo/cyber/agent/skills"
+	"github.com/c1ayooo/cyber/core/extension"
+	"github.com/c1ayooo/cyber/core/resource"
 	"path/filepath"
 )
 

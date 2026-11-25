@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/chainreactors/cyber/agent/hooks"
-	mailbox "github.com/chainreactors/cyber/agent/inbox"
-	"github.com/chainreactors/cyber/agent/provider"
-	"github.com/chainreactors/cyber/core/collaboration"
-	"github.com/chainreactors/cyber/core/types"
+	"github.com/c1ayooo/cyber/agent/hooks"
+	mailbox "github.com/c1ayooo/cyber/agent/inbox"
+	"github.com/c1ayooo/cyber/agent/provider"
+	"github.com/c1ayooo/cyber/core/collaboration"
+	"github.com/c1ayooo/cyber/core/types"
 	"github.com/chainreactors/ioa/protocols"
 )
 

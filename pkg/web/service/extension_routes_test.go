@@ -2,7 +2,7 @@ package service
 
 import (
 	"context"
-	"github.com/chainreactors/cyber/pkg/web"
+	"github.com/c1ayooo/cyber/pkg/web"
 	"net/http"
 	"net/http/httptest"
 	"testing"

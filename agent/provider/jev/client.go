@@ -15,8 +15,8 @@ import (
 	"sync/atomic"
 	"time"
 
-	aop "github.com/chainreactors/cyber/aop"
-	"github.com/chainreactors/cyber/core/decision"
+	aop "github.com/c1ayooo/cyber/aop"
+	"github.com/c1ayooo/cyber/core/decision"
 )
 
 const Endpoint = "https://api.typesafe.ai/v1/systemone"

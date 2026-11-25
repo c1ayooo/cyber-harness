@@ -5,17 +5,17 @@ import (
 	"os"
 	"strings"
 
-	passiveconfig "github.com/chainreactors/cyber/exts/passive/config"
+	passiveconfig "github.com/c1ayooo/cyber/exts/passive/config"
 
-	"github.com/chainreactors/cyber/agent/provider"
-	agentsession "github.com/chainreactors/cyber/agent/session"
-	"github.com/chainreactors/cyber/core/telemetry"
-	ioaclient "github.com/chainreactors/cyber/exts/ioa/client"
-	mcpext "github.com/chainreactors/cyber/exts/mcp"
-	scannerext "github.com/chainreactors/cyber/exts/scanner"
-	searchext "github.com/chainreactors/cyber/exts/search"
-	cfg "github.com/chainreactors/cyber/pkg/config"
-	"github.com/chainreactors/cyber/tools/resources"
+	"github.com/c1ayooo/cyber/agent/provider"
+	agentsession "github.com/c1ayooo/cyber/agent/session"
+	"github.com/c1ayooo/cyber/core/telemetry"
+	ioaclient "github.com/c1ayooo/cyber/exts/ioa/client"
+	mcpext "github.com/c1ayooo/cyber/exts/mcp"
+	scannerext "github.com/c1ayooo/cyber/exts/scanner"
+	searchext "github.com/c1ayooo/cyber/exts/search"
+	cfg "github.com/c1ayooo/cyber/pkg/config"
+	"github.com/c1ayooo/cyber/tools/resources"
 )
 
 // appConfig selects the reusable capability packs in the reference

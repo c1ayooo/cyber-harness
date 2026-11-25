@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/chainreactors/cyber/aop"
-	"github.com/chainreactors/cyber/exts/jev"
+	"github.com/c1ayooo/cyber/aop"
+	"github.com/c1ayooo/cyber/exts/jev"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 )

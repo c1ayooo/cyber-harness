@@ -11,9 +11,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/chainreactors/cyber/core/operation"
-	coretool "github.com/chainreactors/cyber/core/tool"
-	curltool "github.com/chainreactors/cyber/tools/curl"
+	"github.com/c1ayooo/cyber/core/operation"
+	coretool "github.com/c1ayooo/cyber/core/tool"
+	curltool "github.com/c1ayooo/cyber/tools/curl"
 )
 
 func TestCurlConnectionMappingsThroughHub(t *testing.T) {

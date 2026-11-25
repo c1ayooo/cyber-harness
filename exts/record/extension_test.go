@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	coretool "github.com/chainreactors/cyber/core/tool"
-	"github.com/chainreactors/cyber/pkg/testutil/hosttest"
+	coretool "github.com/c1ayooo/cyber/core/tool"
+	"github.com/c1ayooo/cyber/pkg/testutil/hosttest"
 )
 
 func TestExtensionOwnsRecordTool(t *testing.T) {

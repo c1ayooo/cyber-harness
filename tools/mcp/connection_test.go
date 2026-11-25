@@ -13,8 +13,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/chainreactors/cyber/core/resource"
-	coretool "github.com/chainreactors/cyber/core/tool"
+	"github.com/c1ayooo/cyber/core/resource"
+	coretool "github.com/c1ayooo/cyber/core/tool"
 	"github.com/mark3labs/mcp-go/client"
 	"github.com/mark3labs/mcp-go/client/transport"
 )

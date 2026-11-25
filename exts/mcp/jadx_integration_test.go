@@ -11,8 +11,8 @@ import (
 	"testing"
 	"time"
 
-	coretool "github.com/chainreactors/cyber/core/tool"
-	mcptools "github.com/chainreactors/cyber/tools/mcp"
+	coretool "github.com/c1ayooo/cyber/core/tool"
+	mcptools "github.com/c1ayooo/cyber/tools/mcp"
 	"mvdan.cc/sh/v3/syntax"
 )
 

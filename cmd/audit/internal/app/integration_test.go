@@ -16,16 +16,16 @@ import (
 	"testing"
 	"time"
 
+	"github.com/c1ayooo/cyber/agent"
+	"github.com/c1ayooo/cyber/agent/provider"
+	agentsession "github.com/c1ayooo/cyber/agent/session"
+	"github.com/c1ayooo/cyber/aop"
+	"github.com/c1ayooo/cyber/cmd/audit/internal/toolchain"
+	"github.com/c1ayooo/cyber/core/telemetry"
+	coretool "github.com/c1ayooo/cyber/core/tool"
+	cfg "github.com/c1ayooo/cyber/pkg/config"
+	"github.com/c1ayooo/cyber/pkg/profile"
 	"github.com/chainreactors/crtm/pkg/registry"
-	"github.com/chainreactors/cyber/agent"
-	"github.com/chainreactors/cyber/agent/provider"
-	agentsession "github.com/chainreactors/cyber/agent/session"
-	"github.com/chainreactors/cyber/aop"
-	"github.com/chainreactors/cyber/cmd/audit/internal/toolchain"
-	"github.com/chainreactors/cyber/core/telemetry"
-	coretool "github.com/chainreactors/cyber/core/tool"
-	cfg "github.com/chainreactors/cyber/pkg/config"
-	"github.com/chainreactors/cyber/pkg/profile"
 )
 
 func testOption(t *testing.T, url string) cfg.Option {
@@ -280,7 +280,7 @@ func TestAuditDependencyBoundary(t *testing.T) {
 	forbidden := []string{"/exts/scanner", "/tools/scan", "/tools/resources", "/exts/web", "/exts/ioa", "/exts/browser", "/exts/search"}
 	for _, dependency := range strings.Fields(string(output)) {
 		for _, path := range forbidden {
-			if strings.HasPrefix(dependency, "github.com/chainreactors/cyber"+path) {
+			if strings.HasPrefix(dependency, "github.com/c1ayooo/cyber"+path) {
 				t.Errorf("audit depends on %s", dependency)
 			}
 		}

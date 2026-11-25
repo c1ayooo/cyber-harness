@@ -5,10 +5,10 @@ import (
 	"context"
 	"testing"
 
-	"github.com/chainreactors/cyber/core/events"
-	"github.com/chainreactors/cyber/core/extension"
-	"github.com/chainreactors/cyber/core/telemetry"
-	internal "github.com/chainreactors/cyber/pkg/internal/testutil/apptest"
+	"github.com/c1ayooo/cyber/core/events"
+	"github.com/c1ayooo/cyber/core/extension"
+	"github.com/c1ayooo/cyber/core/telemetry"
+	internal "github.com/c1ayooo/cyber/pkg/internal/testutil/apptest"
 )
 
 type Fixture = internal.Fixture

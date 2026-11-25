@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	aop "github.com/chainreactors/cyber/aop"
-	toolpb "github.com/chainreactors/cyber/aop/tool"
+	aop "github.com/c1ayooo/cyber/aop"
+	toolpb "github.com/c1ayooo/cyber/aop/tool"
 	protobuf "google.golang.org/protobuf/proto"
 )
 

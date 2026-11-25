@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/chainreactors/cyber/agent"
-	provider "github.com/chainreactors/cyber/agent/provider"
+	"github.com/c1ayooo/cyber/agent"
+	provider "github.com/c1ayooo/cyber/agent/provider"
 )
 
 type taskLoop func(context.Context, agent.Config) (*agent.Result, error)

@@ -17,8 +17,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/c1ayooo/cyber/exts/arsenal"
 	crtm "github.com/chainreactors/crtm/pkg"
-	"github.com/chainreactors/cyber/exts/arsenal"
 )
 
 type Spec struct{ Name, Version string }

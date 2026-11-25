@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/chainreactors/cyber/agent"
-	"github.com/chainreactors/cyber/core/types"
+	"github.com/c1ayooo/cyber/agent"
+	"github.com/c1ayooo/cyber/core/types"
 )
 
 func TestDirectCommandInheritsCurrentAgentConfig(t *testing.T) {

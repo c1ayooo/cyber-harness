@@ -3,9 +3,9 @@ package service
 import (
 	"context"
 
-	aop "github.com/chainreactors/cyber/aop"
-	"github.com/chainreactors/cyber/pkg/web"
-	managementapi "github.com/chainreactors/cyber/pkg/web/api"
+	aop "github.com/c1ayooo/cyber/aop"
+	"github.com/c1ayooo/cyber/pkg/web"
+	managementapi "github.com/c1ayooo/cyber/pkg/web/api"
 )
 
 // Capability is the server-side seam for an independently deployable Web

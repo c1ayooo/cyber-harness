@@ -1,9 +1,9 @@
 package session
 
 import (
-	"github.com/chainreactors/cyber/core/resource"
-	hostcli "github.com/chainreactors/cyber/pkg/cli"
-	cfg "github.com/chainreactors/cyber/pkg/config"
+	"github.com/c1ayooo/cyber/core/resource"
+	hostcli "github.com/c1ayooo/cyber/pkg/cli"
+	cfg "github.com/c1ayooo/cyber/pkg/config"
 )
 
 // FlagGroups preserves the typed option schema and its existing defaults.

@@ -3,22 +3,22 @@ package session_test
 import (
 	"context"
 
-	"github.com/chainreactors/cyber/agent"
-	agentsession "github.com/chainreactors/cyber/agent/session"
-	coreevents "github.com/chainreactors/cyber/core/events"
-	"github.com/chainreactors/cyber/core/extension"
-	coretool "github.com/chainreactors/cyber/core/tool"
-	"github.com/chainreactors/cyber/core/types"
-	loopext "github.com/chainreactors/cyber/exts/agent"
-	promptext "github.com/chainreactors/cyber/exts/prompt"
-	sessionext "github.com/chainreactors/cyber/exts/session"
-	"github.com/chainreactors/cyber/pkg/console/api"
-	"github.com/chainreactors/cyber/pkg/testutil/apptest"
+	"github.com/c1ayooo/cyber/agent"
+	agentsession "github.com/c1ayooo/cyber/agent/session"
+	coreevents "github.com/c1ayooo/cyber/core/events"
+	"github.com/c1ayooo/cyber/core/extension"
+	coretool "github.com/c1ayooo/cyber/core/tool"
+	"github.com/c1ayooo/cyber/core/types"
+	loopext "github.com/c1ayooo/cyber/exts/agent"
+	promptext "github.com/c1ayooo/cyber/exts/prompt"
+	sessionext "github.com/c1ayooo/cyber/exts/session"
+	"github.com/c1ayooo/cyber/pkg/console/api"
+	"github.com/c1ayooo/cyber/pkg/testutil/apptest"
 
 	"strings"
 	"testing"
 
-	tuiext "github.com/chainreactors/cyber/exts/tui"
+	tuiext "github.com/c1ayooo/cyber/exts/tui"
 	"github.com/spf13/cobra"
 )
 

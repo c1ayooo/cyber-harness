@@ -3,9 +3,9 @@ package service
 import (
 	"context"
 
-	"github.com/chainreactors/cyber/agent/provider"
-	types "github.com/chainreactors/cyber/core/types"
-	configpkg "github.com/chainreactors/cyber/pkg/config"
+	"github.com/c1ayooo/cyber/agent/provider"
+	types "github.com/c1ayooo/cyber/core/types"
+	configpkg "github.com/c1ayooo/cyber/pkg/config"
 	"google.golang.org/protobuf/proto"
 )
 

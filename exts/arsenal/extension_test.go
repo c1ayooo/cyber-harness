@@ -7,11 +7,11 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/c1ayooo/cyber/core/extension"
+	coretool "github.com/c1ayooo/cyber/core/tool"
+	arsenalext "github.com/c1ayooo/cyber/exts/arsenal"
+	"github.com/c1ayooo/cyber/pkg/testutil/hosttest"
 	crtm "github.com/chainreactors/crtm/pkg"
-	"github.com/chainreactors/cyber/core/extension"
-	coretool "github.com/chainreactors/cyber/core/tool"
-	arsenalext "github.com/chainreactors/cyber/exts/arsenal"
-	"github.com/chainreactors/cyber/pkg/testutil/hosttest"
 )
 
 func TestArsenalOwnsManagerAndCommandInstallation(t *testing.T) {

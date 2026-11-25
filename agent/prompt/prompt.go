@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	coreregistry "github.com/chainreactors/cyber/core/registry"
-	"github.com/chainreactors/cyber/core/resource"
+	coreregistry "github.com/c1ayooo/cyber/core/registry"
+	"github.com/c1ayooo/cyber/core/resource"
 )
 
 // Target identifies one model-facing prompt. System and request prompts use

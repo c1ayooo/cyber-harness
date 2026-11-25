@@ -10,10 +10,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/chainreactors/cyber/agent/hooks"
-	"github.com/chainreactors/cyber/agent/provider"
-	"github.com/chainreactors/cyber/aop"
-	coretool "github.com/chainreactors/cyber/core/tool"
+	"github.com/c1ayooo/cyber/agent/hooks"
+	"github.com/c1ayooo/cyber/agent/provider"
+	"github.com/c1ayooo/cyber/aop"
+	coretool "github.com/c1ayooo/cyber/core/tool"
 )
 
 const laboratorySource = `js:function(context,args){

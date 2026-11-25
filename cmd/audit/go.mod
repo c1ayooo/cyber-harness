@@ -1,11 +1,11 @@
-module github.com/chainreactors/cyber/cmd/audit
+module github.com/c1ayooo/cyber/cmd/audit
 
 go 1.26.0
 
 require (
+	github.com/c1ayooo/cyber v0.0.0
+	github.com/c1ayooo/cyber/aop v0.0.0-20260818112202-76d90a72b2c5
 	github.com/chainreactors/crtm v0.0.3-0.20260924103954-9432523918ae
-	github.com/chainreactors/cyber v0.0.0
-	github.com/chainreactors/cyber/aop v0.0.0-20260818112202-76d90a72b2c5
 	github.com/gorilla/websocket v1.5.3
 	github.com/jessevdk/go-flags v1.6.1
 	google.golang.org/protobuf v1.36.12
@@ -18,6 +18,10 @@ require (
 	github.com/Masterminds/semver/v3 v3.5.0 // indirect
 	github.com/VividCortex/ewma v1.2.0 // indirect
 	github.com/alecthomas/chroma/v2 v2.27.0 // indirect
+	github.com/andybalholm/brotli v1.2.1 // indirect
+	github.com/anytls/sing-anytls v0.0.11 // indirect
+	github.com/apernet/hysteria/core/v2 v2.9.2 // indirect
+	github.com/apernet/quic-go v0.59.1-0.20260425001925-6c6cc9bcb716 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2 // indirect
 	github.com/atotto/clipboard v0.1.4 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
@@ -32,10 +36,13 @@ require (
 	github.com/chainreactors/neutron v0.1.1-0.20260714062907-716c6b167cb6 // indirect
 	github.com/chainreactors/proton v0.3.3-0.20260707162538-471f99ea6131 // indirect
 	github.com/chainreactors/proxyclient v1.1.1-0.20260728110701-74504679dc47 // indirect
+	github.com/chainreactors/proxyclient/extra v0.0.0-20260527160727-36cf133952c3 // indirect
 	github.com/chainreactors/sdk v0.3.4-0.20260708104745-dcad8620f5e9 // indirect
 	github.com/chainreactors/tui/console v0.0.0-20260712082522-2ba36ad7841f // indirect
 	github.com/chainreactors/tui/readline v0.0.0-20261010062516-bb32632d1a4e // indirect
 	github.com/chainreactors/utils v0.0.0-20260711153742-f3d210a5fa9d // indirect
+	github.com/chainreactors/utils/cert v0.0.0-20260722180147-5b1816060721 // indirect
+	github.com/chainreactors/utils/mitmproxy v0.0.0-20261002195803-fc9e07c4b4fd // indirect
 	github.com/chainreactors/utils/parsers v0.0.3 // indirect
 	github.com/chainreactors/utils/proc v0.0.0-20261002195803-fc9e07c4b4fd // indirect
 	github.com/charlievieth/fastwalk v1.0.14 // indirect
@@ -51,6 +58,7 @@ require (
 	github.com/cheggaaa/pb/v3 v3.1.4 // indirect
 	github.com/clipperhouse/displaywidth v0.11.0 // indirect
 	github.com/clipperhouse/uax29/v2 v2.7.0 // indirect
+	github.com/cloudflare/circl v1.6.3 // indirect
 	github.com/creack/pty v1.1.24 // indirect
 	github.com/denisbrodbeck/machineid v1.0.1 // indirect
 	github.com/djherbis/times v1.6.0 // indirect
@@ -66,6 +74,8 @@ require (
 	github.com/go-viper/mapstructure/v2 v2.5.0 // indirect
 	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/goccy/go-yaml v1.19.2 // indirect
+	github.com/gofrs/uuid/v5 v5.3.2 // indirect
+	github.com/golang/groupcache v0.0.0-20241129210726-2c02b8208cf8 // indirect
 	github.com/golang/snappy v1.0.0 // indirect
 	github.com/google/go-github v17.0.0+incompatible // indirect
 	github.com/google/go-github/v30 v30.1.0 // indirect
@@ -79,6 +89,7 @@ require (
 	github.com/invopop/jsonschema v0.14.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
+	github.com/klauspost/compress v1.18.6 // indirect
 	github.com/logrusorgru/aurora v2.0.3+incompatible // indirect
 	github.com/logrusorgru/aurora/v4 v4.0.0 // indirect
 	github.com/lucasb-eyer/go-colorful v1.4.0 // indirect
@@ -86,6 +97,7 @@ require (
 	github.com/mattn/go-isatty v0.0.24 // indirect
 	github.com/mattn/go-localereader v0.0.1 // indirect
 	github.com/mattn/go-runewidth v0.0.31 // indirect
+	github.com/metacubex/utls v1.7.3 // indirect
 	github.com/mholt/archiver v3.1.1+incompatible // indirect
 	github.com/microcosm-cc/bluemonday v1.0.27 // indirect
 	github.com/minio/selfupdate v0.6.1-0.20230907112617-f11e74f84ca7 // indirect
@@ -103,12 +115,19 @@ require (
 	github.com/projectdiscovery/blackrock v0.0.2 // indirect
 	github.com/projectdiscovery/gologger v1.1.73 // indirect
 	github.com/projectdiscovery/utils v0.11.9 // indirect
+	github.com/quic-go/qpack v0.6.0 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
+	github.com/sagernet/sing v0.7.6 // indirect
+	github.com/sagernet/sing-vmess v0.2.7 // indirect
 	github.com/sahilm/fuzzy v0.1.1 // indirect
 	github.com/saintfish/chardet v0.0.0-20230101081208-5e3ef4b5456d // indirect
+	github.com/satori/go.uuid v1.2.0 // indirect
+	github.com/sirupsen/logrus v1.9.4 // indirect
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
 	github.com/spf13/cobra v1.10.2 // indirect
 	github.com/spf13/pflag v1.0.10 // indirect
+	github.com/stretchr/objx v0.5.3 // indirect
+	github.com/stretchr/testify v1.12.1 // indirect
 	github.com/tetratelabs/wazero v1.12.0 // indirect
 	github.com/twmb/murmur3 v1.1.8 // indirect
 	github.com/u-root/u-root v0.16.0 // indirect
@@ -119,6 +138,8 @@ require (
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 	github.com/yuin/goldmark v1.8.6 // indirect
 	github.com/yuin/goldmark-emoji v1.0.6 // indirect
+	go.uber.org/atomic v1.11.0 // indirect
+	go.yaml.in/yaml/v3 v3.0.5 // indirect
 	go.yaml.in/yaml/v4 v4.0.0-rc.2 // indirect
 	golang.org/x/crypto v0.57.0 // indirect
 	golang.org/x/exp v0.0.0-20260529124908-c761662dc8c9 // indirect
@@ -132,8 +153,8 @@ require (
 	mvdan.cc/sh/v3 v3.14.1 // indirect
 )
 
-replace github.com/chainreactors/cyber => ../..
+replace github.com/c1ayooo/cyber => ../..
 
-replace github.com/chainreactors/cyber/aop => ../../aop
+replace github.com/c1ayooo/cyber/aop => ../../aop
 
 replace github.com/wasilibs/go-re2 => github.com/chainreactors/native v1.11.1-native.1

@@ -9,8 +9,8 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"github.com/chainreactors/cyber/core/telemetry"
-	coretool "github.com/chainreactors/cyber/core/tool"
+	"github.com/c1ayooo/cyber/core/telemetry"
+	coretool "github.com/c1ayooo/cyber/core/tool"
 	gogopkg "github.com/chainreactors/gogo/v2/pkg"
 	sdkgogo "github.com/chainreactors/sdk/gogo"
 )

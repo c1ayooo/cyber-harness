@@ -218,20 +218,10 @@ func (*ReloadProtocolMessage_Result) isReloadProtocolMessage_Message() {}
 var File_types_reload_proto protoreflect.FileDescriptor
 
 const file_types_reload_proto_rawDesc = "" +
-	"\n" +
-	"\x12types/reload.proto\x12\fcyber.reload\x1a\x12types/config.proto\"G\n" +
-	"\rReloadRequest\x126\n" +
-	"\x06config\x18\x01 \x01(\v2\x1e.cyber.config.DistributeConfigR\x06config\"f\n" +
-	"\fReloadResult\x12\x0e\n" +
-	"\x02ok\x18\x01 \x01(\bR\x02ok\x12\x1a\n" +
-	"\bprovider\x18\x02 \x01(\tR\bprovider\x12\x14\n" +
-	"\x05model\x18\x03 \x01(\tR\x05model\x12\x14\n" +
-	"\x05error\x18\x04 \x01(\tR\x05error\"\x91\x01\n" +
-	"\x15ReloadProtocolMessage\x127\n" +
-	"\arequest\x18\n" +
-	" \x01(\v2\x1b.cyber.reload.ReloadRequestH\x00R\arequest\x124\n" +
-	"\x06result\x18\v \x01(\v2\x1a.cyber.reload.ReloadResultH\x00R\x06resultB\t\n" +
-	"\amessageB1Z/github.com/chainreactors/cyber/core/types;typesb\x06proto3"
+	"\n\x12types/reload.proto\x12\fcyber.reload\x1a\x12types/config.proto\"G\n\rReloadRequest\x126\n\x06config\x18\x01 \x01(\v2\x1e.cyber.config.DistributeConfigR\x06config\"" +
+	"f\n\fReloadResult\x12\x0e\n\x02ok\x18\x01 \x01(\bR\x02ok\x12\x1a\n\bprovider\x18\x02 \x01(\tR\bprovider\x12\x14\n\x05model\x18\x03 \x01(\tR\x05model\x12\x14\n\x05error\x18\x04 \x01(\tR\x05error\"\x91\x01\n\x15ReloadProtocolMessag" +
+	"e\x127\n\arequest\x18\n \x01(\v2\x1b.cyber.reload.ReloadRequestH\x00R\arequest\x124\n\x06result\x18\v \x01(\v2\x1a.cyber.reload.ReloadResultH\x00R\x06resultB\t\n\amessageB+Z)g" +
+	"ithub.com/c1ayooo/cyber/core/types;typesb\x06proto3"
 
 var (
 	file_types_reload_proto_rawDescOnce sync.Once

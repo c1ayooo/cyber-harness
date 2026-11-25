@@ -20,8 +20,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	coretool "github.com/chainreactors/cyber/core/tool"
-	"github.com/chainreactors/cyber/tools/playwright"
+	coretool "github.com/c1ayooo/cyber/core/tool"
+	"github.com/c1ayooo/cyber/tools/playwright"
 	"os"
 	"os/signal"
 )

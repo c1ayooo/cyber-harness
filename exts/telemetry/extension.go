@@ -11,10 +11,10 @@ import (
 	"strings"
 	"sync"
 
-	aop "github.com/chainreactors/cyber/aop"
-	"github.com/chainreactors/cyber/core/eventbus"
-	coreevents "github.com/chainreactors/cyber/core/events"
-	"github.com/chainreactors/cyber/core/extension"
+	aop "github.com/c1ayooo/cyber/aop"
+	"github.com/c1ayooo/cyber/core/eventbus"
+	coreevents "github.com/c1ayooo/cyber/core/events"
+	"github.com/c1ayooo/cyber/core/extension"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 )

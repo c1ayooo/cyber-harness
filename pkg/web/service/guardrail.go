@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/chainreactors/cyber/aop"
-	"github.com/chainreactors/cyber/exts/guardrail"
+	"github.com/c1ayooo/cyber/aop"
+	"github.com/c1ayooo/cyber/exts/guardrail"
 	"google.golang.org/protobuf/proto"
 )
 

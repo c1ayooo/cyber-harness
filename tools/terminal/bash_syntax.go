@@ -3,7 +3,7 @@ package terminal
 import (
 	"strings"
 
-	"github.com/chainreactors/cyber/core/types"
+	"github.com/c1ayooo/cyber/core/types"
 	"mvdan.cc/sh/v3/expand"
 	"mvdan.cc/sh/v3/syntax"
 )

@@ -9,7 +9,7 @@ import (
 	"testing/synctest"
 	"time"
 
-	"github.com/chainreactors/cyber/core/eventbus"
+	"github.com/c1ayooo/cyber/core/eventbus"
 )
 
 func TestStoreCloseTimeoutKeepsMetadataIndexUntilRetry(t *testing.T) {

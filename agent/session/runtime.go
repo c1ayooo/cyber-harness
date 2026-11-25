@@ -9,15 +9,15 @@ import (
 	"sync"
 	"time"
 
-	"github.com/chainreactors/cyber/agent"
-	"github.com/chainreactors/cyber/agent/prompt"
-	"github.com/chainreactors/cyber/agent/provider"
-	"github.com/chainreactors/cyber/agent/skills"
-	aop "github.com/chainreactors/cyber/aop"
-	"github.com/chainreactors/cyber/core/events"
-	"github.com/chainreactors/cyber/core/hooks"
-	"github.com/chainreactors/cyber/core/telemetry"
-	coretool "github.com/chainreactors/cyber/core/tool"
+	"github.com/c1ayooo/cyber/agent"
+	"github.com/c1ayooo/cyber/agent/prompt"
+	"github.com/c1ayooo/cyber/agent/provider"
+	"github.com/c1ayooo/cyber/agent/skills"
+	aop "github.com/c1ayooo/cyber/aop"
+	"github.com/c1ayooo/cyber/core/events"
+	"github.com/c1ayooo/cyber/core/hooks"
+	"github.com/c1ayooo/cyber/core/telemetry"
+	coretool "github.com/c1ayooo/cyber/core/tool"
 )
 
 // ---------------------------------------------------------------------------

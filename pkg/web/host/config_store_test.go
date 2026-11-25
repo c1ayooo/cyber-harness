@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	types "github.com/chainreactors/cyber/core/types"
-	cfg "github.com/chainreactors/cyber/pkg/config"
+	types "github.com/c1ayooo/cyber/core/types"
+	cfg "github.com/c1ayooo/cyber/pkg/config"
 	"google.golang.org/protobuf/proto"
 )
 

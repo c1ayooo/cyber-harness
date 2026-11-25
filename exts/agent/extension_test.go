@@ -8,9 +8,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/chainreactors/cyber/agent"
-	"github.com/chainreactors/cyber/core/extension"
-	agentext "github.com/chainreactors/cyber/exts/agent"
+	"github.com/c1ayooo/cyber/agent"
+	"github.com/c1ayooo/cyber/core/extension"
+	agentext "github.com/c1ayooo/cyber/exts/agent"
 )
 
 type loopFunc func(context.Context, agent.Config) (*agent.Result, error)

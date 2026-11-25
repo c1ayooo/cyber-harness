@@ -4,11 +4,11 @@ import (
 	"context"
 	"testing"
 
-	"github.com/chainreactors/cyber/core/extension"
-	coretool "github.com/chainreactors/cyber/core/tool"
-	terminalext "github.com/chainreactors/cyber/exts/terminal"
-	tmuxext "github.com/chainreactors/cyber/exts/tmux"
-	"github.com/chainreactors/cyber/pkg/testutil/hosttest"
+	"github.com/c1ayooo/cyber/core/extension"
+	coretool "github.com/c1ayooo/cyber/core/tool"
+	terminalext "github.com/c1ayooo/cyber/exts/terminal"
+	tmuxext "github.com/c1ayooo/cyber/exts/tmux"
+	"github.com/c1ayooo/cyber/pkg/testutil/hosttest"
 )
 
 // tmux borrows the Bash tool rather than being built by whoever owns it, so

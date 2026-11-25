@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"strings"
 
-	jev "github.com/chainreactors/cyber/agent/provider/jev"
+	jev "github.com/c1ayooo/cyber/agent/provider/jev"
 )
 
 type runtimeJudgmentBudgetKey struct{}

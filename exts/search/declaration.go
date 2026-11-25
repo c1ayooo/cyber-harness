@@ -3,10 +3,10 @@ package search
 import (
 	"context"
 	"fmt"
-	"github.com/chainreactors/cyber/core/resource"
-	types "github.com/chainreactors/cyber/core/types"
-	cfg "github.com/chainreactors/cyber/pkg/config"
-	searchtools "github.com/chainreactors/cyber/tools/search"
+	"github.com/c1ayooo/cyber/core/resource"
+	types "github.com/c1ayooo/cyber/core/types"
+	cfg "github.com/c1ayooo/cyber/pkg/config"
+	searchtools "github.com/c1ayooo/cyber/tools/search"
 	"strings"
 	"time"
 )

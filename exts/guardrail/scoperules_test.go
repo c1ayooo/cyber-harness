@@ -7,12 +7,12 @@ import (
 	"testing"
 	"time"
 
-	aop "github.com/chainreactors/cyber/aop"
-	operationpb "github.com/chainreactors/cyber/aop/operation"
-	"github.com/chainreactors/cyber/core/events"
-	"github.com/chainreactors/cyber/core/operation"
-	"github.com/chainreactors/cyber/core/scoperules"
-	"github.com/chainreactors/cyber/tools/proxy"
+	aop "github.com/c1ayooo/cyber/aop"
+	operationpb "github.com/c1ayooo/cyber/aop/operation"
+	"github.com/c1ayooo/cyber/core/events"
+	"github.com/c1ayooo/cyber/core/operation"
+	"github.com/c1ayooo/cyber/core/scoperules"
+	"github.com/c1ayooo/cyber/tools/proxy"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 

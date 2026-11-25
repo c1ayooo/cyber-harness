@@ -3,13 +3,13 @@ package proxy
 
 import (
 	"context"
-	"github.com/chainreactors/cyber/core/egress"
-	"github.com/chainreactors/cyber/core/extension"
-	"github.com/chainreactors/cyber/core/hooks"
-	coretool "github.com/chainreactors/cyber/core/tool"
-	guardrailext "github.com/chainreactors/cyber/exts/guardrail"
-	cfg "github.com/chainreactors/cyber/pkg/config"
-	proxytool "github.com/chainreactors/cyber/tools/proxy"
+	"github.com/c1ayooo/cyber/core/egress"
+	"github.com/c1ayooo/cyber/core/extension"
+	"github.com/c1ayooo/cyber/core/hooks"
+	coretool "github.com/c1ayooo/cyber/core/tool"
+	guardrailext "github.com/c1ayooo/cyber/exts/guardrail"
+	cfg "github.com/c1ayooo/cyber/pkg/config"
+	proxytool "github.com/c1ayooo/cyber/tools/proxy"
 )
 
 // Config is what the profile chooses. Everything the extension borrows comes

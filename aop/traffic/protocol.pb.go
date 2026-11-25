@@ -7,7 +7,7 @@
 package traffic
 
 import (
-	operation "github.com/chainreactors/cyber/aop/operation"
+	operation "github.com/c1ayooo/cyber/aop/operation"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
@@ -1109,92 +1109,25 @@ func (*ProtocolMessage_FlowRecord) isProtocolMessage_Message() {}
 var File_aop_traffic_protocol_proto protoreflect.FileDescriptor
 
 const file_aop_traffic_protocol_proto_rawDesc = "" +
-	"\n" +
-	"\x1aaop/traffic/protocol.proto\x12\vaop.traffic\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1caop/operation/protocol.proto\"\xc9\x01\n" +
-	"\rRoutingConfig\x12,\n" +
-	"\x04mode\x18\x01 \x01(\x0e2\x18.aop.traffic.RoutingModeR\x04mode\x12\x10\n" +
-	"\x03url\x18\x02 \x01(\tR\x03url\x12\x1a\n" +
-	"\bselector\x18\x03 \x01(\tR\bselector\x12\x12\n" +
-	"\x04type\x18\x04 \x01(\tR\x04type\x12\x12\n" +
-	"\x04name\x18\x05 \x01(\tR\x04name\x12\x18\n" +
-	"\acountry\x18\x06 \x01(\tR\acountry\x12\x1a\n" +
-	"\bstrategy\x18\a \x01(\tR\bstrategy\"`\n" +
-	"\n" +
-	"FlowFilter\x12\x12\n" +
-	"\x04host\x18\x01 \x01(\tR\x04host\x12\x16\n" +
-	"\x06status\x18\x02 \x01(\tR\x06status\x12\x12\n" +
-	"\x04type\x18\x03 \x01(\tR\x04type\x12\x12\n" +
-	"\x04last\x18\x04 \x01(\rR\x04last\"\x99\x01\n" +
-	"\rCaptureConfig\x12,\n" +
-	"\x04mode\x18\x01 \x01(\x0e2\x18.aop.traffic.CaptureModeR\x04mode\x12#\n" +
-	"\rdecrypt_https\x18\x02 \x01(\bR\fdecryptHttps\x12/\n" +
-	"\x06filter\x18\x03 \x01(\v2\x17.aop.traffic.FlowFilterR\x06filterJ\x04\b\x04\x10\x05\"w\n" +
-	"\tConfigure\x124\n" +
-	"\arouting\x18\x01 \x01(\v2\x1a.aop.traffic.RoutingConfigR\arouting\x124\n" +
-	"\acapture\x18\x02 \x01(\v2\x1a.aop.traffic.CaptureConfigR\acapture\"d\n" +
-	"\x05Query\x12\x14\n" +
-	"\x05state\x18\x01 \x01(\bR\x05state\x12\x14\n" +
-	"\x05flows\x18\x02 \x01(\bR\x05flows\x12/\n" +
-	"\x06filter\x18\x03 \x01(\v2\x17.aop.traffic.FlowFilterR\x06filter\"b\n" +
-	"\fRoutingState\x12\x1f\n" +
-	"\vactive_node\x18\x01 \x01(\tR\n" +
-	"activeNode\x12\x1d\n" +
-	"\n" +
-	"egress_url\x18\x02 \x01(\tR\tegressUrl\x12\x12\n" +
-	"\x04auto\x18\x03 \x01(\bR\x04auto\"Z\n" +
-	"\fCaptureState\x12,\n" +
-	"\x04mode\x18\x01 \x01(\x0e2\x18.aop.traffic.CaptureModeR\x04mode\x12\x1c\n" +
-	"\tcapturing\x18\x02 \x01(\bR\tcapturing\"\x87\x01\n" +
-	"\x05State\x123\n" +
-	"\arouting\x18\x01 \x01(\v2\x19.aop.traffic.RoutingStateR\arouting\x123\n" +
-	"\acapture\x18\x02 \x01(\v2\x19.aop.traffic.CaptureStateR\acapture\x12\x14\n" +
-	"\x05error\x18\x03 \x01(\tR\x05error\"2\n" +
-	"\x06Header\x12\x12\n" +
-	"\x04name\x18\x01 \x01(\tR\x04name\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05value\"\x96\x01\n" +
-	"\vHttpRequest\x12\x16\n" +
-	"\x06method\x18\x01 \x01(\tR\x06method\x12\x10\n" +
-	"\x03url\x18\x02 \x01(\tR\x03url\x12\x1a\n" +
-	"\bprotocol\x18\x03 \x01(\tR\bprotocol\x12-\n" +
-	"\aheaders\x18\x04 \x03(\v2\x13.aop.traffic.HeaderR\aheaders\x12\x12\n" +
-	"\x04body\x18\x05 \x01(\fR\x04body\"\x97\x01\n" +
-	"\fHttpResponse\x12\x1f\n" +
-	"\vstatus_code\x18\x01 \x01(\x05R\n" +
-	"statusCode\x12#\n" +
-	"\rreason_phrase\x18\x02 \x01(\tR\freasonPhrase\x12-\n" +
-	"\aheaders\x18\x03 \x03(\v2\x13.aop.traffic.HeaderR\aheaders\x12\x12\n" +
-	"\x04body\x18\x04 \x01(\fR\x04body\"\xf3\x01\n" +
-	"\x04Flow\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id\x12\x14\n" +
-	"\x05error\x18\f \x01(\tR\x05error\x12\x1a\n" +
-	"\bcomplete\x18\r \x01(\bR\bcomplete\x128\n" +
-	"\ttimestamp\x18\x0e \x01(\v2\x1a.google.protobuf.TimestampR\ttimestamp\x122\n" +
-	"\arequest\x18\x0f \x01(\v2\x18.aop.traffic.HttpRequestR\arequest\x125\n" +
-	"\bresponse\x18\x10 \x01(\v2\x19.aop.traffic.HttpResponseR\bresponseJ\x04\b\x02\x10\f\"e\n" +
-	"\n" +
-	"FlowRecord\x120\n" +
-	"\toperation\x18\x01 \x01(\v2\x12.aop.operation.RefR\toperation\x12%\n" +
-	"\x04flow\x18\x02 \x01(\v2\x11.aop.traffic.FlowR\x04flow\"\xe8\x01\n" +
-	"\x0fProtocolMessage\x126\n" +
-	"\tconfigure\x18\n" +
-	" \x01(\v2\x16.aop.traffic.ConfigureH\x00R\tconfigure\x12*\n" +
-	"\x05query\x18\v \x01(\v2\x12.aop.traffic.QueryH\x00R\x05query\x12*\n" +
-	"\x05state\x18\f \x01(\v2\x12.aop.traffic.StateH\x00R\x05state\x12:\n" +
-	"\vflow_record\x18\r \x01(\v2\x17.aop.traffic.FlowRecordH\x00R\n" +
-	"flowRecordB\t\n" +
-	"\amessage*\\\n" +
-	"\vCaptureMode\x12\x1c\n" +
-	"\x18CAPTURE_MODE_UNSPECIFIED\x10\x00\x12\x16\n" +
-	"\x12CAPTURE_MODE_RELAY\x10\x01\x12\x17\n" +
-	"\x13CAPTURE_MODE_RECORD\x10\x02*\xc0\x01\n" +
-	"\vRoutingMode\x12\x1c\n" +
-	"\x18ROUTING_MODE_UNSPECIFIED\x10\x00\x12\x17\n" +
-	"\x13ROUTING_MODE_DIRECT\x10\x01\x12\x16\n" +
-	"\x12ROUTING_MODE_PROXY\x10\x02\x12\x1a\n" +
-	"\x16ROUTING_MODE_SUBSCRIBE\x10\x03\x12\x15\n" +
-	"\x11ROUTING_MODE_AUTO\x10\x04\x12\x17\n" +
-	"\x13ROUTING_MODE_SWITCH\x10\x05\x12\x16\n" +
-	"\x12ROUTING_MODE_CLEAR\x10\x06B4Z2github.com/chainreactors/cyber/aop/traffic;trafficb\x06proto3"
+	"\n\x1aaop/traffic/protocol.proto\x12\vaop.traffic\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1caop/operation/protocol.proto\"\xc9\x01\n\rRoutingConfig\x12,\n\x04mo" +
+	"de\x18\x01 \x01(\x0e2\x18.aop.traffic.RoutingModeR\x04mode\x12\x10\n\x03url\x18\x02 \x01(\tR\x03url\x12\x1a\n\bselector\x18\x03 \x01(\tR\bselector\x12\x12\n\x04type\x18\x04 \x01(\tR\x04type\x12\x12\n\x04name\x18\x05 \x01(\tR\x04name\x12\x18" +
+	"\n\acountry\x18\x06 \x01(\tR\acountry\x12\x1a\n\bstrategy\x18\a \x01(\tR\bstrategy\"`\n\nFlowFilter\x12\x12\n\x04host\x18\x01 \x01(\tR\x04host\x12\x16\n\x06status\x18\x02 \x01(\tR\x06status\x12\x12\n\x04type\x18\x03 \x01(\tR\x04ty" +
+	"pe\x12\x12\n\x04last\x18\x04 \x01(\rR\x04last\"\x99\x01\n\rCaptureConfig\x12,\n\x04mode\x18\x01 \x01(\x0e2\x18.aop.traffic.CaptureModeR\x04mode\x12#\n\rdecrypt_https\x18\x02 \x01(\bR\fdecryptHttps\x12/\n\x06f" +
+	"ilter\x18\x03 \x01(\v2\x17.aop.traffic.FlowFilterR\x06filterJ\x04\b\x04\x10\x05\"w\n\tConfigure\x124\n\arouting\x18\x01 \x01(\v2\x1a.aop.traffic.RoutingConfigR\arouting\x124\n\acapture" +
+	"\x18\x02 \x01(\v2\x1a.aop.traffic.CaptureConfigR\acapture\"d\n\x05Query\x12\x14\n\x05state\x18\x01 \x01(\bR\x05state\x12\x14\n\x05flows\x18\x02 \x01(\bR\x05flows\x12/\n\x06filter\x18\x03 \x01(\v2\x17.aop.traffic.F" +
+	"lowFilterR\x06filter\"b\n\fRoutingState\x12\x1f\n\vactive_node\x18\x01 \x01(\tR\nactiveNode\x12\x1d\n\negress_url\x18\x02 \x01(\tR\tegressUrl\x12\x12\n\x04auto\x18\x03 \x01(\bR\x04auto\"Z\n\fCapture" +
+	"State\x12,\n\x04mode\x18\x01 \x01(\x0e2\x18.aop.traffic.CaptureModeR\x04mode\x12\x1c\n\tcapturing\x18\x02 \x01(\bR\tcapturing\"\x87\x01\n\x05State\x123\n\arouting\x18\x01 \x01(\v2\x19.aop.traffic.Routi" +
+	"ngStateR\arouting\x123\n\acapture\x18\x02 \x01(\v2\x19.aop.traffic.CaptureStateR\acapture\x12\x14\n\x05error\x18\x03 \x01(\tR\x05error\"2\n\x06Header\x12\x12\n\x04name\x18\x01 \x01(\tR\x04name\x12\x14\n\x05val" +
+	"ue\x18\x02 \x01(\tR\x05value\"\x96\x01\n\vHttpRequest\x12\x16\n\x06method\x18\x01 \x01(\tR\x06method\x12\x10\n\x03url\x18\x02 \x01(\tR\x03url\x12\x1a\n\bprotocol\x18\x03 \x01(\tR\bprotocol\x12-\n\aheaders\x18\x04 \x03(\v2\x13.aop.tra" +
+	"ffic.HeaderR\aheaders\x12\x12\n\x04body\x18\x05 \x01(\fR\x04body\"\x97\x01\n\fHttpResponse\x12\x1f\n\vstatus_code\x18\x01 \x01(\x05R\nstatusCode\x12#\n\rreason_phrase\x18\x02 \x01(\tR\freasonPhrase\x12" +
+	"-\n\aheaders\x18\x03 \x03(\v2\x13.aop.traffic.HeaderR\aheaders\x12\x12\n\x04body\x18\x04 \x01(\fR\x04body\"\xf3\x01\n\x04Flow\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\x12\x14\n\x05error\x18\f \x01(\tR\x05error\x12\x1a\n\bcomplete\x18\r " +
+	"\x01(\bR\bcomplete\x128\n\ttimestamp\x18\x0e \x01(\v2\x1a.google.protobuf.TimestampR\ttimestamp\x122\n\arequest\x18\x0f \x01(\v2\x18.aop.traffic.HttpRequestR\arequest\x125\n\br" +
+	"esponse\x18\x10 \x01(\v2\x19.aop.traffic.HttpResponseR\bresponseJ\x04\b\x02\x10\f\"e\n\nFlowRecord\x120\n\toperation\x18\x01 \x01(\v2\x12.aop.operation.RefR\toperation\x12%\n\x04flow" +
+	"\x18\x02 \x01(\v2\x11.aop.traffic.FlowR\x04flow\"\xe8\x01\n\x0fProtocolMessage\x126\n\tconfigure\x18\n \x01(\v2\x16.aop.traffic.ConfigureH\x00R\tconfigure\x12*\n\x05query\x18\v \x01(\v2\x12.aop" +
+	".traffic.QueryH\x00R\x05query\x12*\n\x05state\x18\f \x01(\v2\x12.aop.traffic.StateH\x00R\x05state\x12:\n\vflow_record\x18\r \x01(\v2\x17.aop.traffic.FlowRecordH\x00R\nflowRecordB" +
+	"\t\n\amessage*\\\n\vCaptureMode\x12\x1c\n\x18CAPTURE_MODE_UNSPECIFIED\x10\x00\x12\x16\n\x12CAPTURE_MODE_RELAY\x10\x01\x12\x17\n\x13CAPTURE_MODE_RECORD\x10\x02*\xc0\x01\n\vRoutingMode\x12\x1c\n\x18ROUT" +
+	"ING_MODE_UNSPECIFIED\x10\x00\x12\x17\n\x13ROUTING_MODE_DIRECT\x10\x01\x12\x16\n\x12ROUTING_MODE_PROXY\x10\x02\x12\x1a\n\x16ROUTING_MODE_SUBSCRIBE\x10\x03\x12\x15\n\x11ROUTING_MODE_AUTO\x10\x04\x12\x17\n\x13RO" +
+	"UTING_MODE_SWITCH\x10\x05\x12\x16\n\x12ROUTING_MODE_CLEAR\x10\x06B.Z,github.com/c1ayooo/cyber/aop/traffic;trafficb\x06proto3"
 
 var (
 	file_aop_traffic_protocol_proto_rawDescOnce sync.Once

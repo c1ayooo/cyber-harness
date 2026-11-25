@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	jevapi "github.com/chainreactors/cyber/agent/provider/jev"
-	"github.com/chainreactors/cyber/core/decision"
+	jevapi "github.com/c1ayooo/cyber/agent/provider/jev"
+	"github.com/c1ayooo/cyber/core/decision"
 )
 
 func TestExecutableReflexIsolationAndComputeBudget(t *testing.T) {

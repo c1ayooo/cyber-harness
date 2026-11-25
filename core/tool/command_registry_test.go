@@ -6,10 +6,10 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/chainreactors/cyber/core/extension"
-	"github.com/chainreactors/cyber/core/hooks"
-	"github.com/chainreactors/cyber/core/operation"
-	toolhooks "github.com/chainreactors/cyber/core/tool/hooks"
+	"github.com/c1ayooo/cyber/core/extension"
+	"github.com/c1ayooo/cyber/core/hooks"
+	"github.com/c1ayooo/cyber/core/operation"
+	toolhooks "github.com/c1ayooo/cyber/core/tool/hooks"
 )
 
 type testCommandBatch struct {

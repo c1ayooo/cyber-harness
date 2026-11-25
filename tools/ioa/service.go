@@ -6,8 +6,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/chainreactors/cyber/core/telemetry"
-	coretool "github.com/chainreactors/cyber/core/tool"
+	"github.com/c1ayooo/cyber/core/telemetry"
+	coretool "github.com/c1ayooo/cyber/core/tool"
 	ioaclient "github.com/chainreactors/ioa/client"
 	"github.com/chainreactors/ioa/protocols"
 	ioaserver "github.com/chainreactors/ioa/server"

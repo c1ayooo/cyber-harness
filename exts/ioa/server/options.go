@@ -2,7 +2,7 @@ package server
 
 import (
 	"fmt"
-	cfg "github.com/chainreactors/cyber/pkg/config"
+	cfg "github.com/c1ayooo/cyber/pkg/config"
 	"net/url"
 )
 

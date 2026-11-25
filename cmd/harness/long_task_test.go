@@ -6,7 +6,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	harness "github.com/chainreactors/cyber/core/collaboration"
+	harness "github.com/c1ayooo/cyber/core/collaboration"
 	"os"
 	"os/exec"
 	"path/filepath"

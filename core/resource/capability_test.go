@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/chainreactors/cyber/core/resource"
+	"github.com/c1ayooo/cyber/core/resource"
 )
 
 // greeter is a named interface owned by this package, which is what a

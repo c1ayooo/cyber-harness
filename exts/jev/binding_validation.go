@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"sync"
 
-	coretool "github.com/chainreactors/cyber/core/tool"
+	coretool "github.com/c1ayooo/cyber/core/tool"
 	"github.com/santhosh-tekuri/jsonschema/v6"
 )
 

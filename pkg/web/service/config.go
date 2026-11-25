@@ -7,12 +7,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/chainreactors/cyber/agent/provider"
-	"github.com/chainreactors/cyber/core/extension"
-	types "github.com/chainreactors/cyber/core/types"
-	cfg "github.com/chainreactors/cyber/pkg/config"
-	profile "github.com/chainreactors/cyber/pkg/profile"
-	managementapi "github.com/chainreactors/cyber/pkg/web/api"
+	"github.com/c1ayooo/cyber/agent/provider"
+	"github.com/c1ayooo/cyber/core/extension"
+	types "github.com/c1ayooo/cyber/core/types"
+	cfg "github.com/c1ayooo/cyber/pkg/config"
+	profile "github.com/c1ayooo/cyber/pkg/profile"
+	managementapi "github.com/c1ayooo/cyber/pkg/web/api"
 	"google.golang.org/protobuf/proto"
 )
 

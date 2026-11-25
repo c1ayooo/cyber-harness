@@ -2,9 +2,9 @@
 package arsenal
 
 import (
+	"github.com/c1ayooo/cyber/core/extension"
+	tool "github.com/c1ayooo/cyber/tools/arsenal"
 	crtm "github.com/chainreactors/crtm/pkg"
-	"github.com/chainreactors/cyber/core/extension"
-	tool "github.com/chainreactors/cyber/tools/arsenal"
 )
 
 type Extension struct {

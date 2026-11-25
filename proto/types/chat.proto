@@ -7,7 +7,7 @@ import "types/command.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/struct.proto";
 
-option go_package = "github.com/chainreactors/cyber/core/types;types";
+option go_package = "github.com/c1ayooo/cyber/core/types;types";
 
 // SessionHistory is persisted as an AOP event extension. It makes transcript
 // inheritance explicit without changing the shared AOP protocol schema.

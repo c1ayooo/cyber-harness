@@ -17,8 +17,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/chainreactors/cyber/agent/provider"
-	"github.com/chainreactors/cyber/aop"
+	"github.com/c1ayooo/cyber/agent/provider"
+	"github.com/c1ayooo/cyber/aop"
 	"golang.org/x/image/font"
 	"golang.org/x/image/font/basicfont"
 	"golang.org/x/image/math/fixed"

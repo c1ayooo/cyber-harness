@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/chainreactors/cyber/agent"
-	"github.com/chainreactors/cyber/agent/prompt"
-	"github.com/chainreactors/cyber/agent/subagent"
-	"github.com/chainreactors/cyber/core/telemetry"
-	"github.com/chainreactors/cyber/tools/scan"
+	"github.com/c1ayooo/cyber/agent"
+	"github.com/c1ayooo/cyber/agent/prompt"
+	"github.com/c1ayooo/cyber/agent/subagent"
+	"github.com/c1ayooo/cyber/core/telemetry"
+	"github.com/c1ayooo/cyber/tools/scan"
 	"github.com/chainreactors/utils/parsers"
 )
 

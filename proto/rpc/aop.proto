@@ -4,7 +4,7 @@ package cyber.rpc.aop;
 
 import "aop/envelope.proto";
 
-option go_package = "github.com/chainreactors/cyber/pkg/rpc;rpc";
+option go_package = "github.com/c1ayooo/cyber/pkg/rpc;rpc";
 
 // AOPService exposes the application protocol as one bidirectional Envelope
 // stream. Native clients may use Connect or gRPC; browser clients keep using

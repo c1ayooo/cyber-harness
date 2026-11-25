@@ -5,9 +5,9 @@ import (
 	"errors"
 	"testing"
 
-	agenthooks "github.com/chainreactors/cyber/agent/hooks"
-	"github.com/chainreactors/cyber/agent/inbox"
-	"github.com/chainreactors/cyber/core/hooks"
+	agenthooks "github.com/c1ayooo/cyber/agent/hooks"
+	"github.com/c1ayooo/cyber/agent/inbox"
+	"github.com/c1ayooo/cyber/core/hooks"
 )
 
 func TestSessionHookFailureRollsBack(t *testing.T) {

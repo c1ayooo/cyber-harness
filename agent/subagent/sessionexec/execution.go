@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/chainreactors/cyber/agent"
-	"github.com/chainreactors/cyber/agent/inbox"
-	"github.com/chainreactors/cyber/agent/session"
-	"github.com/chainreactors/cyber/agent/subagent"
+	"github.com/c1ayooo/cyber/agent"
+	"github.com/c1ayooo/cyber/agent/inbox"
+	"github.com/c1ayooo/cyber/agent/session"
+	"github.com/c1ayooo/cyber/agent/subagent"
 )
 
 // prepare admits work before calling user preparation. Its release belongs to

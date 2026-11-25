@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/chainreactors/cyber/core/telemetry"
+	"github.com/c1ayooo/cyber/core/telemetry"
 	"github.com/chainreactors/neutron/common"
 	"github.com/chainreactors/neutron/templates"
 	"github.com/chainreactors/sdk/neutron"

@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	traffic "github.com/chainreactors/cyber/aop/traffic"
+	traffic "github.com/c1ayooo/cyber/aop/traffic"
 	mitmproxy "github.com/chainreactors/utils/mitmproxy/proxy"
 )
 

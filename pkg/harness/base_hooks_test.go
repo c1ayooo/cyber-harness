@@ -4,11 +4,11 @@ import (
 	"context"
 	"testing"
 
-	"github.com/chainreactors/cyber/core/extension"
-	"github.com/chainreactors/cyber/core/hooks"
-	coretool "github.com/chainreactors/cyber/core/tool"
-	toolhooks "github.com/chainreactors/cyber/core/tool/hooks"
-	"github.com/chainreactors/cyber/pkg/harness"
+	"github.com/c1ayooo/cyber/core/extension"
+	"github.com/c1ayooo/cyber/core/hooks"
+	coretool "github.com/c1ayooo/cyber/core/tool"
+	toolhooks "github.com/c1ayooo/cyber/core/tool/hooks"
+	"github.com/c1ayooo/cyber/pkg/harness"
 )
 
 // The command registry used to take its hook registry as a constructor

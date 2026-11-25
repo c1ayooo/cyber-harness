@@ -3,10 +3,10 @@ package pty
 import (
 	"fmt"
 
-	"github.com/chainreactors/cyber/aop"
-	ptypb "github.com/chainreactors/cyber/aop/pty"
-	"github.com/chainreactors/cyber/core/extension"
-	procbus "github.com/chainreactors/cyber/core/proc"
+	"github.com/c1ayooo/cyber/aop"
+	ptypb "github.com/c1ayooo/cyber/aop/pty"
+	"github.com/c1ayooo/cyber/core/extension"
+	procbus "github.com/c1ayooo/cyber/core/proc"
 )
 
 // Extension owns the canonical AOP PTY protocol. It borrows the session

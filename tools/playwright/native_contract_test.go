@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/chainreactors/cyber/core/operation"
-	coretool "github.com/chainreactors/cyber/core/tool"
+	"github.com/c1ayooo/cyber/core/operation"
+	coretool "github.com/c1ayooo/cyber/core/tool"
 )
 
 func TestNativeBrowserContractRejectsForgedReads(t *testing.T) {

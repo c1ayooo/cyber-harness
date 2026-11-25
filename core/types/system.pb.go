@@ -212,23 +212,10 @@ func (x *GetStatusResponse) GetStatus() *SystemStatus {
 var File_types_system_proto protoreflect.FileDescriptor
 
 const file_types_system_proto_rawDesc = "" +
-	"\n" +
-	"\x12types/system.proto\x12\fcyber.system\"\x12\n" +
-	"\x10GetStatusRequest\"\xbf\x02\n" +
-	"\fSystemStatus\x12\x18\n" +
-	"\aversion\x18\x01 \x01(\tR\aversion\x12#\n" +
-	"\rllm_available\x18\x02 \x01(\bR\fllmAvailable\x12!\n" +
-	"\fllm_provider\x18\x03 \x01(\tR\vllmProvider\x12\x1b\n" +
-	"\tllm_model\x18\x04 \x01(\tR\bllmModel\x123\n" +
-	"\x16llm_api_key_configured\x18\x05 \x01(\bR\x13llmApiKeyConfigured\x12\x1f\n" +
-	"\vconfig_path\x18\x06 \x01(\tR\n" +
-	"configPath\x12#\n" +
-	"\rconfig_loaded\x18\a \x01(\bR\fconfigLoaded\x12\x16\n" +
-	"\x06agents\x18\b \x01(\rR\x06agents\x12\x1d\n" +
-	"\n" +
-	"server_url\x18\t \x01(\tR\tserverUrl\"G\n" +
-	"\x11GetStatusResponse\x122\n" +
-	"\x06status\x18\x01 \x01(\v2\x1a.cyber.system.SystemStatusR\x06statusB1Z/github.com/chainreactors/cyber/core/types;typesb\x06proto3"
+	"\n\x12types/system.proto\x12\fcyber.system\"\x12\n\x10GetStatusRequest\"\xbf\x02\n\fSystemStatus\x12\x18\n\aversion\x18\x01 \x01(\tR\aversion\x12#\n\rllm_available\x18\x02 \x01(\bR\fllmAva" +
+	"ilable\x12!\n\fllm_provider\x18\x03 \x01(\tR\vllmProvider\x12\x1b\n\tllm_model\x18\x04 \x01(\tR\bllmModel\x123\n\x16llm_api_key_configured\x18\x05 \x01(\bR\x13llmApiKeyConfigured\x12\x1f\n\vc" +
+	"onfig_path\x18\x06 \x01(\tR\nconfigPath\x12#\n\rconfig_loaded\x18\a \x01(\bR\fconfigLoaded\x12\x16\n\x06agents\x18\b \x01(\rR\x06agents\x12\x1d\n\nserver_url\x18\t \x01(\tR\tserverUrl\"G\n\x11GetS" +
+	"tatusResponse\x122\n\x06status\x18\x01 \x01(\v2\x1a.cyber.system.SystemStatusR\x06statusB+Z)github.com/c1ayooo/cyber/core/types;typesb\x06proto3"
 
 var (
 	file_types_system_proto_rawDescOnce sync.Once

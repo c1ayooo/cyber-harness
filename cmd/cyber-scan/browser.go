@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/chainreactors/cyber/core/extension"
-	browserext "github.com/chainreactors/cyber/exts/browser"
+	"github.com/c1ayooo/cyber/core/extension"
+	browserext "github.com/c1ayooo/cyber/exts/browser"
 )
 
 func browserExtension(config appConfig, workDir string) (extension.Extension, error) {

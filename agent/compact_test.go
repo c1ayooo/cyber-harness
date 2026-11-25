@@ -6,9 +6,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/chainreactors/cyber/agent/prompt"
-	"github.com/chainreactors/cyber/agent/provider"
-	aop "github.com/chainreactors/cyber/aop"
+	"github.com/c1ayooo/cyber/agent/prompt"
+	"github.com/c1ayooo/cyber/agent/provider"
+	aop "github.com/c1ayooo/cyber/aop"
 )
 
 type compactionTestPrompts struct{}

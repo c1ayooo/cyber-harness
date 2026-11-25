@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/chainreactors/cyber/agent/provider"
-	aop "github.com/chainreactors/cyber/aop"
-	types "github.com/chainreactors/cyber/core/types"
+	"github.com/c1ayooo/cyber/agent/provider"
+	aop "github.com/c1ayooo/cyber/aop"
+	types "github.com/c1ayooo/cyber/core/types"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 

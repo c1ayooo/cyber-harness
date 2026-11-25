@@ -3,11 +3,11 @@ package tool
 import (
 	"context"
 	"errors"
-	"github.com/chainreactors/cyber/core/hooks"
+	"github.com/c1ayooo/cyber/core/hooks"
 	"testing"
 
-	aop "github.com/chainreactors/cyber/aop"
-	"github.com/chainreactors/cyber/core/extension"
+	aop "github.com/c1ayooo/cyber/aop"
+	"github.com/c1ayooo/cyber/core/extension"
 )
 
 func TestRegistryRejectsDuplicateCommands(t *testing.T) {

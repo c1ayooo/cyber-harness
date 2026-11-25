@@ -1,7 +1,7 @@
 package scan
 
 import (
-	"github.com/chainreactors/cyber/pkg/output"
+	"github.com/c1ayooo/cyber/pkg/output"
 	"github.com/chainreactors/utils/parsers"
 )
 

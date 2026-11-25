@@ -9,11 +9,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/chainreactors/cyber/agent/provider"
-	"github.com/chainreactors/cyber/core/egress"
-	"github.com/chainreactors/cyber/core/extension"
-	"github.com/chainreactors/cyber/core/hooks"
-	coretool "github.com/chainreactors/cyber/core/tool"
+	"github.com/c1ayooo/cyber/agent/provider"
+	"github.com/c1ayooo/cyber/core/egress"
+	"github.com/c1ayooo/cyber/core/extension"
+	"github.com/c1ayooo/cyber/core/hooks"
+	coretool "github.com/c1ayooo/cyber/core/tool"
 )
 
 func loadSearchExtension(t *testing.T, cfg provider.ProviderConfig) (*Extension, *coretool.ToolRegistry) {

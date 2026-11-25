@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	aop "github.com/chainreactors/cyber/aop"
+	aop "github.com/c1ayooo/cyber/aop"
 )
 
 func terminalFixture(id, origin, turn string) *aop.Event {

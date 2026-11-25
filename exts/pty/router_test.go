@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/chainreactors/cyber/aop"
-	ptypb "github.com/chainreactors/cyber/aop/pty"
+	"github.com/c1ayooo/cyber/aop"
+	ptypb "github.com/c1ayooo/cyber/aop/pty"
 	runtimeproc "github.com/chainreactors/utils/proc"
 )
 

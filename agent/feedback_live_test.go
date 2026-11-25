@@ -7,9 +7,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/chainreactors/cyber/agent/provider"
-	coretool "github.com/chainreactors/cyber/core/tool"
-	"github.com/chainreactors/cyber/tools/files"
+	"github.com/c1ayooo/cyber/agent/provider"
+	coretool "github.com/c1ayooo/cyber/core/tool"
+	"github.com/c1ayooo/cyber/tools/files"
 )
 
 // Explicit opt-in keeps normal tests offline and never borrows ambient credentials.

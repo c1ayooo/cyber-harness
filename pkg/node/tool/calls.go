@@ -7,13 +7,13 @@ import (
 	"strings"
 	"sync"
 
-	aop "github.com/chainreactors/cyber/aop"
-	operationpb "github.com/chainreactors/cyber/aop/operation"
-	toolpb "github.com/chainreactors/cyber/aop/tool"
-	"github.com/chainreactors/cyber/core/eventbus"
-	"github.com/chainreactors/cyber/core/operation"
-	"github.com/chainreactors/cyber/core/telemetry"
-	coretool "github.com/chainreactors/cyber/core/tool"
+	aop "github.com/c1ayooo/cyber/aop"
+	operationpb "github.com/c1ayooo/cyber/aop/operation"
+	toolpb "github.com/c1ayooo/cyber/aop/tool"
+	"github.com/c1ayooo/cyber/core/eventbus"
+	"github.com/c1ayooo/cyber/core/operation"
+	"github.com/c1ayooo/cyber/core/telemetry"
+	coretool "github.com/c1ayooo/cyber/core/tool"
 	"google.golang.org/protobuf/proto"
 )
 

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/chainreactors/cyber/agent/provider"
+	"github.com/c1ayooo/cyber/agent/provider"
 )
 
 func parseAnthropicWebSearchResponse(data []byte) (*searchResponse, error) {

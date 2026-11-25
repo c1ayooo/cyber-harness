@@ -6,8 +6,8 @@ import (
 	"net/url"
 	"strings"
 
-	toolpb "github.com/chainreactors/cyber/aop/tool"
-	"github.com/chainreactors/cyber/tools/scan/engine"
+	toolpb "github.com/c1ayooo/cyber/aop/tool"
+	"github.com/c1ayooo/cyber/tools/scan/engine"
 	sdktypes "github.com/chainreactors/sdk/pkg/types"
 	sdkzombie "github.com/chainreactors/sdk/zombie"
 	"github.com/chainreactors/utils"

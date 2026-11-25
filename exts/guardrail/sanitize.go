@@ -5,7 +5,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/chainreactors/cyber/aop"
+	"github.com/c1ayooo/cyber/aop"
 	"google.golang.org/protobuf/proto"
 )
 

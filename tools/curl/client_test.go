@@ -15,10 +15,10 @@ import (
 	"testing"
 	"time"
 
-	aop "github.com/chainreactors/cyber/aop"
-	toolpb "github.com/chainreactors/cyber/aop/tool"
-	coreevents "github.com/chainreactors/cyber/core/events"
-	coretool "github.com/chainreactors/cyber/core/tool"
+	aop "github.com/c1ayooo/cyber/aop"
+	toolpb "github.com/c1ayooo/cyber/aop/tool"
+	coreevents "github.com/c1ayooo/cyber/core/events"
+	coretool "github.com/c1ayooo/cyber/core/tool"
 )
 
 // run is a small harness: parse args, execute against a real server, capture

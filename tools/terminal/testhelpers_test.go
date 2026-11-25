@@ -2,11 +2,11 @@ package terminal
 
 import (
 	"context"
-	"github.com/chainreactors/cyber/core/hooks"
+	"github.com/c1ayooo/cyber/core/hooks"
 	"testing"
 
-	"github.com/chainreactors/cyber/core/extension"
-	coretool "github.com/chainreactors/cyber/core/tool"
+	"github.com/c1ayooo/cyber/core/extension"
+	coretool "github.com/c1ayooo/cyber/core/tool"
 )
 
 type testCommandBatch struct {

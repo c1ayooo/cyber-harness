@@ -8,11 +8,11 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"github.com/chainreactors/cyber/agent/provider"
-	"github.com/chainreactors/cyber/core/extension"
-	"github.com/chainreactors/cyber/core/telemetry"
-	providerext "github.com/chainreactors/cyber/exts/provider"
-	profile "github.com/chainreactors/cyber/pkg/profile"
+	"github.com/c1ayooo/cyber/agent/provider"
+	"github.com/c1ayooo/cyber/core/extension"
+	"github.com/c1ayooo/cyber/core/telemetry"
+	providerext "github.com/c1ayooo/cyber/exts/provider"
+	profile "github.com/c1ayooo/cyber/pkg/profile"
 )
 
 type providerCommitProfile struct {

@@ -6,9 +6,9 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/chainreactors/cyber/core/extension"
-	coretool "github.com/chainreactors/cyber/core/tool"
-	"github.com/chainreactors/cyber/tools/playwright"
+	"github.com/c1ayooo/cyber/core/extension"
+	coretool "github.com/c1ayooo/cyber/core/tool"
+	"github.com/c1ayooo/cyber/tools/playwright"
 )
 
 // Extension owns the browser command registration and the browser processes

@@ -13,7 +13,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/chainreactors/cyber/core/truncate"
+	"github.com/c1ayooo/cyber/core/truncate"
 )
 
 const (

@@ -4,9 +4,9 @@ package client
 import (
 	"context"
 
-	"github.com/chainreactors/cyber/core/extension"
-	"github.com/chainreactors/cyber/core/telemetry"
-	service "github.com/chainreactors/cyber/tools/ioa"
+	"github.com/c1ayooo/cyber/core/extension"
+	"github.com/c1ayooo/cyber/core/telemetry"
+	service "github.com/c1ayooo/cyber/tools/ioa"
 )
 
 // Extension is the sole owner of an IOA connection.

@@ -2,10 +2,10 @@ package session
 
 import (
 	"fmt"
-	agentsession "github.com/chainreactors/cyber/agent/session"
-	"github.com/chainreactors/cyber/core/extension"
-	coretool "github.com/chainreactors/cyber/core/tool"
-	"github.com/chainreactors/cyber/pkg/console/api"
+	agentsession "github.com/c1ayooo/cyber/agent/session"
+	"github.com/c1ayooo/cyber/core/extension"
+	coretool "github.com/c1ayooo/cyber/core/tool"
+	"github.com/c1ayooo/cyber/pkg/console/api"
 	"github.com/spf13/cobra"
 )
 

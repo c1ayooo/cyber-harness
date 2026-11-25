@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/chainreactors/cyber/agent/skills"
+	"github.com/c1ayooo/cyber/agent/skills"
 )
 
 func TestBundleProvidesCyberSkill(t *testing.T) {
@@ -30,10 +30,10 @@ func TestBundleProvidesCyberSkill(t *testing.T) {
 func TestReadVirtualServesSkillTree(t *testing.T) {
 	bundle, _ := Bundle()
 	for location, want := range map[string]string{
-		"cyber://skills/cyber/SKILL.md":          "# Cyber ASM and Penetration Testing",
-		"cyber://skills/cyber/okf/easm/gogo.md":  "# Gogo",
+		"cyber://skills/cyber/SKILL.md":            "# Cyber ASM and Penetration Testing",
+		"cyber://skills/cyber/okf/easm/gogo.md":    "# Gogo",
 		"cyber://skills/cyber/reference/report.md": "report",
-		"cyber://skills/scan/verify.md":          "verify",
+		"cyber://skills/scan/verify.md":            "verify",
 	} {
 		raw, handled, err := bundle.ReadVirtual(location)
 		if err != nil || !handled {

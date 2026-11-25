@@ -7,12 +7,12 @@ import (
 	"testing"
 	"time"
 
-	agentsession "github.com/chainreactors/cyber/agent/session"
-	"github.com/chainreactors/cyber/aop"
-	"github.com/chainreactors/cyber/core/truncate"
-	"github.com/chainreactors/cyber/core/types"
-	cfg "github.com/chainreactors/cyber/pkg/config"
-	"github.com/chainreactors/cyber/pkg/output"
+	agentsession "github.com/c1ayooo/cyber/agent/session"
+	"github.com/c1ayooo/cyber/aop"
+	"github.com/c1ayooo/cyber/core/truncate"
+	"github.com/c1ayooo/cyber/core/types"
+	cfg "github.com/c1ayooo/cyber/pkg/config"
+	"github.com/c1ayooo/cyber/pkg/output"
 	rlterm "github.com/chainreactors/tui/readline/terminal"
 	"google.golang.org/protobuf/types/known/anypb"
 )

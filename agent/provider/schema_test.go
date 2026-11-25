@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	aop "github.com/chainreactors/cyber/aop"
+	aop "github.com/c1ayooo/cyber/aop"
 )
 
 func TestVendorToolSchemasPreserveExactJSONAndFallbacks(t *testing.T) {

@@ -6,11 +6,11 @@ import (
 	"strings"
 	"testing"
 
-	provider "github.com/chainreactors/cyber/agent/provider"
-	"github.com/chainreactors/cyber/core/extension"
-	"github.com/chainreactors/cyber/core/hooks"
-	coretool "github.com/chainreactors/cyber/core/tool"
-	toolhooks "github.com/chainreactors/cyber/core/tool/hooks"
+	provider "github.com/c1ayooo/cyber/agent/provider"
+	"github.com/c1ayooo/cyber/core/extension"
+	"github.com/c1ayooo/cyber/core/hooks"
+	coretool "github.com/c1ayooo/cyber/core/tool"
+	toolhooks "github.com/c1ayooo/cyber/core/tool/hooks"
 )
 
 func TestToolAdmissionDenialKeepsAgentLoopRunning(t *testing.T) {

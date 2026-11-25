@@ -17,7 +17,7 @@ import (
 	"testing"
 	"time"
 
-	harness "github.com/chainreactors/cyber/core/collaboration"
+	harness "github.com/c1ayooo/cyber/core/collaboration"
 	peerclient "github.com/chainreactors/ioa/client"
 	"github.com/chainreactors/ioa/protocols"
 	ioaserver "github.com/chainreactors/ioa/server"

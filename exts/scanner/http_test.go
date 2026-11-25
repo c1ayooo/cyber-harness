@@ -9,9 +9,9 @@ import (
 	"slices"
 	"testing"
 
-	coretool "github.com/chainreactors/cyber/core/tool"
-	scannerext "github.com/chainreactors/cyber/exts/scanner"
-	"github.com/chainreactors/cyber/pkg/testutil/hosttest"
+	coretool "github.com/c1ayooo/cyber/core/tool"
+	scannerext "github.com/c1ayooo/cyber/exts/scanner"
+	"github.com/c1ayooo/cyber/pkg/testutil/hosttest"
 )
 
 func TestHTTPInstallationNeedsNoEnginesOrModel(t *testing.T) {

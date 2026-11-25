@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"strings"
 
-	aop "github.com/chainreactors/cyber/aop"
+	aop "github.com/c1ayooo/cyber/aop"
 )
 
 // Keep the encoded schema intact at the vendor boundary, including exact numbers.

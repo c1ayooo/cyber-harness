@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/chainreactors/cyber/core/extension"
-	profile "github.com/chainreactors/cyber/pkg/profile"
+	"github.com/c1ayooo/cyber/core/extension"
+	profile "github.com/c1ayooo/cyber/pkg/profile"
 )
 
 func TestConfigShutdownRetainsCandidateWhileCommitIsInProgress(t *testing.T) {

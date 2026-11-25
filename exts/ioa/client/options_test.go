@@ -1,7 +1,7 @@
 package client
 
 import (
-	cfg "github.com/chainreactors/cyber/pkg/config"
+	cfg "github.com/c1ayooo/cyber/pkg/config"
 	ioaclient "github.com/chainreactors/ioa/client"
 	"net/url"
 	"os"

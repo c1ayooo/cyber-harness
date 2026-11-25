@@ -7,7 +7,7 @@
 package tool
 
 import (
-	aop "github.com/chainreactors/cyber/aop"
+	aop "github.com/c1ayooo/cyber/aop"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
@@ -440,43 +440,14 @@ func (*ProtocolMessage_Call) isProtocolMessage_Message() {}
 var File_aop_tool_protocol_proto protoreflect.FileDescriptor
 
 const file_aop_tool_protocol_proto_rawDesc = "" +
-	"\n" +
-	"\x17aop/tool/protocol.proto\x12\baop.tool\x1a\x11aop/content.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"a\n" +
-	"\x04Call\x12\x1d\n" +
-	"\n" +
-	"session_id\x18\x01 \x01(\tR\tsessionId\x12\x17\n" +
-	"\aturn_id\x18\x02 \x01(\tR\x06turnId\x12!\n" +
-	"\x04call\x18\x03 \x01(\v2\r.aop.ToolCallR\x04call\"\xa9\x01\n" +
-	"\bProgress\x12\x12\n" +
-	"\x04tool\x18\x01 \x01(\tR\x04tool\x12\x16\n" +
-	"\x06target\x18\x03 \x01(\tR\x06target\x128\n" +
-	"\ttimestamp\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\ttimestamp\x12\x12\n" +
-	"\x04text\x18\x06 \x01(\tR\x04text\x12\x17\n" +
-	"\acall_id\x18\a \x01(\tR\x06callIdJ\x04\b\x02\x10\x03J\x04\b\x04\x10\x05\"\xda\x01\n" +
-	"\bArtifact\x12\x12\n" +
-	"\x04tool\x18\x01 \x01(\tR\x04tool\x12\x12\n" +
-	"\x04kind\x18\x02 \x01(\tR\x04kind\x12\x16\n" +
-	"\x06target\x18\x03 \x01(\tR\x06target\x12\x12\n" +
-	"\x04data\x18\x04 \x01(\fR\x04data\x12\x1d\n" +
-	"\n" +
-	"media_type\x18\x05 \x01(\tR\tmediaType\x128\n" +
-	"\ttimestamp\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\ttimestamp\x12\x1b\n" +
-	"\tresult_id\x18\b \x01(\tR\bresultIdJ\x04\b\a\x10\b\"\xec\x01\n" +
-	"\x04Loot\x12\x1b\n" +
-	"\tresult_id\x18\x01 \x01(\tR\bresultId\x12\x12\n" +
-	"\x04tool\x18\x02 \x01(\tR\x04tool\x12\x12\n" +
-	"\x04kind\x18\x03 \x01(\tR\x04kind\x12\x16\n" +
-	"\x06target\x18\x04 \x01(\tR\x06target\x12\x1a\n" +
-	"\bpriority\x18\x05 \x01(\tR\bpriority\x12\x12\n" +
-	"\x04tags\x18\x06 \x03(\tR\x04tags\x12 \n" +
-	"\vdescription\x18\a \x01(\tR\vdescription\x12/\n" +
-	"\x13verification_status\x18\b \x01(\tR\x12verificationStatusJ\x04\b\t\x10\n" +
-	"\"\x80\x01\n" +
-	"\x0fProtocolMessage\x120\n" +
-	"\bprogress\x18\n" +
-	" \x01(\v2\x12.aop.tool.ProgressH\x00R\bprogress\x12$\n" +
-	"\x04call\x18\v \x01(\v2\x0e.aop.tool.CallH\x00R\x04callB\t\n" +
-	"\amessageJ\x04\b\f\x10\rJ\x04\b\r\x10\x0eB.Z,github.com/chainreactors/cyber/aop/tool;toolb\x06proto3"
+	"\n\x17aop/tool/protocol.proto\x12\baop.tool\x1a\x11aop/content.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"a\n\x04Call\x12\x1d\n\nsession_id\x18\x01 \x01(\tR\tsessionId\x12\x17" +
+	"\n\aturn_id\x18\x02 \x01(\tR\x06turnId\x12!\n\x04call\x18\x03 \x01(\v2\r.aop.ToolCallR\x04call\"\xa9\x01\n\bProgress\x12\x12\n\x04tool\x18\x01 \x01(\tR\x04tool\x12\x16\n\x06target\x18\x03 \x01(\tR\x06target\x128\n\ttimestamp" +
+	"\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\ttimestamp\x12\x12\n\x04text\x18\x06 \x01(\tR\x04text\x12\x17\n\acall_id\x18\a \x01(\tR\x06callIdJ\x04\b\x02\x10\x03J\x04\b\x04\x10\x05\"\xda\x01\n\bArtifact\x12\x12\n\x04tool\x18\x01 \x01(" +
+	"\tR\x04tool\x12\x12\n\x04kind\x18\x02 \x01(\tR\x04kind\x12\x16\n\x06target\x18\x03 \x01(\tR\x06target\x12\x12\n\x04data\x18\x04 \x01(\fR\x04data\x12\x1d\n\nmedia_type\x18\x05 \x01(\tR\tmediaType\x128\n\ttimestamp\x18\x06 \x01(\v2\x1a.goog" +
+	"le.protobuf.TimestampR\ttimestamp\x12\x1b\n\tresult_id\x18\b \x01(\tR\bresultIdJ\x04\b\a\x10\b\"\xec\x01\n\x04Loot\x12\x1b\n\tresult_id\x18\x01 \x01(\tR\bresultId\x12\x12\n\x04tool\x18\x02 \x01(\tR\x04tool\x12\x12\n" +
+	"\x04kind\x18\x03 \x01(\tR\x04kind\x12\x16\n\x06target\x18\x04 \x01(\tR\x06target\x12\x1a\n\bpriority\x18\x05 \x01(\tR\bpriority\x12\x12\n\x04tags\x18\x06 \x03(\tR\x04tags\x12 \n\vdescription\x18\a \x01(\tR\vdescription\x12/\n\x13v" +
+	"erification_status\x18\b \x01(\tR\x12verificationStatusJ\x04\b\t\x10\n\"\x80\x01\n\x0fProtocolMessage\x120\n\bprogress\x18\n \x01(\v2\x12.aop.tool.ProgressH\x00R\bprogress\x12$\n\x04call" +
+	"\x18\v \x01(\v2\x0e.aop.tool.CallH\x00R\x04callB\t\n\amessageJ\x04\b\f\x10\rJ\x04\b\r\x10\x0eB(Z&github.com/c1ayooo/cyber/aop/tool;toolb\x06proto3"
 
 var (
 	file_aop_tool_protocol_proto_rawDescOnce sync.Once

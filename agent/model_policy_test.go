@@ -6,10 +6,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/chainreactors/cyber/agent/hooks"
-	"github.com/chainreactors/cyber/agent/provider"
-	aop "github.com/chainreactors/cyber/aop"
-	corehooks "github.com/chainreactors/cyber/core/hooks"
+	"github.com/c1ayooo/cyber/agent/hooks"
+	"github.com/c1ayooo/cyber/agent/provider"
+	aop "github.com/c1ayooo/cyber/aop"
+	corehooks "github.com/c1ayooo/cyber/core/hooks"
 )
 
 func TestModelRequestPolicyCannotDispatchCompositionTools(t *testing.T) {

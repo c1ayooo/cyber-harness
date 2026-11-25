@@ -7,9 +7,9 @@ import (
 	"fmt"
 	"sync"
 
-	jevapi "github.com/chainreactors/cyber/agent/provider/jev"
-	decision "github.com/chainreactors/cyber/core/decision"
-	coretool "github.com/chainreactors/cyber/core/tool"
+	jevapi "github.com/c1ayooo/cyber/agent/provider/jev"
+	decision "github.com/c1ayooo/cyber/core/decision"
+	coretool "github.com/c1ayooo/cyber/core/tool"
 )
 
 // A test oracle for the laboratory protocol, not a production validator or

@@ -7,19 +7,19 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/chainreactors/cyber/core/extension"
-	loopext "github.com/chainreactors/cyber/exts/agent"
-	promptext "github.com/chainreactors/cyber/exts/prompt"
-	sessionext "github.com/chainreactors/cyber/exts/session"
+	"github.com/c1ayooo/cyber/core/extension"
+	loopext "github.com/c1ayooo/cyber/exts/agent"
+	promptext "github.com/c1ayooo/cyber/exts/prompt"
+	sessionext "github.com/c1ayooo/cyber/exts/session"
 
-	"github.com/chainreactors/cyber/pkg/testutil/apptest"
+	"github.com/c1ayooo/cyber/pkg/testutil/apptest"
 
-	"github.com/chainreactors/cyber/agent"
-	provider "github.com/chainreactors/cyber/agent/provider"
-	"github.com/chainreactors/cyber/agent/session"
-	"github.com/chainreactors/cyber/agent/skills"
-	coretool "github.com/chainreactors/cyber/core/tool"
-	"github.com/chainreactors/cyber/pkg/testutil/hosttest"
+	"github.com/c1ayooo/cyber/agent"
+	provider "github.com/c1ayooo/cyber/agent/provider"
+	"github.com/c1ayooo/cyber/agent/session"
+	"github.com/c1ayooo/cyber/agent/skills"
+	coretool "github.com/c1ayooo/cyber/core/tool"
+	"github.com/c1ayooo/cyber/pkg/testutil/hosttest"
 )
 
 func TestAgentStatusIncludesLLMHealthFailure(t *testing.T) {

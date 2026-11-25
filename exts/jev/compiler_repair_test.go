@@ -11,10 +11,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/chainreactors/cyber/agent/provider"
-	jevapi "github.com/chainreactors/cyber/agent/provider/jev"
-	"github.com/chainreactors/cyber/aop"
-	coretool "github.com/chainreactors/cyber/core/tool"
+	"github.com/c1ayooo/cyber/agent/provider"
+	jevapi "github.com/c1ayooo/cyber/agent/provider/jev"
+	"github.com/c1ayooo/cyber/aop"
+	coretool "github.com/c1ayooo/cyber/core/tool"
 )
 
 func compilerReadPlan(t *testing.T, review func(inferenceRequest) map[string]inferenceAnswer) (*Extension, *compilation, string) {

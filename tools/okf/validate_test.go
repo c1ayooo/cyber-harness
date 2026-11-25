@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	coretool "github.com/chainreactors/cyber/core/tool"
+	coretool "github.com/c1ayooo/cyber/core/tool"
 	"os"
 	"path/filepath"
 	"strings"

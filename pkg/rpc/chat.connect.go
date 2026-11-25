@@ -8,8 +8,8 @@ import (
 	connect "connectrpc.com/connect"
 	context "context"
 	errors "errors"
-	aop "github.com/chainreactors/cyber/aop"
-	types "github.com/chainreactors/cyber/core/types"
+	aop "github.com/c1ayooo/cyber/aop"
+	types "github.com/c1ayooo/cyber/core/types"
 	http "net/http"
 	strings "strings"
 )

@@ -7,10 +7,10 @@ import (
 	"strings"
 	"sync"
 
-	agentsession "github.com/chainreactors/cyber/agent/session"
-	aop "github.com/chainreactors/cyber/aop"
-	cfg "github.com/chainreactors/cyber/pkg/config"
-	consoleapi "github.com/chainreactors/cyber/pkg/console/api"
+	agentsession "github.com/c1ayooo/cyber/agent/session"
+	aop "github.com/c1ayooo/cyber/aop"
+	cfg "github.com/c1ayooo/cyber/pkg/config"
+	consoleapi "github.com/c1ayooo/cyber/pkg/console/api"
 	rlterm "github.com/chainreactors/tui/readline/terminal"
 )
 

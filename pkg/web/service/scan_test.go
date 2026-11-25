@@ -11,11 +11,11 @@ import (
 	"testing"
 	"time"
 
-	aop "github.com/chainreactors/cyber/aop"
-	toolpb "github.com/chainreactors/cyber/aop/tool"
-	types "github.com/chainreactors/cyber/core/types"
-	webpkg "github.com/chainreactors/cyber/pkg/web"
-	scanpb "github.com/chainreactors/cyber/pkg/web/scan"
+	aop "github.com/c1ayooo/cyber/aop"
+	toolpb "github.com/c1ayooo/cyber/aop/tool"
+	types "github.com/c1ayooo/cyber/core/types"
+	webpkg "github.com/c1ayooo/cyber/pkg/web"
+	scanpb "github.com/c1ayooo/cyber/pkg/web/scan"
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )

@@ -9,13 +9,13 @@ import (
 	"sync"
 	"time"
 
-	"github.com/chainreactors/cyber/agent/provider"
-	"github.com/chainreactors/cyber/core/extension"
-	types "github.com/chainreactors/cyber/core/types"
-	"github.com/chainreactors/cyber/pkg/config"
-	profile "github.com/chainreactors/cyber/pkg/profile"
-	web "github.com/chainreactors/cyber/pkg/web"
-	managementapi "github.com/chainreactors/cyber/pkg/web/api"
+	"github.com/c1ayooo/cyber/agent/provider"
+	"github.com/c1ayooo/cyber/core/extension"
+	types "github.com/c1ayooo/cyber/core/types"
+	"github.com/c1ayooo/cyber/pkg/config"
+	profile "github.com/c1ayooo/cyber/pkg/profile"
+	web "github.com/c1ayooo/cyber/pkg/web"
+	managementapi "github.com/c1ayooo/cyber/pkg/web/api"
 )
 
 // ScanServiceConfig enables the scan console. A nil Scans field disables it:

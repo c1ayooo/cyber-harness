@@ -3,8 +3,8 @@ package service
 import (
 	"sync"
 
-	aop "github.com/chainreactors/cyber/aop"
-	scanpb "github.com/chainreactors/cyber/pkg/web/scan"
+	aop "github.com/c1ayooo/cyber/aop"
+	scanpb "github.com/c1ayooo/cyber/pkg/web/scan"
 	protobuf "google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )

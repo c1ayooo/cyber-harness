@@ -13,13 +13,13 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/chainreactors/cyber/core/extension"
-	coretool "github.com/chainreactors/cyber/core/tool"
-	fileext "github.com/chainreactors/cyber/exts/files"
-	skillsext "github.com/chainreactors/cyber/exts/skills"
-	"github.com/chainreactors/cyber/pkg/testutil/hosttest"
+	"github.com/c1ayooo/cyber/core/extension"
+	coretool "github.com/c1ayooo/cyber/core/tool"
+	fileext "github.com/c1ayooo/cyber/exts/files"
+	skillsext "github.com/c1ayooo/cyber/exts/skills"
+	"github.com/c1ayooo/cyber/pkg/testutil/hosttest"
 
-	"github.com/chainreactors/cyber/tools/files"
+	"github.com/c1ayooo/cyber/tools/files"
 )
 
 func TestReadRuntimeDocument(t *testing.T) {
@@ -257,7 +257,7 @@ func TestSymlinkCannotLeaveConfiguredRoot(t *testing.T) {
 }
 
 func TestProductionDependenciesStayIndependent(t *testing.T) {
-	const prefix = "github.com/chainreactors/cyber/"
+	const prefix = "github.com/c1ayooo/cyber/"
 	cmd := exec.CommandContext(t.Context(), "go", "list", "-mod=readonly", "-deps", prefix+"exts/files")
 	output, err := cmd.CombinedOutput()
 	if err != nil {

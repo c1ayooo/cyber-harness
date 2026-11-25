@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/chainreactors/cyber/core/extension"
-	"github.com/chainreactors/cyber/core/namespaces"
+	"github.com/c1ayooo/cyber/core/extension"
+	"github.com/c1ayooo/cyber/core/namespaces"
 )
 
 type registryConsumer struct {

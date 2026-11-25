@@ -2,11 +2,11 @@ package console
 
 import (
 	"context"
-	agentsession "github.com/chainreactors/cyber/agent/session"
-	"github.com/chainreactors/cyber/core/extension"
-	sessionext "github.com/chainreactors/cyber/exts/session"
-	tuiext "github.com/chainreactors/cyber/exts/tui"
-	"github.com/chainreactors/cyber/pkg/console/api"
+	agentsession "github.com/c1ayooo/cyber/agent/session"
+	"github.com/c1ayooo/cyber/core/extension"
+	sessionext "github.com/c1ayooo/cyber/exts/session"
+	tuiext "github.com/c1ayooo/cyber/exts/tui"
+	"github.com/c1ayooo/cyber/pkg/console/api"
 	"testing"
 )
 

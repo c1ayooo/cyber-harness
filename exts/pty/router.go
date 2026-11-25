@@ -8,9 +8,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/chainreactors/cyber/aop"
-	ptypb "github.com/chainreactors/cyber/aop/pty"
-	procbus "github.com/chainreactors/cyber/core/proc"
+	"github.com/c1ayooo/cyber/aop"
+	ptypb "github.com/c1ayooo/cyber/aop/pty"
+	procbus "github.com/c1ayooo/cyber/core/proc"
 	runtimeproc "github.com/chainreactors/utils/proc"
 	"google.golang.org/protobuf/proto"
 )

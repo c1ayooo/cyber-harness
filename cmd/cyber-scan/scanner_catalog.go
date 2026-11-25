@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"slices"
 
-	"github.com/chainreactors/cyber/core/resource"
-	passiveconfig "github.com/chainreactors/cyber/exts/passive/config"
-	scannerext "github.com/chainreactors/cyber/exts/scanner"
-	hostcli "github.com/chainreactors/cyber/pkg/cli"
+	"github.com/c1ayooo/cyber/core/resource"
+	passiveconfig "github.com/c1ayooo/cyber/exts/passive/config"
+	scannerext "github.com/c1ayooo/cyber/exts/scanner"
+	hostcli "github.com/c1ayooo/cyber/pkg/cli"
 )
 
 func productScannerNames() []string            { return append(scannerext.Names(), discoveryNames()...) }

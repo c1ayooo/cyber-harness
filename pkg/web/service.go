@@ -4,8 +4,8 @@ import (
 	"context"
 	"net/http"
 
-	aop "github.com/chainreactors/cyber/aop"
-	managementapi "github.com/chainreactors/cyber/pkg/web/api"
+	aop "github.com/c1ayooo/cyber/aop"
+	managementapi "github.com/c1ayooo/cyber/pkg/web/api"
 )
 
 const (

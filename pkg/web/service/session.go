@@ -9,9 +9,9 @@ import (
 	"strings"
 	"time"
 
-	aop "github.com/chainreactors/cyber/aop"
-	filepb "github.com/chainreactors/cyber/aop/file"
-	managementapi "github.com/chainreactors/cyber/pkg/web/api"
+	aop "github.com/c1ayooo/cyber/aop"
+	filepb "github.com/c1ayooo/cyber/aop/file"
+	managementapi "github.com/c1ayooo/cyber/pkg/web/api"
 	"google.golang.org/protobuf/proto"
 )
 

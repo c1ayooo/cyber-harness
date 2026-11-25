@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strings"
 
-	jevapi "github.com/chainreactors/cyber/agent/provider/jev"
+	jevapi "github.com/c1ayooo/cyber/agent/provider/jev"
 	"github.com/dop251/goja"
 )
 

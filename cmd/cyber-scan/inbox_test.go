@@ -11,11 +11,11 @@ import (
 	"testing"
 	"time"
 
-	agentsession "github.com/chainreactors/cyber/agent/session"
-	"github.com/chainreactors/cyber/core/telemetry"
-	taskcli "github.com/chainreactors/cyber/pkg/cli/task"
-	cfg "github.com/chainreactors/cyber/pkg/config"
-	profilepkg "github.com/chainreactors/cyber/pkg/profile"
+	agentsession "github.com/c1ayooo/cyber/agent/session"
+	"github.com/c1ayooo/cyber/core/telemetry"
+	taskcli "github.com/c1ayooo/cyber/pkg/cli/task"
+	cfg "github.com/c1ayooo/cyber/pkg/config"
+	profilepkg "github.com/c1ayooo/cyber/pkg/profile"
 )
 
 func TestParseCLIInboxHost(t *testing.T) {

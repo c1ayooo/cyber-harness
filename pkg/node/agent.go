@@ -9,16 +9,16 @@ import (
 
 	"google.golang.org/protobuf/proto"
 
-	"github.com/chainreactors/cyber/agent"
-	provider "github.com/chainreactors/cyber/agent/provider"
-	agentsession "github.com/chainreactors/cyber/agent/session"
-	aop "github.com/chainreactors/cyber/aop"
-	filepb "github.com/chainreactors/cyber/aop/file"
-	"github.com/chainreactors/cyber/core/telemetry"
-	types "github.com/chainreactors/cyber/core/types"
-	cfg "github.com/chainreactors/cyber/pkg/config"
-	"github.com/chainreactors/cyber/pkg/console"
-	profile "github.com/chainreactors/cyber/pkg/profile"
+	"github.com/c1ayooo/cyber/agent"
+	provider "github.com/c1ayooo/cyber/agent/provider"
+	agentsession "github.com/c1ayooo/cyber/agent/session"
+	aop "github.com/c1ayooo/cyber/aop"
+	filepb "github.com/c1ayooo/cyber/aop/file"
+	"github.com/c1ayooo/cyber/core/telemetry"
+	types "github.com/c1ayooo/cyber/core/types"
+	cfg "github.com/c1ayooo/cyber/pkg/config"
+	"github.com/c1ayooo/cyber/pkg/console"
+	profile "github.com/c1ayooo/cyber/pkg/profile"
 )
 
 func RunWebSocket(ctx context.Context, newProfile func(profile.Request) (profile.Profile, error), option *cfg.Option, logger telemetry.Logger) error {

@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"testing"
 
-	jevapi "github.com/chainreactors/cyber/agent/provider/jev"
+	jevapi "github.com/c1ayooo/cyber/agent/provider/jev"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 )

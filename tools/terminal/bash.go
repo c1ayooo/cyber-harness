@@ -13,17 +13,17 @@ import (
 	"sync"
 	"time"
 
-	aop "github.com/chainreactors/cyber/aop"
+	aop "github.com/c1ayooo/cyber/aop"
 
-	"github.com/chainreactors/cyber/agent/inbox"
-	"github.com/chainreactors/cyber/core/hooks"
-	"github.com/chainreactors/cyber/core/operation"
-	procbus "github.com/chainreactors/cyber/core/proc"
-	coretool "github.com/chainreactors/cyber/core/tool"
-	"github.com/chainreactors/cyber/core/truncate"
-	"github.com/chainreactors/cyber/core/types"
+	"github.com/c1ayooo/cyber/agent/inbox"
+	"github.com/c1ayooo/cyber/core/hooks"
+	"github.com/c1ayooo/cyber/core/operation"
+	procbus "github.com/c1ayooo/cyber/core/proc"
+	coretool "github.com/c1ayooo/cyber/core/tool"
+	"github.com/c1ayooo/cyber/core/truncate"
+	"github.com/c1ayooo/cyber/core/types"
 
-	"github.com/chainreactors/cyber/pkg/output"
+	"github.com/c1ayooo/cyber/pkg/output"
 	"github.com/chainreactors/utils/proc"
 )
 

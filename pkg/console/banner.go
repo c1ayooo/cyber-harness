@@ -2,8 +2,8 @@ package console
 
 import (
 	"fmt"
-	cfg "github.com/chainreactors/cyber/pkg/config"
-	outputpkg "github.com/chainreactors/cyber/pkg/output"
+	cfg "github.com/c1ayooo/cyber/pkg/config"
+	outputpkg "github.com/c1ayooo/cyber/pkg/output"
 	runewidth "github.com/mattn/go-runewidth"
 	"golang.org/x/term"
 	"io"

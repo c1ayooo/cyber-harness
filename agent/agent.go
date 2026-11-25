@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/chainreactors/cyber/agent/inbox"
-	providerpkg "github.com/chainreactors/cyber/agent/provider"
-	aop "github.com/chainreactors/cyber/aop"
+	"github.com/c1ayooo/cyber/agent/inbox"
+	providerpkg "github.com/c1ayooo/cyber/agent/provider"
+	aop "github.com/c1ayooo/cyber/aop"
 	"google.golang.org/protobuf/proto"
 )
 

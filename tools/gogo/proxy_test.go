@@ -5,7 +5,7 @@ import (
 	"context"
 	"testing"
 
-	coretool "github.com/chainreactors/cyber/core/tool"
+	coretool "github.com/c1ayooo/cyber/core/tool"
 )
 
 func TestGogoInjectProxy(t *testing.T) {

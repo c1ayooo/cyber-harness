@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strings"
 
-	agentprompt "github.com/chainreactors/cyber/agent/prompt"
+	agentprompt "github.com/c1ayooo/cyber/agent/prompt"
 )
 
 func defaultContributions() []agentprompt.Contribution {

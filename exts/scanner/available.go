@@ -1,13 +1,13 @@
 package scanner
 
 import (
-	"github.com/chainreactors/cyber/exts/proton"
-	"github.com/chainreactors/cyber/tools/curl"
-	"github.com/chainreactors/cyber/tools/gogo"
-	"github.com/chainreactors/cyber/tools/neutron"
-	"github.com/chainreactors/cyber/tools/scan"
-	"github.com/chainreactors/cyber/tools/spray"
-	"github.com/chainreactors/cyber/tools/zombie"
+	"github.com/c1ayooo/cyber/exts/proton"
+	"github.com/c1ayooo/cyber/tools/curl"
+	"github.com/c1ayooo/cyber/tools/gogo"
+	"github.com/c1ayooo/cyber/tools/neutron"
+	"github.com/c1ayooo/cyber/tools/scan"
+	"github.com/c1ayooo/cyber/tools/spray"
+	"github.com/c1ayooo/cyber/tools/zombie"
 )
 
 func Names() []string {

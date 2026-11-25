@@ -1,8 +1,8 @@
 package client
 
 import (
-	"github.com/chainreactors/cyber/core/extension"
-	"github.com/chainreactors/cyber/tools/ioa"
+	"github.com/c1ayooo/cyber/core/extension"
+	"github.com/c1ayooo/cyber/tools/ioa"
 )
 
 type ConsoleConfig struct{ Space, Endpoint string }

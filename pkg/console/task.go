@@ -10,11 +10,11 @@ import (
 	"sync"
 	"time"
 
-	agenthooks "github.com/chainreactors/cyber/agent/hooks"
-	agentsession "github.com/chainreactors/cyber/agent/session"
-	aop "github.com/chainreactors/cyber/aop"
-	cfg "github.com/chainreactors/cyber/pkg/config"
-	outputpkg "github.com/chainreactors/cyber/pkg/output"
+	agenthooks "github.com/c1ayooo/cyber/agent/hooks"
+	agentsession "github.com/c1ayooo/cyber/agent/session"
+	aop "github.com/c1ayooo/cyber/aop"
+	cfg "github.com/c1ayooo/cyber/pkg/config"
+	outputpkg "github.com/c1ayooo/cyber/pkg/output"
 	"golang.org/x/term"
 )
 

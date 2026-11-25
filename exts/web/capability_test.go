@@ -8,11 +8,11 @@ import (
 	"sync/atomic"
 	"testing"
 
-	aop "github.com/chainreactors/cyber/aop"
-	"github.com/chainreactors/cyber/core/extension"
-	webpkg "github.com/chainreactors/cyber/pkg/web"
-	managementapi "github.com/chainreactors/cyber/pkg/web/api"
-	webservice "github.com/chainreactors/cyber/pkg/web/service"
+	aop "github.com/c1ayooo/cyber/aop"
+	"github.com/c1ayooo/cyber/core/extension"
+	webpkg "github.com/c1ayooo/cyber/pkg/web"
+	managementapi "github.com/c1ayooo/cyber/pkg/web/api"
+	webservice "github.com/c1ayooo/cyber/pkg/web/service"
 )
 
 type testCapability struct{ closed atomic.Bool }

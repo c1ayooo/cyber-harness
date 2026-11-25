@@ -4,12 +4,12 @@ import (
 	"context"
 	"testing"
 
-	"github.com/chainreactors/cyber/agent"
-	"github.com/chainreactors/cyber/agent/prompt"
-	provider "github.com/chainreactors/cyber/agent/provider"
-	"github.com/chainreactors/cyber/agent/subagent"
-	aop "github.com/chainreactors/cyber/aop"
-	"github.com/chainreactors/cyber/tools/scan"
+	"github.com/c1ayooo/cyber/agent"
+	"github.com/c1ayooo/cyber/agent/prompt"
+	provider "github.com/c1ayooo/cyber/agent/provider"
+	"github.com/c1ayooo/cyber/agent/subagent"
+	aop "github.com/c1ayooo/cyber/aop"
+	"github.com/c1ayooo/cyber/tools/scan"
 )
 
 type recordingPromptResolver struct {

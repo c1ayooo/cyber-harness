@@ -1,8 +1,8 @@
 package scanner
 
 import (
-	cfg "github.com/chainreactors/cyber/pkg/config"
-	"github.com/chainreactors/cyber/tools/scan"
+	cfg "github.com/c1ayooo/cyber/pkg/config"
+	"github.com/c1ayooo/cyber/tools/scan"
 )
 
 // ScanConfigKey is the scan-pipeline configuration section owned by this

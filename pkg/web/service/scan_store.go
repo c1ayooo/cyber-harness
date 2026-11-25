@@ -6,7 +6,7 @@ import (
 	"time"
 	"unicode/utf8"
 
-	scanpb "github.com/chainreactors/cyber/pkg/web/scan"
+	scanpb "github.com/c1ayooo/cyber/pkg/web/scan"
 	"github.com/uptrace/bun"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )

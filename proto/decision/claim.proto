@@ -1,6 +1,6 @@
 syntax = "proto3";
 package decision;
-option go_package = "github.com/chainreactors/cyber/core/decision;decision";
+option go_package = "github.com/c1ayooo/cyber/core/decision;decision";
 
 enum ClaimType {
   unspecified = 0;

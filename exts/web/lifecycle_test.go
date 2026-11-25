@@ -12,11 +12,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/chainreactors/cyber/core/extension"
-	webext "github.com/chainreactors/cyber/exts/web"
-	"github.com/chainreactors/cyber/pkg/profile"
-	"github.com/chainreactors/cyber/pkg/testutil/hosttest"
-	webpkg "github.com/chainreactors/cyber/pkg/web"
+	"github.com/c1ayooo/cyber/core/extension"
+	webext "github.com/c1ayooo/cyber/exts/web"
+	"github.com/c1ayooo/cyber/pkg/profile"
+	"github.com/c1ayooo/cyber/pkg/testutil/hosttest"
+	webpkg "github.com/c1ayooo/cyber/pkg/web"
 	"github.com/gorilla/websocket"
 )
 

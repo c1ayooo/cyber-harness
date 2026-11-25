@@ -7,11 +7,11 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/chainreactors/cyber/agent/provider"
-	"github.com/chainreactors/cyber/core/extension"
-	coretool "github.com/chainreactors/cyber/core/tool"
-	katanaext "github.com/chainreactors/cyber/exts/katana"
-	"github.com/chainreactors/cyber/pkg/harness"
+	"github.com/c1ayooo/cyber/agent/provider"
+	"github.com/c1ayooo/cyber/core/extension"
+	coretool "github.com/c1ayooo/cyber/core/tool"
+	katanaext "github.com/c1ayooo/cyber/exts/katana"
+	"github.com/c1ayooo/cyber/pkg/harness"
 )
 
 func main() {

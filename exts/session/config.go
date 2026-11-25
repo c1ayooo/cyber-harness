@@ -3,8 +3,8 @@ package session
 import (
 	"time"
 
-	"github.com/chainreactors/cyber/agent/session"
-	"github.com/chainreactors/cyber/pkg/config"
+	"github.com/c1ayooo/cyber/agent/session"
+	"github.com/c1ayooo/cyber/pkg/config"
 )
 
 // ConfigFromOption projects user parameters onto an existing product selection.

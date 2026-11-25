@@ -9,8 +9,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/chainreactors/cyber/aop"
-	"github.com/chainreactors/cyber/cmd/audit/internal/toolchain"
+	"github.com/c1ayooo/cyber/aop"
+	"github.com/c1ayooo/cyber/cmd/audit/internal/toolchain"
 	"google.golang.org/protobuf/encoding/protojson"
 )
 

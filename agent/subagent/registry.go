@@ -10,10 +10,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/chainreactors/cyber/agent"
-	"github.com/chainreactors/cyber/core/registry"
-	"github.com/chainreactors/cyber/core/resource"
-	types "github.com/chainreactors/cyber/core/types"
+	"github.com/c1ayooo/cyber/agent"
+	"github.com/c1ayooo/cyber/core/registry"
+	"github.com/c1ayooo/cyber/core/resource"
+	types "github.com/c1ayooo/cyber/core/types"
 )
 
 type Mode string

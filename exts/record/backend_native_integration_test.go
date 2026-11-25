@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	recordtool "github.com/chainreactors/cyber/tools/record"
+	recordtool "github.com/c1ayooo/cyber/tools/record"
 )
 
 func TestNativeDesktopScreenshotAndRecord(t *testing.T) {

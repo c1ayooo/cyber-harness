@@ -1,7 +1,7 @@
 package config
 
 import (
-	cfg "github.com/chainreactors/cyber/pkg/config"
+	cfg "github.com/c1ayooo/cyber/pkg/config"
 )
 
 // ReconConfigKey is the passive reconnaissance configuration section owned

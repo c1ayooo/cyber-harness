@@ -13,9 +13,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/chainreactors/cyber/agent/provider"
-	"github.com/chainreactors/cyber/core/types"
-	cfg "github.com/chainreactors/cyber/pkg/config"
+	"github.com/c1ayooo/cyber/agent/provider"
+	"github.com/c1ayooo/cyber/core/types"
+	cfg "github.com/c1ayooo/cyber/pkg/config"
 	flags "github.com/jessevdk/go-flags"
 	"golang.org/x/term"
 	"gopkg.in/yaml.v3"

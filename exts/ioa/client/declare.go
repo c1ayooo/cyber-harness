@@ -7,13 +7,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/chainreactors/cyber/core/extension"
-	"github.com/chainreactors/cyber/core/resource"
-	"github.com/chainreactors/cyber/core/telemetry"
-	types "github.com/chainreactors/cyber/core/types"
-	hostcli "github.com/chainreactors/cyber/pkg/cli"
-	cfg "github.com/chainreactors/cyber/pkg/config"
-	ioatools "github.com/chainreactors/cyber/tools/ioa"
+	"github.com/c1ayooo/cyber/core/extension"
+	"github.com/c1ayooo/cyber/core/resource"
+	"github.com/c1ayooo/cyber/core/telemetry"
+	types "github.com/c1ayooo/cyber/core/types"
+	hostcli "github.com/c1ayooo/cyber/pkg/cli"
+	cfg "github.com/c1ayooo/cyber/pkg/config"
+	ioatools "github.com/c1ayooo/cyber/tools/ioa"
 )
 
 // Declare contributes the client resources needed before argument parsing.

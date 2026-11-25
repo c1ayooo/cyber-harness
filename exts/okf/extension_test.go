@@ -5,13 +5,13 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/chainreactors/cyber/agent/prompt"
-	"github.com/chainreactors/cyber/agent/skills"
-	"github.com/chainreactors/cyber/core/extension"
-	"github.com/chainreactors/cyber/core/hooks"
-	coretool "github.com/chainreactors/cyber/core/tool"
-	promptext "github.com/chainreactors/cyber/exts/prompt"
-	skillsext "github.com/chainreactors/cyber/exts/skills"
+	"github.com/c1ayooo/cyber/agent/prompt"
+	"github.com/c1ayooo/cyber/agent/skills"
+	"github.com/c1ayooo/cyber/core/extension"
+	"github.com/c1ayooo/cyber/core/hooks"
+	coretool "github.com/c1ayooo/cyber/core/tool"
+	promptext "github.com/c1ayooo/cyber/exts/prompt"
+	skillsext "github.com/c1ayooo/cyber/exts/skills"
 )
 
 func TestExtensionPublishesPolicyCommandAndReference(t *testing.T) {

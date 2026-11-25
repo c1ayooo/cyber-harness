@@ -2,7 +2,7 @@
 
 package record
 
-import "github.com/chainreactors/cyber/core/resource"
+import "github.com/c1ayooo/cyber/core/resource"
 
 // Declare contributes nothing in a build that cannot run recordings. See the
 // tagged file for why the section tracks the extension.

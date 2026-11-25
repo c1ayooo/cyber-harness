@@ -252,31 +252,11 @@ func (*Evaluation_Noul) isEvaluation_Value() {}
 var File_decision_claim_proto protoreflect.FileDescriptor
 
 const file_decision_claim_proto_rawDesc = "" +
-	"\n" +
-	"\x14decision/claim.proto\x12\bdecision\"d\n" +
-	"\x05Claim\x12'\n" +
-	"\x04type\x18\x01 \x01(\x0e2\x13.decision.ClaimTypeR\x04type\x12\x18\n" +
-	"\acontext\x18\x02 \x01(\tR\acontext\x12\x18\n" +
-	"\aoptions\x18\x03 \x03(\tR\aoptions\"\x8e\x02\n" +
-	"\n" +
-	"Evaluation\x12\x18\n" +
-	"\x06choice\x18\x01 \x01(\tH\x00R\x06choice\x12\x16\n" +
-	"\x05score\x18\x02 \x01(\x01H\x00R\x05score\x12\x14\n" +
-	"\x04noul\x18\x03 \x01(\x01H\x00R\x04noul\x12M\n" +
-	"\rprobabilities\x18\x04 \x03(\v2'.decision.Evaluation.ProbabilitiesEntryR\rprobabilities\x12\x1e\n" +
-	"\n" +
-	"confidence\x18\x05 \x01(\x01R\n" +
-	"confidence\x1a@\n" +
-	"\x12ProbabilitiesEntry\x12\x10\n" +
-	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\x01R\x05value:\x028\x01B\a\n" +
-	"\x05value*=\n" +
-	"\tClaimType\x12\x0f\n" +
-	"\vunspecified\x10\x00\x12\n" +
-	"\n" +
-	"\x06choice\x10\x01\x12\t\n" +
-	"\x05score\x10\x02\x12\b\n" +
-	"\x04noul\x10\x03B7Z5github.com/chainreactors/cyber/core/decision;decisionb\x06proto3"
+	"\n\x14decision/claim.proto\x12\bdecision\"d\n\x05Claim\x12'\n\x04type\x18\x01 \x01(\x0e2\x13.decision.ClaimTypeR\x04type\x12\x18\n\acontext\x18\x02 \x01(\tR\acontext\x12\x18\n\aoptions\x18\x03 \x03(\tR\ao" +
+	"ptions\"\x8e\x02\n\nEvaluation\x12\x18\n\x06choice\x18\x01 \x01(\tH\x00R\x06choice\x12\x16\n\x05score\x18\x02 \x01(\x01H\x00R\x05score\x12\x14\n\x04noul\x18\x03 \x01(\x01H\x00R\x04noul\x12M\n\rprobabilities\x18\x04 \x03(\v2'.decision." +
+	"Evaluation.ProbabilitiesEntryR\rprobabilities\x12\x1e\n\nconfidence\x18\x05 \x01(\x01R\nconfidence\x1a@\n\x12ProbabilitiesEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n\x05value\x18\x02 " +
+	"\x01(\x01R\x05value:\x028\x01B\a\n\x05value*=\n\tClaimType\x12\x0f\n\vunspecified\x10\x00\x12\n\n\x06choice\x10\x01\x12\t\n\x05score\x10\x02\x12\b\n\x04noul\x10\x03B1Z/github.com/c1ayooo/cyber/core/decision" +
+	";decisionb\x06proto3"
 
 var (
 	file_decision_claim_proto_rawDescOnce sync.Once

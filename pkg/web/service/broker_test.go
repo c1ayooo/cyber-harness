@@ -8,10 +8,10 @@ import (
 	"testing"
 	"time"
 
-	aop "github.com/chainreactors/cyber/aop"
-	types "github.com/chainreactors/cyber/core/types"
-	managementapi "github.com/chainreactors/cyber/pkg/web/api"
-	scanpb "github.com/chainreactors/cyber/pkg/web/scan"
+	aop "github.com/c1ayooo/cyber/aop"
+	types "github.com/c1ayooo/cyber/core/types"
+	managementapi "github.com/c1ayooo/cyber/pkg/web/api"
+	scanpb "github.com/c1ayooo/cyber/pkg/web/scan"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )

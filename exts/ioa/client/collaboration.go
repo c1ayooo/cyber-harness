@@ -8,13 +8,13 @@ import (
 	"sync"
 	"time"
 
-	agenthooks "github.com/chainreactors/cyber/agent/hooks"
-	"github.com/chainreactors/cyber/agent/inbox"
-	"github.com/chainreactors/cyber/agent/prompt"
-	"github.com/chainreactors/cyber/agent/skills"
-	"github.com/chainreactors/cyber/core/extension"
-	"github.com/chainreactors/cyber/core/hooks"
-	service "github.com/chainreactors/cyber/tools/ioa"
+	agenthooks "github.com/c1ayooo/cyber/agent/hooks"
+	"github.com/c1ayooo/cyber/agent/inbox"
+	"github.com/c1ayooo/cyber/agent/prompt"
+	"github.com/c1ayooo/cyber/agent/skills"
+	"github.com/c1ayooo/cyber/core/extension"
+	"github.com/c1ayooo/cyber/core/hooks"
+	service "github.com/c1ayooo/cyber/tools/ioa"
 )
 
 type CollaborationOptions struct {

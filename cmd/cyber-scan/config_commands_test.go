@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/chainreactors/cyber/pkg/cli/configuration"
-	cfg "github.com/chainreactors/cyber/pkg/config"
+	"github.com/c1ayooo/cyber/pkg/cli/configuration"
+	cfg "github.com/c1ayooo/cyber/pkg/config"
 )
 
 func TestDoctorRejectsInvalidScannerConfiguration(t *testing.T) {

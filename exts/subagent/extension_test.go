@@ -5,17 +5,17 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/chainreactors/cyber/agent"
-	"github.com/chainreactors/cyber/agent/session"
-	"github.com/chainreactors/cyber/agent/subagent"
-	"github.com/chainreactors/cyber/core/extension"
-	coretool "github.com/chainreactors/cyber/core/tool"
-	loopext "github.com/chainreactors/cyber/exts/agent"
-	promptext "github.com/chainreactors/cyber/exts/prompt"
-	sessionext "github.com/chainreactors/cyber/exts/session"
-	subagentext "github.com/chainreactors/cyber/exts/subagent"
-	"github.com/chainreactors/cyber/pkg/testutil/apptest"
-	"github.com/chainreactors/cyber/pkg/testutil/hosttest"
+	"github.com/c1ayooo/cyber/agent"
+	"github.com/c1ayooo/cyber/agent/session"
+	"github.com/c1ayooo/cyber/agent/subagent"
+	"github.com/c1ayooo/cyber/core/extension"
+	coretool "github.com/c1ayooo/cyber/core/tool"
+	loopext "github.com/c1ayooo/cyber/exts/agent"
+	promptext "github.com/c1ayooo/cyber/exts/prompt"
+	sessionext "github.com/c1ayooo/cyber/exts/session"
+	subagentext "github.com/c1ayooo/cyber/exts/subagent"
+	"github.com/c1ayooo/cyber/pkg/testutil/apptest"
+	"github.com/c1ayooo/cyber/pkg/testutil/hosttest"
 )
 
 func TestSessionWithoutSubagentDoesNotInstallTool(t *testing.T) {

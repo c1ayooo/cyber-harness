@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/chainreactors/cyber/agent/provider"
+	"github.com/c1ayooo/cyber/agent/provider"
 )
 
 func TestReloadProviderPreservesNewerStateAndBuildFailure(t *testing.T) {

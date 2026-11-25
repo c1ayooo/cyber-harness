@@ -5,8 +5,8 @@ import (
 	"errors"
 	"testing"
 
-	aop "github.com/chainreactors/cyber/aop"
-	traffic "github.com/chainreactors/cyber/aop/traffic"
+	aop "github.com/c1ayooo/cyber/aop"
+	traffic "github.com/c1ayooo/cyber/aop/traffic"
 )
 
 // dispatchTraffic installs one connection-owned namespace and returns every

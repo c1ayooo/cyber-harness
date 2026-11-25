@@ -15,9 +15,9 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/chainreactors/cyber/agent/inbox"
-	"github.com/chainreactors/cyber/core/operation"
-	coretool "github.com/chainreactors/cyber/core/tool"
+	"github.com/c1ayooo/cyber/agent/inbox"
+	"github.com/c1ayooo/cyber/core/operation"
+	coretool "github.com/c1ayooo/cyber/core/tool"
 
 	"github.com/chainreactors/utils/proc"
 )

@@ -7,12 +7,12 @@ import (
 	"testing"
 	"time"
 
-	agenthooks "github.com/chainreactors/cyber/agent/hooks"
-	"github.com/chainreactors/cyber/agent/inbox"
-	"github.com/chainreactors/cyber/agent/provider"
-	aop "github.com/chainreactors/cyber/aop"
-	"github.com/chainreactors/cyber/core/hooks"
-	coretool "github.com/chainreactors/cyber/core/tool"
+	agenthooks "github.com/c1ayooo/cyber/agent/hooks"
+	"github.com/c1ayooo/cyber/agent/inbox"
+	"github.com/c1ayooo/cyber/agent/provider"
+	aop "github.com/c1ayooo/cyber/aop"
+	"github.com/c1ayooo/cyber/core/hooks"
+	coretool "github.com/c1ayooo/cyber/core/tool"
 )
 
 func TestInboxWaitRejectsParallelWork(t *testing.T) {

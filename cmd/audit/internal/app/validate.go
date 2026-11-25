@@ -6,7 +6,7 @@ import (
 	"io"
 	"path/filepath"
 
-	coretool "github.com/chainreactors/cyber/core/tool"
+	coretool "github.com/c1ayooo/cyber/core/tool"
 )
 
 // All entry points use the same validation as finalization. Validation is

@@ -5,8 +5,8 @@ import (
 	"context"
 	"testing"
 
-	coretool "github.com/chainreactors/cyber/core/tool"
-	"github.com/chainreactors/cyber/tools/zombie"
+	coretool "github.com/c1ayooo/cyber/core/tool"
+	"github.com/c1ayooo/cyber/tools/zombie"
 )
 
 func TestZombieExecuteWithProxy(t *testing.T) {

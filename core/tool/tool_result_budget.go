@@ -5,7 +5,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	aop "github.com/chainreactors/cyber/aop"
+	aop "github.com/c1ayooo/cyber/aop"
 )
 
 // The transport bounds inline text. Recoverable output stays at its source;

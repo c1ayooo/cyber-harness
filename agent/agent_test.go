@@ -14,17 +14,17 @@ import (
 	"testing"
 	"time"
 
-	agenthooks "github.com/chainreactors/cyber/agent/hooks"
-	"github.com/chainreactors/cyber/agent/inbox"
-	"github.com/chainreactors/cyber/agent/provider"
-	"github.com/chainreactors/cyber/agent/skills"
-	aop "github.com/chainreactors/cyber/aop"
-	coreevents "github.com/chainreactors/cyber/core/events"
-	"github.com/chainreactors/cyber/core/telemetry"
-	coretool "github.com/chainreactors/cyber/core/tool"
-	"github.com/chainreactors/cyber/pkg/testutil/hosttest"
+	agenthooks "github.com/c1ayooo/cyber/agent/hooks"
+	"github.com/c1ayooo/cyber/agent/inbox"
+	"github.com/c1ayooo/cyber/agent/provider"
+	"github.com/c1ayooo/cyber/agent/skills"
+	aop "github.com/c1ayooo/cyber/aop"
+	coreevents "github.com/c1ayooo/cyber/core/events"
+	"github.com/c1ayooo/cyber/core/telemetry"
+	coretool "github.com/c1ayooo/cyber/core/tool"
+	"github.com/c1ayooo/cyber/pkg/testutil/hosttest"
 
-	terminaltool "github.com/chainreactors/cyber/tools/terminal"
+	terminaltool "github.com/c1ayooo/cyber/tools/terminal"
 )
 
 func TestRunWithoutToolsReturnsFinalText(t *testing.T) {

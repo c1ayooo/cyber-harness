@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/chainreactors/cyber/core/extension"
-	"github.com/chainreactors/cyber/core/resource"
+	"github.com/c1ayooo/cyber/core/extension"
+	"github.com/c1ayooo/cyber/core/resource"
 )
 
 type testExtension struct {

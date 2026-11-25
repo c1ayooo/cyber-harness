@@ -2,10 +2,10 @@ package jev
 
 import (
 	"encoding/json"
-	jevapi "github.com/chainreactors/cyber/agent/provider/jev"
-	"github.com/chainreactors/cyber/core/resource"
-	"github.com/chainreactors/cyber/core/types"
-	cfg "github.com/chainreactors/cyber/pkg/config"
+	jevapi "github.com/c1ayooo/cyber/agent/provider/jev"
+	"github.com/c1ayooo/cyber/core/resource"
+	"github.com/c1ayooo/cyber/core/types"
+	cfg "github.com/c1ayooo/cyber/pkg/config"
 	"strings"
 	"testing"
 )

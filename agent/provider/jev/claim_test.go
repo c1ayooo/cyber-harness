@@ -12,7 +12,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/chainreactors/cyber/core/decision"
+	"github.com/c1ayooo/cyber/core/decision"
 )
 
 func TestClaimDecisionMethodsUseClosedTypes(t *testing.T) {

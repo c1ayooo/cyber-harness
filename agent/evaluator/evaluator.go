@@ -7,12 +7,12 @@ import (
 	"strings"
 	"time"
 
-	agentpkg "github.com/chainreactors/cyber/agent"
-	"github.com/chainreactors/cyber/agent/prompt"
-	"github.com/chainreactors/cyber/agent/provider"
-	aop "github.com/chainreactors/cyber/aop"
-	"github.com/chainreactors/cyber/core/telemetry"
-	"github.com/chainreactors/cyber/core/truncate"
+	agentpkg "github.com/c1ayooo/cyber/agent"
+	"github.com/c1ayooo/cyber/agent/prompt"
+	"github.com/c1ayooo/cyber/agent/provider"
+	aop "github.com/c1ayooo/cyber/aop"
+	"github.com/c1ayooo/cyber/core/telemetry"
+	"github.com/c1ayooo/cyber/core/truncate"
 )
 
 const (

@@ -7,12 +7,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/chainreactors/cyber/agent"
-	agenthooks "github.com/chainreactors/cyber/agent/hooks"
-	"github.com/chainreactors/cyber/agent/inbox"
-	"github.com/chainreactors/cyber/agent/provider"
-	"github.com/chainreactors/cyber/core/hooks"
-	"github.com/chainreactors/cyber/core/operation"
+	"github.com/c1ayooo/cyber/agent"
+	agenthooks "github.com/c1ayooo/cyber/agent/hooks"
+	"github.com/c1ayooo/cyber/agent/inbox"
+	"github.com/c1ayooo/cyber/agent/provider"
+	"github.com/c1ayooo/cyber/core/hooks"
+	"github.com/c1ayooo/cyber/core/operation"
 )
 
 func TestInboxInterruptSubagentReturnsOnlyAfterContinuation(t *testing.T) {

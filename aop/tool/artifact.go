@@ -3,8 +3,8 @@ package tool
 import (
 	"fmt"
 
-	aop "github.com/chainreactors/cyber/aop"
-	operationpb "github.com/chainreactors/cyber/aop/operation"
+	aop "github.com/c1ayooo/cyber/aop"
+	operationpb "github.com/c1ayooo/cyber/aop/operation"
 )
 
 const (

@@ -8,9 +8,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/chainreactors/cyber/agent/provider"
-	jev "github.com/chainreactors/cyber/agent/provider/jev"
-	"github.com/chainreactors/cyber/aop"
+	"github.com/c1ayooo/cyber/agent/provider"
+	jev "github.com/c1ayooo/cyber/agent/provider/jev"
+	"github.com/c1ayooo/cyber/aop"
 )
 
 func TestReceiptCompactionPreservesOutcomesAndExactArguments(t *testing.T) {

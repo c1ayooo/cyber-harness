@@ -2,12 +2,12 @@ package scanner
 
 import (
 	"context"
-	"github.com/chainreactors/cyber/core/egress"
-	"github.com/chainreactors/cyber/core/events"
-	"github.com/chainreactors/cyber/core/extension"
-	"github.com/chainreactors/cyber/core/hooks"
-	"github.com/chainreactors/cyber/core/telemetry"
-	coretool "github.com/chainreactors/cyber/core/tool"
+	"github.com/c1ayooo/cyber/core/egress"
+	"github.com/c1ayooo/cyber/core/events"
+	"github.com/c1ayooo/cyber/core/extension"
+	"github.com/c1ayooo/cyber/core/hooks"
+	"github.com/c1ayooo/cyber/core/telemetry"
+	coretool "github.com/c1ayooo/cyber/core/tool"
 	"testing"
 )
 

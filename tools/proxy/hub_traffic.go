@@ -6,12 +6,12 @@ import (
 	"os"
 	"strconv"
 
-	operationpb "github.com/chainreactors/cyber/aop/operation"
-	traffic "github.com/chainreactors/cyber/aop/traffic"
-	corehooks "github.com/chainreactors/cyber/core/hooks"
-	"github.com/chainreactors/cyber/core/operation"
-	"github.com/chainreactors/cyber/core/scoperules"
-	toolhooks "github.com/chainreactors/cyber/core/tool/hooks"
+	operationpb "github.com/c1ayooo/cyber/aop/operation"
+	traffic "github.com/c1ayooo/cyber/aop/traffic"
+	corehooks "github.com/c1ayooo/cyber/core/hooks"
+	"github.com/c1ayooo/cyber/core/operation"
+	"github.com/c1ayooo/cyber/core/scoperules"
+	toolhooks "github.com/c1ayooo/cyber/core/tool/hooks"
 	"google.golang.org/protobuf/proto"
 )
 

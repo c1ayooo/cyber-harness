@@ -7,9 +7,9 @@ import (
 	"log"
 	"strings"
 
-	aop "github.com/chainreactors/cyber/aop"
-	"github.com/chainreactors/cyber/core/scoperules"
-	types "github.com/chainreactors/cyber/core/types"
+	aop "github.com/c1ayooo/cyber/aop"
+	"github.com/c1ayooo/cyber/core/scoperules"
+	types "github.com/c1ayooo/cyber/core/types"
 	protobuf "google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 )

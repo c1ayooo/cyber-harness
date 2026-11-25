@@ -11,8 +11,8 @@ import (
 	"sync"
 	"time"
 
-	aop "github.com/chainreactors/cyber/aop"
-	coretool "github.com/chainreactors/cyber/core/tool"
+	aop "github.com/c1ayooo/cyber/aop"
+	coretool "github.com/c1ayooo/cyber/core/tool"
 )
 
 type recordingSession struct {

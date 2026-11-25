@@ -1,11 +1,11 @@
 package main
 
 import (
-	"github.com/chainreactors/cyber/core/extension"
-	katanaext "github.com/chainreactors/cyber/exts/katana"
-	passiveext "github.com/chainreactors/cyber/exts/passive"
-	"github.com/chainreactors/cyber/tools/katana"
-	"github.com/chainreactors/cyber/tools/passive"
+	"github.com/c1ayooo/cyber/core/extension"
+	katanaext "github.com/c1ayooo/cyber/exts/katana"
+	passiveext "github.com/c1ayooo/cyber/exts/passive"
+	"github.com/c1ayooo/cyber/tools/katana"
+	"github.com/c1ayooo/cyber/tools/passive"
 )
 
 func discoveryExtensions(config appConfig) []extension.Extension {

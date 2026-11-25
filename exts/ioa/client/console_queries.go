@@ -7,8 +7,8 @@ import (
 	"io"
 	"text/tabwriter"
 
-	consoleapi "github.com/chainreactors/cyber/pkg/console/api"
-	ioatools "github.com/chainreactors/cyber/tools/ioa"
+	consoleapi "github.com/c1ayooo/cyber/pkg/console/api"
+	ioatools "github.com/c1ayooo/cyber/tools/ioa"
 	"github.com/chainreactors/ioa/protocols"
 )
 

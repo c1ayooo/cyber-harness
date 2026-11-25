@@ -13,8 +13,8 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"github.com/chainreactors/cyber/cmd/audit/internal/toolchain"
-	coretool "github.com/chainreactors/cyber/core/tool"
+	"github.com/c1ayooo/cyber/cmd/audit/internal/toolchain"
+	coretool "github.com/c1ayooo/cyber/core/tool"
 	flags "github.com/jessevdk/go-flags"
 )
 

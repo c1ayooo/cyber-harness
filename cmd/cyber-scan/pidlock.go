@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/chainreactors/cyber/core/telemetry"
+	"github.com/c1ayooo/cyber/core/telemetry"
 )
 
 // agentPIDFilePath is the process-wide pidfile shared by scanner Agent runs.

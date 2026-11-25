@@ -7,10 +7,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/chainreactors/cyber/agent"
-	agenthooks "github.com/chainreactors/cyber/agent/hooks"
-	"github.com/chainreactors/cyber/agent/provider"
-	aop "github.com/chainreactors/cyber/aop"
+	"github.com/c1ayooo/cyber/agent"
+	agenthooks "github.com/c1ayooo/cyber/agent/hooks"
+	"github.com/c1ayooo/cyber/agent/provider"
+	aop "github.com/c1ayooo/cyber/aop"
 )
 
 func TestRuntimeProviderReloadPreservesSessionHistory(t *testing.T) {

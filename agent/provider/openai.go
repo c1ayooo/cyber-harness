@@ -10,7 +10,7 @@ import (
 	"net/url"
 	"strings"
 
-	aop "github.com/chainreactors/cyber/aop"
+	aop "github.com/c1ayooo/cyber/aop"
 )
 
 type OpenAIProvider struct {

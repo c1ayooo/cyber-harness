@@ -6,16 +6,16 @@ package profile
 import (
 	"context"
 
-	"github.com/chainreactors/cyber/agent/provider"
-	agentsession "github.com/chainreactors/cyber/agent/session"
-	"github.com/chainreactors/cyber/aop"
-	toolpb "github.com/chainreactors/cyber/aop/tool"
-	"github.com/chainreactors/cyber/core/eventbus"
-	"github.com/chainreactors/cyber/core/events"
-	"github.com/chainreactors/cyber/core/proc"
-	"github.com/chainreactors/cyber/core/telemetry"
-	cfg "github.com/chainreactors/cyber/pkg/config"
-	consoleapi "github.com/chainreactors/cyber/pkg/console/api"
+	"github.com/c1ayooo/cyber/agent/provider"
+	agentsession "github.com/c1ayooo/cyber/agent/session"
+	"github.com/c1ayooo/cyber/aop"
+	toolpb "github.com/c1ayooo/cyber/aop/tool"
+	"github.com/c1ayooo/cyber/core/eventbus"
+	"github.com/c1ayooo/cyber/core/events"
+	"github.com/c1ayooo/cyber/core/proc"
+	"github.com/c1ayooo/cyber/core/telemetry"
+	cfg "github.com/c1ayooo/cyber/pkg/config"
+	consoleapi "github.com/c1ayooo/cyber/pkg/console/api"
 )
 
 // Profile is the complete runtime surface published by a composition root.

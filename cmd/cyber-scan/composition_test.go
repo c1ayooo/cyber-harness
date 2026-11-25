@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/chainreactors/cyber/agent"
-	agentsession "github.com/chainreactors/cyber/agent/session"
+	"github.com/c1ayooo/cyber/agent"
+	agentsession "github.com/c1ayooo/cyber/agent/session"
 )
 
 // Every capability a profile publishes is resolved by type at load, not by the

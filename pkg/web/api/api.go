@@ -9,7 +9,7 @@ import (
 	"errors"
 	"fmt"
 
-	types "github.com/chainreactors/cyber/core/types"
+	types "github.com/c1ayooo/cyber/core/types"
 )
 
 type Code string

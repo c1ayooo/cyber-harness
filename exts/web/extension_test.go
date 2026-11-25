@@ -6,9 +6,9 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/chainreactors/cyber/core/extension"
-	webext "github.com/chainreactors/cyber/exts/web"
-	webpkg "github.com/chainreactors/cyber/pkg/web"
+	"github.com/c1ayooo/cyber/core/extension"
+	webext "github.com/c1ayooo/cyber/exts/web"
+	webpkg "github.com/c1ayooo/cyber/pkg/web"
 )
 
 type routeContributor struct {

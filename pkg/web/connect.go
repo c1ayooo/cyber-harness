@@ -7,11 +7,11 @@ import (
 	"net/http"
 
 	"connectrpc.com/connect"
-	aop "github.com/chainreactors/cyber/aop"
-	types "github.com/chainreactors/cyber/core/types"
-	rpc "github.com/chainreactors/cyber/pkg/rpc"
-	managementapi "github.com/chainreactors/cyber/pkg/web/api"
-	scanpb "github.com/chainreactors/cyber/pkg/web/scan"
+	aop "github.com/c1ayooo/cyber/aop"
+	types "github.com/c1ayooo/cyber/core/types"
+	rpc "github.com/c1ayooo/cyber/pkg/rpc"
+	managementapi "github.com/c1ayooo/cyber/pkg/web/api"
+	scanpb "github.com/c1ayooo/cyber/pkg/web/scan"
 )
 
 // Protobuf JSON base64-encodes raw artifact bytes, so the 50 MiB business limit

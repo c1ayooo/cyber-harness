@@ -4,13 +4,13 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/chainreactors/cyber/agent/provider"
+	"github.com/c1ayooo/cyber/agent/provider"
 
-	"github.com/chainreactors/cyber/core/egress"
-	"github.com/chainreactors/cyber/core/extension"
-	coretool "github.com/chainreactors/cyber/core/tool"
+	"github.com/c1ayooo/cyber/core/egress"
+	"github.com/c1ayooo/cyber/core/extension"
+	coretool "github.com/c1ayooo/cyber/core/tool"
 
-	searchtools "github.com/chainreactors/cyber/tools/search"
+	searchtools "github.com/c1ayooo/cyber/tools/search"
 )
 
 // Extension owns search tool declarations and command registrations.

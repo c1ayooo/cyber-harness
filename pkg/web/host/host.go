@@ -12,10 +12,10 @@ import (
 	"path"
 	"strings"
 
-	"github.com/chainreactors/cyber/core/extension"
-	"github.com/chainreactors/cyber/core/telemetry"
-	webext "github.com/chainreactors/cyber/exts/web"
-	"github.com/chainreactors/cyber/pkg/web"
+	"github.com/c1ayooo/cyber/core/extension"
+	"github.com/c1ayooo/cyber/core/telemetry"
+	webext "github.com/c1ayooo/cyber/exts/web"
+	"github.com/c1ayooo/cyber/pkg/web"
 )
 
 type Config struct {

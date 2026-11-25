@@ -7,7 +7,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
-	harness "github.com/chainreactors/cyber/core/collaboration"
+	harness "github.com/c1ayooo/cyber/core/collaboration"
 	"path/filepath"
 	"strings"
 	"testing"

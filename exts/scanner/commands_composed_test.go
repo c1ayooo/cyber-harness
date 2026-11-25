@@ -6,11 +6,11 @@ import (
 	"testing"
 	"time"
 
-	toolpb "github.com/chainreactors/cyber/aop/tool"
-	katanaext "github.com/chainreactors/cyber/exts/katana"
-	passiveext "github.com/chainreactors/cyber/exts/passive"
-	"github.com/chainreactors/cyber/tools/katana"
-	"github.com/chainreactors/cyber/tools/passive"
+	toolpb "github.com/c1ayooo/cyber/aop/tool"
+	katanaext "github.com/c1ayooo/cyber/exts/katana"
+	passiveext "github.com/c1ayooo/cyber/exts/passive"
+	"github.com/c1ayooo/cyber/tools/katana"
+	"github.com/c1ayooo/cyber/tools/passive"
 )
 
 func TestComposedScannerCommandsAreInstalled(t *testing.T) {

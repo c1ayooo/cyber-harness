@@ -9,9 +9,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/chainreactors/cyber/core/extension"
-	webpkg "github.com/chainreactors/cyber/pkg/web"
-	webservice "github.com/chainreactors/cyber/pkg/web/service"
+	"github.com/c1ayooo/cyber/core/extension"
+	webpkg "github.com/c1ayooo/cyber/pkg/web"
+	webservice "github.com/c1ayooo/cyber/pkg/web/service"
 )
 
 func TestManifestDescribesCoreOnlyHost(t *testing.T) {

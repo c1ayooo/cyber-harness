@@ -6,13 +6,13 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/chainreactors/cyber/core/extension"
-	"github.com/chainreactors/cyber/core/namespaces"
-	"github.com/chainreactors/cyber/core/resource"
-	coretool "github.com/chainreactors/cyber/core/tool"
-	ptyext "github.com/chainreactors/cyber/exts/pty"
-	terminalext "github.com/chainreactors/cyber/exts/terminal"
-	"github.com/chainreactors/cyber/pkg/testutil/hosttest"
+	"github.com/c1ayooo/cyber/core/extension"
+	"github.com/c1ayooo/cyber/core/namespaces"
+	"github.com/c1ayooo/cyber/core/resource"
+	coretool "github.com/c1ayooo/cyber/core/tool"
+	ptyext "github.com/c1ayooo/cyber/exts/pty"
+	terminalext "github.com/c1ayooo/cyber/exts/terminal"
+	"github.com/c1ayooo/cyber/pkg/testutil/hosttest"
 )
 
 // terminal returns the registry that owns the command point and the terminal

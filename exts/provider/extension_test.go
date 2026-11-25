@@ -5,9 +5,9 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/chainreactors/cyber/agent/provider"
-	"github.com/chainreactors/cyber/core/extension"
-	"github.com/chainreactors/cyber/core/telemetry"
+	"github.com/c1ayooo/cyber/agent/provider"
+	"github.com/c1ayooo/cyber/core/extension"
+	"github.com/c1ayooo/cyber/core/telemetry"
 )
 
 func TestProviderRollbackKeepsOtherProfileState(t *testing.T) {

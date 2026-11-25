@@ -95,13 +95,8 @@ func (x *Envelope) GetPayload() *anypb.Any {
 var File_aop_envelope_proto protoreflect.FileDescriptor
 
 const file_aop_envelope_proto_rawDesc = "" +
-	"\n" +
-	"\x12aop/envelope.proto\x12\x03aop\x1a\x19google/protobuf/any.proto\"\x8e\x01\n" +
-	"\bEnvelope\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id\x12\x19\n" +
-	"\breply_to\x18\x02 \x01(\tR\areplyTo\x12'\n" +
-	"\x0fdelivery_cursor\x18\x03 \x01(\tR\x0edeliveryCursor\x12.\n" +
-	"\apayload\x18\x04 \x01(\v2\x14.google.protobuf.AnyR\apayloadB$Z\"github.com/chainreactors/cyber/aopb\x06proto3"
+	"\n\x12aop/envelope.proto\x12\x03aop\x1a\x19google/protobuf/any.proto\"\x8e\x01\n\bEnvelope\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\x12\x19\n\breply_to\x18\x02 \x01(\tR\areplyTo\x12'\n\x0fdelivery_cursor\x18" +
+	"\x03 \x01(\tR\x0edeliveryCursor\x12.\n\apayload\x18\x04 \x01(\v2\x14.google.protobuf.AnyR\apayloadB\x1eZ\x1cgithub.com/c1ayooo/cyber/aopb\x06proto3"
 
 var (
 	file_aop_envelope_proto_rawDescOnce sync.Once

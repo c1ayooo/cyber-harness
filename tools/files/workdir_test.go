@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/chainreactors/cyber/core/operation"
+	"github.com/c1ayooo/cyber/core/operation"
 )
 
 // The files extension stays rooted at the agent directory, but a session may

@@ -2,7 +2,7 @@ package skills
 
 import (
 	"context"
-	"github.com/chainreactors/cyber/core/extension"
+	"github.com/c1ayooo/cyber/core/extension"
 	"os"
 	"path/filepath"
 	"testing"

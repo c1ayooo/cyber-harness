@@ -8,7 +8,7 @@ import (
 	"runtime/debug"
 	"sync/atomic"
 
-	"github.com/chainreactors/cyber/core/resource"
+	"github.com/c1ayooo/cyber/core/resource"
 )
 
 var ErrCloseIncomplete = resource.ErrCloseIncomplete

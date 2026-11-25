@@ -6,15 +6,15 @@ import (
 	"testing"
 	"time"
 
-	"github.com/chainreactors/cyber/agent"
-	agentprompt "github.com/chainreactors/cyber/agent/prompt"
-	"github.com/chainreactors/cyber/agent/skills"
-	"github.com/chainreactors/cyber/core/extension"
-	"github.com/chainreactors/cyber/core/telemetry"
-	promptext "github.com/chainreactors/cyber/exts/prompt"
-	cfg "github.com/chainreactors/cyber/pkg/config"
-	"github.com/chainreactors/cyber/pkg/testutil/apptest"
-	"github.com/chainreactors/cyber/pkg/testutil/hosttest"
+	"github.com/c1ayooo/cyber/agent"
+	agentprompt "github.com/c1ayooo/cyber/agent/prompt"
+	"github.com/c1ayooo/cyber/agent/skills"
+	"github.com/c1ayooo/cyber/core/extension"
+	"github.com/c1ayooo/cyber/core/telemetry"
+	promptext "github.com/c1ayooo/cyber/exts/prompt"
+	cfg "github.com/c1ayooo/cyber/pkg/config"
+	"github.com/c1ayooo/cyber/pkg/testutil/apptest"
+	"github.com/c1ayooo/cyber/pkg/testutil/hosttest"
 )
 
 func defaultPromptResolver(t *testing.T) agentprompt.Resolver {

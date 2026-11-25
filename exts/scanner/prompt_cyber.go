@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/chainreactors/cyber/agent/prompt"
-	promptext "github.com/chainreactors/cyber/exts/prompt"
-	"github.com/chainreactors/cyber/tools/scan"
+	"github.com/c1ayooo/cyber/agent/prompt"
+	promptext "github.com/c1ayooo/cyber/exts/prompt"
+	"github.com/c1ayooo/cyber/tools/scan"
 )
 
 // cyberPromptContribution owns the cybersecurity identity and policy sections

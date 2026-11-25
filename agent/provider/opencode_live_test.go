@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	aop "github.com/chainreactors/cyber/aop"
+	aop "github.com/c1ayooo/cyber/aop"
 )
 
 // Explicit opt-in only: credentials stay in the test process environment.

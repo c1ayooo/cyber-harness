@@ -16,8 +16,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/c1ayooo/cyber/cmd/audit/internal/toolchain"
 	crtm "github.com/chainreactors/crtm/pkg"
-	"github.com/chainreactors/cyber/cmd/audit/internal/toolchain"
 )
 
 // TestSingleFileRelease exercises an already-built release, not the test binary

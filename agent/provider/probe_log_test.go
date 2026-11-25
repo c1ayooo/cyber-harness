@@ -10,8 +10,8 @@ import (
 	"strings"
 	"testing"
 
-	providerapi "github.com/chainreactors/cyber/agent/provider"
-	"github.com/chainreactors/cyber/core/telemetry"
+	providerapi "github.com/c1ayooo/cyber/agent/provider"
+	"github.com/c1ayooo/cyber/core/telemetry"
 )
 
 func TestLogLLMProbeStatusReady(t *testing.T) {

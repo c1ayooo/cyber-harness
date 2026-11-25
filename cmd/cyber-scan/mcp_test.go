@@ -3,11 +3,11 @@ package main
 import (
 	"testing"
 
-	"github.com/chainreactors/cyber/agent"
-	agentsession "github.com/chainreactors/cyber/agent/session"
-	guardrailext "github.com/chainreactors/cyber/exts/guardrail"
-	mcpext "github.com/chainreactors/cyber/exts/mcp"
-	mcptools "github.com/chainreactors/cyber/tools/mcp"
+	"github.com/c1ayooo/cyber/agent"
+	agentsession "github.com/c1ayooo/cyber/agent/session"
+	guardrailext "github.com/c1ayooo/cyber/exts/guardrail"
+	mcpext "github.com/c1ayooo/cyber/exts/mcp"
+	mcptools "github.com/c1ayooo/cyber/tools/mcp"
 )
 
 // External MCP servers are operator configuration: the reference graph must be

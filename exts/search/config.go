@@ -1,7 +1,7 @@
 package search
 
 import (
-	cfg "github.com/chainreactors/cyber/pkg/config"
+	cfg "github.com/c1ayooo/cyber/pkg/config"
 )
 
 // ConfigKey is the configuration section owned by this extension.

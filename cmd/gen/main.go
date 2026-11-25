@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-const modulePath = "github.com/chainreactors/cyber"
+const modulePath = "github.com/c1ayooo/cyber"
 
 const (
 	protocVersion           = "35.1"

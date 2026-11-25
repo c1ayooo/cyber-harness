@@ -9,9 +9,9 @@ import (
 	"strconv"
 	"strings"
 
-	jevapi "github.com/chainreactors/cyber/agent/provider/jev"
-	decision "github.com/chainreactors/cyber/core/decision"
-	coretool "github.com/chainreactors/cyber/core/tool"
+	jevapi "github.com/c1ayooo/cyber/agent/provider/jev"
+	decision "github.com/c1ayooo/cyber/core/decision"
+	coretool "github.com/c1ayooo/cyber/core/tool"
 	"github.com/dop251/goja"
 	"github.com/dop251/goja/ast"
 	"github.com/dop251/goja/parser"

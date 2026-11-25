@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/chainreactors/cyber/core/resource"
-	types "github.com/chainreactors/cyber/core/types"
+	"github.com/c1ayooo/cyber/core/resource"
+	types "github.com/c1ayooo/cyber/core/types"
 )
 
 func TestConnectionUsesTypedResourcePoint(t *testing.T) {

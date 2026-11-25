@@ -1459,107 +1459,28 @@ func (*ProtocolMessage_Closed) isProtocolMessage_Message() {}
 var File_aop_pty_protocol_proto protoreflect.FileDescriptor
 
 const file_aop_pty_protocol_proto_rawDesc = "" +
-	"\n" +
-	"\x16aop/pty/protocol.proto\x12\aaop.pty\x1a\x1fgoogle/protobuf/timestamp.proto\"P\n" +
-	"\aProcess\x12\x10\n" +
-	"\x03pid\x18\x01 \x01(\x05R\x03pid\x12\x1b\n" +
-	"\texit_code\x18\x02 \x01(\x05R\bexitCode\x12\x16\n" +
-	"\x06signal\x18\x03 \x01(\tR\x06signal\"\xb6\x04\n" +
-	"\aSession\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
-	"\x04kind\x18\x02 \x01(\tR\x04kind\x12\x12\n" +
-	"\x04name\x18\x03 \x01(\tR\x04name\x12\x18\n" +
-	"\acommand\x18\x04 \x01(\tR\acommand\x12\x10\n" +
-	"\x03pid\x18\x05 \x01(\x05R\x03pid\x129\n" +
-	"\n" +
-	"started_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\tstartedAt\x12D\n" +
-	"\x10last_activity_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\x0elastActivityAt\x125\n" +
-	"\bended_at\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\aendedAt\x12!\n" +
-	"\factivity_seq\x18\t \x01(\x03R\vactivitySeq\x12!\n" +
-	"\foutput_bytes\x18\n" +
-	" \x01(\x03R\voutputBytes\x12\x1b\n" +
-	"\texit_code\x18\v \x01(\x05R\bexitCode\x12\x14\n" +
-	"\x05state\x18\f \x01(\tR\x05state\x12\x1d\n" +
-	"\n" +
-	"kill_cause\x18\r \x01(\tR\tkillCause\x12\x14\n" +
-	"\x05shape\x18\x0e \x01(\tR\x05shape\x125\n" +
-	"\bready_at\x18\x0f \x01(\v2\x1a.google.protobuf.TimestampR\areadyAt\x12*\n" +
-	"\aprocess\x18\x10 \x01(\v2\x10.aop.pty.ProcessR\aprocess\"\xd8\x01\n" +
-	"\x04Open\x12\x1b\n" +
-	"\tstream_id\x18\x01 \x01(\tR\bstreamId\x12\x17\n" +
-	"\anode_id\x18\x02 \x01(\tR\x06nodeId\x12\x12\n" +
-	"\x04kind\x18\x03 \x01(\tR\x04kind\x12\x12\n" +
-	"\x04name\x18\x04 \x01(\tR\x04name\x12\x18\n" +
-	"\acommand\x18\x05 \x01(\tR\acommand\x12\x12\n" +
-	"\x04args\x18\x06 \x03(\tR\x04args\x12\x12\n" +
-	"\x04cols\x18\a \x01(\x05R\x04cols\x12\x12\n" +
-	"\x04rows\x18\b \x01(\x05R\x04rows\x12\x1c\n" +
-	"\tsingleton\x18\t \x01(\bR\tsingleton\"Q\n" +
-	"\x06Opened\x12\x1b\n" +
-	"\tstream_id\x18\x01 \x01(\tR\bstreamId\x12*\n" +
-	"\asession\x18\x02 \x01(\v2\x10.aop.pty.SessionR\asession\"8\n" +
-	"\x05Input\x12\x1b\n" +
-	"\tstream_id\x18\x01 \x01(\tR\bstreamId\x12\x12\n" +
-	"\x04data\x18\x02 \x01(\fR\x04data\"Q\n" +
-	"\x06Output\x12\x1b\n" +
-	"\tstream_id\x18\x01 \x01(\tR\bstreamId\x12\x12\n" +
-	"\x04data\x18\x02 \x01(\fR\x04data\x12\x16\n" +
-	"\x06offset\x18\x03 \x01(\x03R\x06offset\"M\n" +
-	"\x06Resize\x12\x1b\n" +
-	"\tstream_id\x18\x01 \x01(\tR\bstreamId\x12\x12\n" +
-	"\x04cols\x18\x02 \x01(\x05R\x04cols\x12\x12\n" +
-	"\x04rows\x18\x03 \x01(\x05R\x04rows\"<\n" +
-	"\x04List\x12\x1b\n" +
-	"\tstream_id\x18\x01 \x01(\tR\bstreamId\x12\x17\n" +
-	"\anode_id\x18\x02 \x01(\tR\x06nodeId\"U\n" +
-	"\bSessions\x12\x1b\n" +
-	"\tstream_id\x18\x01 \x01(\tR\bstreamId\x12,\n" +
-	"\bsessions\x18\x02 \x03(\v2\x10.aop.pty.SessionR\bsessions\"l\n" +
-	"\x06Attach\x12\x1b\n" +
-	"\tstream_id\x18\x01 \x01(\tR\bstreamId\x12\x1d\n" +
-	"\n" +
-	"session_id\x18\x02 \x01(\tR\tsessionId\x12\x12\n" +
-	"\x04cols\x18\x03 \x01(\x05R\x04cols\x12\x12\n" +
-	"\x04rows\x18\x04 \x01(\x05R\x04rows\"S\n" +
-	"\bAttached\x12\x1b\n" +
-	"\tstream_id\x18\x01 \x01(\tR\bstreamId\x12*\n" +
-	"\asession\x18\x02 \x01(\v2\x10.aop.pty.SessionR\asession\"%\n" +
-	"\x06Detach\x12\x1b\n" +
-	"\tstream_id\x18\x01 \x01(\tR\bstreamId\"'\n" +
-	"\bDetached\x12\x1b\n" +
-	"\tstream_id\x18\x01 \x01(\tR\bstreamId\"#\n" +
-	"\x04Kill\x12\x1b\n" +
-	"\tstream_id\x18\x01 \x01(\tR\bstreamId\"$\n" +
-	"\x05Close\x12\x1b\n" +
-	"\tstream_id\x18\x01 \x01(\tR\bstreamId\"Q\n" +
-	"\x06Closed\x12\x1b\n" +
-	"\tstream_id\x18\x01 \x01(\tR\bstreamId\x12*\n" +
-	"\asession\x18\x02 \x01(\v2\x10.aop.pty.SessionR\asession\"P\n" +
-	"\x05State\x12\x1b\n" +
-	"\tstream_id\x18\x01 \x01(\tR\bstreamId\x12*\n" +
-	"\asession\x18\x02 \x01(\v2\x10.aop.pty.SessionR\asession\">\n" +
-	"\x05Error\x12\x1b\n" +
-	"\tstream_id\x18\x01 \x01(\tR\bstreamId\x12\x18\n" +
-	"\amessage\x18\x02 \x01(\tR\amessage\"\xc0\x05\n" +
-	"\x0fProtocolMessage\x12#\n" +
-	"\x04open\x18\n" +
-	" \x01(\v2\r.aop.pty.OpenH\x00R\x04open\x12&\n" +
-	"\x05input\x18\v \x01(\v2\x0e.aop.pty.InputH\x00R\x05input\x12)\n" +
-	"\x06output\x18\f \x01(\v2\x0f.aop.pty.OutputH\x00R\x06output\x12)\n" +
-	"\x06resize\x18\r \x01(\v2\x0f.aop.pty.ResizeH\x00R\x06resize\x12#\n" +
-	"\x04list\x18\x0e \x01(\v2\r.aop.pty.ListH\x00R\x04list\x12/\n" +
-	"\bsessions\x18\x0f \x01(\v2\x11.aop.pty.SessionsH\x00R\bsessions\x12)\n" +
-	"\x06attach\x18\x10 \x01(\v2\x0f.aop.pty.AttachH\x00R\x06attach\x12)\n" +
-	"\x06detach\x18\x11 \x01(\v2\x0f.aop.pty.DetachH\x00R\x06detach\x12&\n" +
-	"\x05close\x18\x12 \x01(\v2\x0e.aop.pty.CloseH\x00R\x05close\x12&\n" +
-	"\x05state\x18\x13 \x01(\v2\x0e.aop.pty.StateH\x00R\x05state\x12&\n" +
-	"\x05error\x18\x14 \x01(\v2\x0e.aop.pty.ErrorH\x00R\x05error\x12)\n" +
-	"\x06opened\x18\x15 \x01(\v2\x0f.aop.pty.OpenedH\x00R\x06opened\x12/\n" +
-	"\battached\x18\x16 \x01(\v2\x11.aop.pty.AttachedH\x00R\battached\x12/\n" +
-	"\bdetached\x18\x17 \x01(\v2\x11.aop.pty.DetachedH\x00R\bdetached\x12#\n" +
-	"\x04kill\x18\x18 \x01(\v2\r.aop.pty.KillH\x00R\x04kill\x12)\n" +
-	"\x06closed\x18\x19 \x01(\v2\x0f.aop.pty.ClosedH\x00R\x06closedB\t\n" +
-	"\amessageB,Z*github.com/chainreactors/cyber/aop/pty;ptyb\x06proto3"
+	"\n\x16aop/pty/protocol.proto\x12\aaop.pty\x1a\x1fgoogle/protobuf/timestamp.proto\"P\n\aProcess\x12\x10\n\x03pid\x18\x01 \x01(\x05R\x03pid\x12\x1b\n\texit_code\x18\x02 \x01(\x05R\bexitCode\x12\x16\n\x06" +
+	"signal\x18\x03 \x01(\tR\x06signal\"\xb6\x04\n\aSession\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n\x04kind\x18\x02 \x01(\tR\x04kind\x12\x12\n\x04name\x18\x03 \x01(\tR\x04name\x12\x18\n\acommand\x18\x04 \x01(\tR\acommand\x12\x10\n\x03pid\x18\x05 \x01(\x05R" +
+	"\x03pid\x129\n\nstarted_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\tstartedAt\x12D\n\x10last_activity_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\x0elastActiv" +
+	"ityAt\x125\n\bended_at\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\aendedAt\x12!\n\factivity_seq\x18\t \x01(\x03R\vactivitySeq\x12!\n\foutput_bytes\x18\n \x01(\x03R\voutputByt" +
+	"es\x12\x1b\n\texit_code\x18\v \x01(\x05R\bexitCode\x12\x14\n\x05state\x18\f \x01(\tR\x05state\x12\x1d\n\nkill_cause\x18\r \x01(\tR\tkillCause\x12\x14\n\x05shape\x18\x0e \x01(\tR\x05shape\x125\n\bready_at\x18\x0f \x01(\v2\x1a.g" +
+	"oogle.protobuf.TimestampR\areadyAt\x12*\n\aprocess\x18\x10 \x01(\v2\x10.aop.pty.ProcessR\aprocess\"\xd8\x01\n\x04Open\x12\x1b\n\tstream_id\x18\x01 \x01(\tR\bstreamId\x12\x17\n\anode_id\x18\x02" +
+	" \x01(\tR\x06nodeId\x12\x12\n\x04kind\x18\x03 \x01(\tR\x04kind\x12\x12\n\x04name\x18\x04 \x01(\tR\x04name\x12\x18\n\acommand\x18\x05 \x01(\tR\acommand\x12\x12\n\x04args\x18\x06 \x03(\tR\x04args\x12\x12\n\x04cols\x18\a \x01(\x05R\x04cols\x12\x12\n\x04rows\x18\b" +
+	" \x01(\x05R\x04rows\x12\x1c\n\tsingleton\x18\t \x01(\bR\tsingleton\"Q\n\x06Opened\x12\x1b\n\tstream_id\x18\x01 \x01(\tR\bstreamId\x12*\n\asession\x18\x02 \x01(\v2\x10.aop.pty.SessionR\asession\"8\n\x05I" +
+	"nput\x12\x1b\n\tstream_id\x18\x01 \x01(\tR\bstreamId\x12\x12\n\x04data\x18\x02 \x01(\fR\x04data\"Q\n\x06Output\x12\x1b\n\tstream_id\x18\x01 \x01(\tR\bstreamId\x12\x12\n\x04data\x18\x02 \x01(\fR\x04data\x12\x16\n\x06offset\x18\x03 \x01(\x03" +
+	"R\x06offset\"M\n\x06Resize\x12\x1b\n\tstream_id\x18\x01 \x01(\tR\bstreamId\x12\x12\n\x04cols\x18\x02 \x01(\x05R\x04cols\x12\x12\n\x04rows\x18\x03 \x01(\x05R\x04rows\"<\n\x04List\x12\x1b\n\tstream_id\x18\x01 \x01(\tR\bstreamId\x12\x17\n\a" +
+	"node_id\x18\x02 \x01(\tR\x06nodeId\"U\n\bSessions\x12\x1b\n\tstream_id\x18\x01 \x01(\tR\bstreamId\x12,\n\bsessions\x18\x02 \x03(\v2\x10.aop.pty.SessionR\bsessions\"l\n\x06Attach\x12\x1b\n\tstream" +
+	"_id\x18\x01 \x01(\tR\bstreamId\x12\x1d\n\nsession_id\x18\x02 \x01(\tR\tsessionId\x12\x12\n\x04cols\x18\x03 \x01(\x05R\x04cols\x12\x12\n\x04rows\x18\x04 \x01(\x05R\x04rows\"S\n\bAttached\x12\x1b\n\tstream_id\x18\x01 \x01(\tR\bstrea" +
+	"mId\x12*\n\asession\x18\x02 \x01(\v2\x10.aop.pty.SessionR\asession\"%\n\x06Detach\x12\x1b\n\tstream_id\x18\x01 \x01(\tR\bstreamId\"'\n\bDetached\x12\x1b\n\tstream_id\x18\x01 \x01(\tR\bstreamId\"" +
+	"#\n\x04Kill\x12\x1b\n\tstream_id\x18\x01 \x01(\tR\bstreamId\"$\n\x05Close\x12\x1b\n\tstream_id\x18\x01 \x01(\tR\bstreamId\"Q\n\x06Closed\x12\x1b\n\tstream_id\x18\x01 \x01(\tR\bstreamId\x12*\n\asession\x18\x02 \x01" +
+	"(\v2\x10.aop.pty.SessionR\asession\"P\n\x05State\x12\x1b\n\tstream_id\x18\x01 \x01(\tR\bstreamId\x12*\n\asession\x18\x02 \x01(\v2\x10.aop.pty.SessionR\asession\">\n\x05Error\x12\x1b\n\tstre" +
+	"am_id\x18\x01 \x01(\tR\bstreamId\x12\x18\n\amessage\x18\x02 \x01(\tR\amessage\"\xc0\x05\n\x0fProtocolMessage\x12#\n\x04open\x18\n \x01(\v2\r.aop.pty.OpenH\x00R\x04open\x12&\n\x05input\x18\v \x01(\v2\x0e.aop.pt" +
+	"y.InputH\x00R\x05input\x12)\n\x06output\x18\f \x01(\v2\x0f.aop.pty.OutputH\x00R\x06output\x12)\n\x06resize\x18\r \x01(\v2\x0f.aop.pty.ResizeH\x00R\x06resize\x12#\n\x04list\x18\x0e \x01(\v2\r.aop.pty.L" +
+	"istH\x00R\x04list\x12/\n\bsessions\x18\x0f \x01(\v2\x11.aop.pty.SessionsH\x00R\bsessions\x12)\n\x06attach\x18\x10 \x01(\v2\x0f.aop.pty.AttachH\x00R\x06attach\x12)\n\x06detach\x18\x11 \x01(\v2\x0f.aop.pt" +
+	"y.DetachH\x00R\x06detach\x12&\n\x05close\x18\x12 \x01(\v2\x0e.aop.pty.CloseH\x00R\x05close\x12&\n\x05state\x18\x13 \x01(\v2\x0e.aop.pty.StateH\x00R\x05state\x12&\n\x05error\x18\x14 \x01(\v2\x0e.aop.pty.Erro" +
+	"rH\x00R\x05error\x12)\n\x06opened\x18\x15 \x01(\v2\x0f.aop.pty.OpenedH\x00R\x06opened\x12/\n\battached\x18\x16 \x01(\v2\x11.aop.pty.AttachedH\x00R\battached\x12/\n\bdetached\x18\x17 \x01(\v2\x11.aop.p" +
+	"ty.DetachedH\x00R\bdetached\x12#\n\x04kill\x18\x18 \x01(\v2\r.aop.pty.KillH\x00R\x04kill\x12)\n\x06closed\x18\x19 \x01(\v2\x0f.aop.pty.ClosedH\x00R\x06closedB\t\n\amessageB&Z$github.com" +
+	"/c1ayooo/cyber/aop/pty;ptyb\x06proto3"
 
 var (
 	file_aop_pty_protocol_proto_rawDescOnce sync.Once

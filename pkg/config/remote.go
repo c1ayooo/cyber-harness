@@ -5,7 +5,7 @@ import (
 	"maps"
 	"reflect"
 
-	types "github.com/chainreactors/cyber/core/types"
+	types "github.com/c1ayooo/cyber/core/types"
 )
 
 // ResolveDistributedRuntime builds a fresh snapshot through the same schema,

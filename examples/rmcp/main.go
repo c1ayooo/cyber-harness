@@ -8,15 +8,15 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/chainreactors/cyber/core/egress"
-	terminalext "github.com/chainreactors/cyber/exts/terminal"
+	"github.com/c1ayooo/cyber/core/egress"
+	terminalext "github.com/c1ayooo/cyber/exts/terminal"
 
-	"github.com/chainreactors/cyber/core/extension"
-	"github.com/chainreactors/cyber/core/telemetry"
-	coretool "github.com/chainreactors/cyber/core/tool"
-	toolnode "github.com/chainreactors/cyber/pkg/node/tool"
+	"github.com/c1ayooo/cyber/core/extension"
+	"github.com/c1ayooo/cyber/core/telemetry"
+	coretool "github.com/c1ayooo/cyber/core/tool"
+	toolnode "github.com/c1ayooo/cyber/pkg/node/tool"
 
-	"github.com/chainreactors/cyber/core/hooks"
+	"github.com/c1ayooo/cyber/core/hooks"
 )
 
 func newRegistry(workDir string) (coretool.Executor, *extension.Set) {

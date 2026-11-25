@@ -1239,108 +1239,29 @@ func (*Event_Extension) isEvent_Payload() {}
 var File_aop_event_proto protoreflect.FileDescriptor
 
 const file_aop_event_proto_rawDesc = "" +
-	"\n" +
-	"\x0faop/event.proto\x12\x03aop\x1a\x11aop/content.proto\x1a\x19google/protobuf/any.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\x81\x01\n" +
-	"\x0eSessionStarted\x12\x14\n" +
-	"\x05model\x18\x01 \x01(\tR\x05model\x12*\n" +
-	"\x11parent_session_id\x18\x02 \x01(\tR\x0fparentSessionId\x12-\n" +
-	"\x13parent_tool_call_id\x18\x03 \x01(\tR\x10parentToolCallId\"&\n" +
-	"\fSessionEnded\x12\x16\n" +
-	"\x06reason\x18\x01 \x01(\tR\x06reason\"\r\n" +
-	"\vTurnStarted\"a\n" +
-	"\rProtocolError\x12\x12\n" +
-	"\x04code\x18\x01 \x01(\tR\x04code\x12\x18\n" +
-	"\amessage\x18\x02 \x01(\tR\amessage\x12\x1c\n" +
-	"\tretryable\x18\x03 \x01(\bR\tretryableJ\x04\b\x04\x10\x05\"\xfd\x01\n" +
-	"\n" +
-	"TokenUsage\x12!\n" +
-	"\finput_tokens\x18\x01 \x01(\x04R\vinputTokens\x12#\n" +
-	"\routput_tokens\x18\x02 \x01(\x04R\foutputTokens\x12!\n" +
-	"\ftotal_tokens\x18\x03 \x01(\x04R\vtotalTokens\x12\x14\n" +
-	"\x05model\x18\x04 \x01(\tR\x05model\x123\n" +
-	"\x06detail\x18\x05 \x03(\v2\x1b.aop.TokenUsage.DetailEntryR\x06detail\x1a9\n" +
-	"\vDetailEntry\x12\x10\n" +
-	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\x04R\x05value:\x028\x01\"\xa4\x01\n" +
-	"\tTurnEnded\x12\x1f\n" +
-	"\vstop_reason\x18\x01 \x01(\tR\n" +
-	"stopReason\x12(\n" +
-	"\x05error\x18\x02 \x01(\v2\x12.aop.ProtocolErrorR\x05error\x12%\n" +
-	"\x05usage\x18\x03 \x01(\v2\x0f.aop.TokenUsageR\x05usage\x12%\n" +
-	"\x0econtext_tokens\x18\x04 \x01(\x04R\rcontextTokens\"\xc9\x02\n" +
-	"\fMessageDelta\x12\x1d\n" +
-	"\n" +
-	"message_id\x18\x01 \x01(\tR\tmessageId\x12#\n" +
-	"\rcontent_index\x18\x02 \x01(\rR\fcontentIndex\x121\n" +
-	"\toperation\x18\x03 \x01(\x0e2\x13.aop.DeltaOperationR\toperation\x12\x14\n" +
-	"\x04text\x18\x04 \x01(\tH\x00R\x04text\x12\x1e\n" +
-	"\treasoning\x18\x05 \x01(\tH\x00R\treasoning\x12\x1a\n" +
-	"\arefusal\x18\x06 \x01(\tH\x00R\arefusal\x12\x14\n" +
-	"\x04data\x18\a \x01(\fH\x00R\x04data\x12'\n" +
-	"\x0etool_arguments\x18\b \x01(\tH\x00R\rtoolArguments\x12(\n" +
-	"\acontent\x18\t \x01(\v2\f.aop.ContentH\x00R\acontentB\a\n" +
-	"\x05value\"p\n" +
-	"\rToolCallDelta\x12\x17\n" +
-	"\acall_id\x18\x01 \x01(\tR\x06callId\x12\x14\n" +
-	"\x05index\x18\x02 \x01(\rR\x05index\x12\x12\n" +
-	"\x04name\x18\x03 \x01(\tR\x04name\x12\x1c\n" +
-	"\targuments\x18\x04 \x01(\fR\targuments\"$\n" +
-	"\x06Status\x12\x14\n" +
-	"\x05state\x18\x01 \x01(\tR\x05stateJ\x04\b\x02\x10\x03\"<\n" +
-	"\x10ProviderMetadata\x12\x12\n" +
-	"\x04name\x18\x01 \x01(\tR\x04name\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\fR\x05value\"\x9e\x02\n" +
-	"\rProviderFrame\x12\x1a\n" +
-	"\bprovider\x18\x01 \x01(\tR\bprovider\x12\x1a\n" +
-	"\bprotocol\x18\x02 \x01(\tR\bprotocol\x12\x1d\n" +
-	"\n" +
-	"event_type\x18\x03 \x01(\tR\teventType\x12,\n" +
-	"\tdirection\x18\x04 \x01(\x0e2\x0e.aop.DirectionR\tdirection\x12\x1c\n" +
-	"\ttransport\x18\x05 \x01(\tR\ttransport\x12\x18\n" +
-	"\apayload\x18\x06 \x01(\fR\apayload\x12\x1d\n" +
-	"\n" +
-	"media_type\x18\a \x01(\tR\tmediaType\x121\n" +
-	"\bmetadata\x18\b \x03(\v2\x15.aop.ProviderMetadataR\bmetadata\"\xd8\a\n" +
-	"\x05Event\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id\x129\n" +
-	"\n" +
-	"emitted_at\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\temittedAt\x12\x1d\n" +
-	"\n" +
-	"session_id\x18\x03 \x01(\tR\tsessionId\x12\x17\n" +
-	"\aturn_id\x18\x04 \x01(\tR\x06turnId\x12\x18\n" +
-	"\aemitter\x18\x05 \x01(\tR\aemitter\x12\x10\n" +
-	"\x03seq\x18\x06 \x01(\x04R\x03seq\x124\n" +
-	"\n" +
-	"extensions\x18\b \x03(\v2\x14.google.protobuf.AnyR\n" +
-	"extensions\x12>\n" +
-	"\x0fsession_started\x18\n" +
-	" \x01(\v2\x13.aop.SessionStartedH\x00R\x0esessionStarted\x128\n" +
-	"\rsession_ended\x18\v \x01(\v2\x11.aop.SessionEndedH\x00R\fsessionEnded\x125\n" +
-	"\fturn_started\x18\f \x01(\v2\x10.aop.TurnStartedH\x00R\vturnStarted\x12/\n" +
-	"\n" +
-	"turn_ended\x18\r \x01(\v2\x0e.aop.TurnEndedH\x00R\tturnEnded\x12(\n" +
-	"\amessage\x18\x0e \x01(\v2\f.aop.MessageH\x00R\amessage\x128\n" +
-	"\rmessage_delta\x18\x0f \x01(\v2\x11.aop.MessageDeltaH\x00R\fmessageDelta\x12,\n" +
-	"\ttool_call\x18\x10 \x01(\v2\r.aop.ToolCallH\x00R\btoolCall\x12<\n" +
-	"\x0ftool_call_delta\x18\x11 \x01(\v2\x12.aop.ToolCallDeltaH\x00R\rtoolCallDelta\x122\n" +
-	"\vtool_result\x18\x12 \x01(\v2\x0f.aop.ToolResultH\x00R\n" +
-	"toolResult\x12'\n" +
-	"\x05usage\x18\x13 \x01(\v2\x0f.aop.TokenUsageH\x00R\x05usage\x12*\n" +
-	"\x05error\x18\x14 \x01(\v2\x12.aop.ProtocolErrorH\x00R\x05error\x12%\n" +
-	"\x06status\x18\x15 \x01(\v2\v.aop.StatusH\x00R\x06status\x12;\n" +
-	"\x0eprovider_frame\x18\x17 \x01(\v2\x12.aop.ProviderFrameH\x00R\rproviderFrame\x124\n" +
-	"\textension\x18\x18 \x01(\v2\x14.google.protobuf.AnyH\x00R\textensionB\t\n" +
-	"\apayloadJ\x04\b\a\x10\bJ\x04\b\x16\x10\x17*\x9e\x01\n" +
-	"\x0eDeltaOperation\x12\x1f\n" +
-	"\x1bDELTA_OPERATION_UNSPECIFIED\x10\x00\x12\x19\n" +
-	"\x15DELTA_OPERATION_START\x10\x01\x12\x1a\n" +
-	"\x16DELTA_OPERATION_APPEND\x10\x02\x12\x1b\n" +
-	"\x17DELTA_OPERATION_REPLACE\x10\x03\x12\x17\n" +
-	"\x13DELTA_OPERATION_END\x10\x04*U\n" +
-	"\tDirection\x12\x19\n" +
-	"\x15DIRECTION_UNSPECIFIED\x10\x00\x12\x15\n" +
-	"\x11DIRECTION_REQUEST\x10\x01\x12\x16\n" +
-	"\x12DIRECTION_RESPONSE\x10\x02B$Z\"github.com/chainreactors/cyber/aopb\x06proto3"
+	"\n\x0faop/event.proto\x12\x03aop\x1a\x11aop/content.proto\x1a\x19google/protobuf/any.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\x81\x01\n\x0eSessionStarted\x12\x14\n\x05mode" +
+	"l\x18\x01 \x01(\tR\x05model\x12*\n\x11parent_session_id\x18\x02 \x01(\tR\x0fparentSessionId\x12-\n\x13parent_tool_call_id\x18\x03 \x01(\tR\x10parentToolCallId\"&\n\fSessionEnded\x12\x16\n\x06rea" +
+	"son\x18\x01 \x01(\tR\x06reason\"\r\n\vTurnStarted\"a\n\rProtocolError\x12\x12\n\x04code\x18\x01 \x01(\tR\x04code\x12\x18\n\amessage\x18\x02 \x01(\tR\amessage\x12\x1c\n\tretryable\x18\x03 \x01(\bR\tretryableJ\x04\b" +
+	"\x04\x10\x05\"\xfd\x01\n\nTokenUsage\x12!\n\finput_tokens\x18\x01 \x01(\x04R\vinputTokens\x12#\n\routput_tokens\x18\x02 \x01(\x04R\foutputTokens\x12!\n\ftotal_tokens\x18\x03 \x01(\x04R\vtotalTokens\x12\x14\n" +
+	"\x05model\x18\x04 \x01(\tR\x05model\x123\n\x06detail\x18\x05 \x03(\v2\x1b.aop.TokenUsage.DetailEntryR\x06detail\x1a9\n\vDetailEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n\x05value\x18\x02 \x01(\x04R\x05value:" +
+	"\x028\x01\"\xa4\x01\n\tTurnEnded\x12\x1f\n\vstop_reason\x18\x01 \x01(\tR\nstopReason\x12(\n\x05error\x18\x02 \x01(\v2\x12.aop.ProtocolErrorR\x05error\x12%\n\x05usage\x18\x03 \x01(\v2\x0f.aop.TokenUsageR\x05us" +
+	"age\x12%\n\x0econtext_tokens\x18\x04 \x01(\x04R\rcontextTokens\"\xc9\x02\n\fMessageDelta\x12\x1d\n\nmessage_id\x18\x01 \x01(\tR\tmessageId\x12#\n\rcontent_index\x18\x02 \x01(\rR\fcontentIndex\x12" +
+	"1\n\toperation\x18\x03 \x01(\x0e2\x13.aop.DeltaOperationR\toperation\x12\x14\n\x04text\x18\x04 \x01(\tH\x00R\x04text\x12\x1e\n\treasoning\x18\x05 \x01(\tH\x00R\treasoning\x12\x1a\n\arefusal\x18\x06 \x01(\tH\x00R\aref" +
+	"usal\x12\x14\n\x04data\x18\a \x01(\fH\x00R\x04data\x12'\n\x0etool_arguments\x18\b \x01(\tH\x00R\rtoolArguments\x12(\n\acontent\x18\t \x01(\v2\f.aop.ContentH\x00R\acontentB\a\n\x05value\"p\n\rToolCa" +
+	"llDelta\x12\x17\n\acall_id\x18\x01 \x01(\tR\x06callId\x12\x14\n\x05index\x18\x02 \x01(\rR\x05index\x12\x12\n\x04name\x18\x03 \x01(\tR\x04name\x12\x1c\n\targuments\x18\x04 \x01(\fR\targuments\"$\n\x06Status\x12\x14\n\x05state\x18\x01 \x01(" +
+	"\tR\x05stateJ\x04\b\x02\x10\x03\"<\n\x10ProviderMetadata\x12\x12\n\x04name\x18\x01 \x01(\tR\x04name\x12\x14\n\x05value\x18\x02 \x01(\fR\x05value\"\x9e\x02\n\rProviderFrame\x12\x1a\n\bprovider\x18\x01 \x01(\tR\bprovider\x12\x1a\n\bpr" +
+	"otocol\x18\x02 \x01(\tR\bprotocol\x12\x1d\n\nevent_type\x18\x03 \x01(\tR\teventType\x12,\n\tdirection\x18\x04 \x01(\x0e2\x0e.aop.DirectionR\tdirection\x12\x1c\n\ttransport\x18\x05 \x01(\tR\ttranspor" +
+	"t\x12\x18\n\apayload\x18\x06 \x01(\fR\apayload\x12\x1d\n\nmedia_type\x18\a \x01(\tR\tmediaType\x121\n\bmetadata\x18\b \x03(\v2\x15.aop.ProviderMetadataR\bmetadata\"\xd8\a\n\x05Event\x12\x0e\n\x02id\x18\x01 " +
+	"\x01(\tR\x02id\x129\n\nemitted_at\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\temittedAt\x12\x1d\n\nsession_id\x18\x03 \x01(\tR\tsessionId\x12\x17\n\aturn_id\x18\x04 \x01(\tR\x06turnId\x12\x18\n\aem" +
+	"itter\x18\x05 \x01(\tR\aemitter\x12\x10\n\x03seq\x18\x06 \x01(\x04R\x03seq\x124\n\nextensions\x18\b \x03(\v2\x14.google.protobuf.AnyR\nextensions\x12>\n\x0fsession_started\x18\n \x01(\v2\x13.aop.Sess" +
+	"ionStartedH\x00R\x0esessionStarted\x128\n\rsession_ended\x18\v \x01(\v2\x11.aop.SessionEndedH\x00R\fsessionEnded\x125\n\fturn_started\x18\f \x01(\v2\x10.aop.TurnStartedH\x00" +
+	"R\vturnStarted\x12/\n\nturn_ended\x18\r \x01(\v2\x0e.aop.TurnEndedH\x00R\tturnEnded\x12(\n\amessage\x18\x0e \x01(\v2\f.aop.MessageH\x00R\amessage\x128\n\rmessage_delta\x18\x0f \x01(\v2" +
+	"\x11.aop.MessageDeltaH\x00R\fmessageDelta\x12,\n\ttool_call\x18\x10 \x01(\v2\r.aop.ToolCallH\x00R\btoolCall\x12<\n\x0ftool_call_delta\x18\x11 \x01(\v2\x12.aop.ToolCallDeltaH\x00R" +
+	"\rtoolCallDelta\x122\n\vtool_result\x18\x12 \x01(\v2\x0f.aop.ToolResultH\x00R\ntoolResult\x12'\n\x05usage\x18\x13 \x01(\v2\x0f.aop.TokenUsageH\x00R\x05usage\x12*\n\x05error\x18\x14 \x01(\v2\x12.aop" +
+	".ProtocolErrorH\x00R\x05error\x12%\n\x06status\x18\x15 \x01(\v2\v.aop.StatusH\x00R\x06status\x12;\n\x0eprovider_frame\x18\x17 \x01(\v2\x12.aop.ProviderFrameH\x00R\rproviderFrame\x124\n\te" +
+	"xtension\x18\x18 \x01(\v2\x14.google.protobuf.AnyH\x00R\textensionB\t\n\apayloadJ\x04\b\a\x10\bJ\x04\b\x16\x10\x17*\x9e\x01\n\x0eDeltaOperation\x12\x1f\n\x1bDELTA_OPERATION_UNSPECIFIED\x10\x00\x12\x19\n\x15" +
+	"DELTA_OPERATION_START\x10\x01\x12\x1a\n\x16DELTA_OPERATION_APPEND\x10\x02\x12\x1b\n\x17DELTA_OPERATION_REPLACE\x10\x03\x12\x17\n\x13DELTA_OPERATION_END\x10\x04*U\n\tDirection\x12\x19\n\x15DIRECT" +
+	"ION_UNSPECIFIED\x10\x00\x12\x15\n\x11DIRECTION_REQUEST\x10\x01\x12\x16\n\x12DIRECTION_RESPONSE\x10\x02B\x1eZ\x1cgithub.com/c1ayooo/cyber/aopb\x06proto3"
 
 var (
 	file_aop_event_proto_rawDescOnce sync.Once

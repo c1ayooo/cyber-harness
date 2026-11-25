@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	cfg "github.com/chainreactors/cyber/pkg/config"
+	cfg "github.com/c1ayooo/cyber/pkg/config"
 )
 
 func TestTaskResolutionHasNoScannerFallback(t *testing.T) {

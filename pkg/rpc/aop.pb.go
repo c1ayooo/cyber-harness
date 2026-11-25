@@ -7,7 +7,7 @@
 package rpc
 
 import (
-	aop "github.com/chainreactors/cyber/aop"
+	aop "github.com/c1ayooo/cyber/aop"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -24,11 +24,8 @@ const (
 var File_rpc_aop_proto protoreflect.FileDescriptor
 
 const file_rpc_aop_proto_rawDesc = "" +
-	"\n" +
-	"\rrpc/aop.proto\x12\rcyber.rpc.aop\x1a\x12aop/envelope.proto29\n" +
-	"\n" +
-	"AOPService\x12+\n" +
-	"\aConnect\x12\r.aop.Envelope\x1a\r.aop.Envelope(\x010\x01B,Z*github.com/chainreactors/cyber/pkg/rpc;rpcb\x06proto3"
+	"\n\rrpc/aop.proto\x12\rcyber.rpc.aop\x1a\x12aop/envelope.proto29\n\nAOPService\x12+\n\aConnect\x12\r.aop.Envelope\x1a\r.aop.Envelope(\x010\x01B&Z$github.com/c1ay" +
+	"ooo/cyber/pkg/rpc;rpcb\x06proto3"
 
 var file_rpc_aop_proto_goTypes = []any{
 	(*aop.Envelope)(nil), // 0: aop.Envelope

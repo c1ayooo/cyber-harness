@@ -6,7 +6,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/chainreactors/cyber/agent/provider"
+	"github.com/c1ayooo/cyber/agent/provider"
 )
 
 // Search is independent of the chat protocol and model. Recognize the official

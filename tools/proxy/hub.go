@@ -14,12 +14,12 @@ import (
 	"sync/atomic"
 	"time"
 
-	aop "github.com/chainreactors/cyber/aop"
-	operationpb "github.com/chainreactors/cyber/aop/operation"
-	traffic "github.com/chainreactors/cyber/aop/traffic"
-	"github.com/chainreactors/cyber/core/hooks"
-	"github.com/chainreactors/cyber/core/operation"
-	cfg "github.com/chainreactors/cyber/pkg/config"
+	aop "github.com/c1ayooo/cyber/aop"
+	operationpb "github.com/c1ayooo/cyber/aop/operation"
+	traffic "github.com/c1ayooo/cyber/aop/traffic"
+	"github.com/c1ayooo/cyber/core/hooks"
+	"github.com/c1ayooo/cyber/core/operation"
+	cfg "github.com/c1ayooo/cyber/pkg/config"
 	mitmproxy "github.com/chainreactors/utils/mitmproxy/proxy"
 )
 

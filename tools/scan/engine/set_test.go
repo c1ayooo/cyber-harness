@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/chainreactors/cyber/core/telemetry"
+	"github.com/c1ayooo/cyber/core/telemetry"
 	gogopkg "github.com/chainreactors/gogo/v2/pkg"
 	"github.com/chainreactors/neutron/operators"
 	neutronhttp "github.com/chainreactors/neutron/protocols/http"

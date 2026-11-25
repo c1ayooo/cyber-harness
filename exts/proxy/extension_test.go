@@ -2,13 +2,13 @@ package proxy
 
 import (
 	"context"
-	"github.com/chainreactors/cyber/core/egress"
+	"github.com/c1ayooo/cyber/core/egress"
 	"testing"
 
-	"github.com/chainreactors/cyber/core/extension"
-	"github.com/chainreactors/cyber/core/hooks"
-	"github.com/chainreactors/cyber/core/namespaces"
-	coretool "github.com/chainreactors/cyber/core/tool"
+	"github.com/c1ayooo/cyber/core/extension"
+	"github.com/c1ayooo/cyber/core/hooks"
+	"github.com/c1ayooo/cyber/core/namespaces"
+	coretool "github.com/c1ayooo/cyber/core/tool"
 )
 
 func TestHubOwnsProxyLifecycle(t *testing.T) {

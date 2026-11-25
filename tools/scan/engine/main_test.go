@@ -6,7 +6,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/chainreactors/cyber/tools/resources"
+	"github.com/c1ayooo/cyber/tools/resources"
 )
 
 func TestMain(m *testing.M) {

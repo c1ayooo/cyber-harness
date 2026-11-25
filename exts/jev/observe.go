@@ -7,9 +7,9 @@ import (
 	"io"
 	"strings"
 
-	"github.com/chainreactors/cyber/agent"
-	aop "github.com/chainreactors/cyber/aop"
-	coretool "github.com/chainreactors/cyber/core/tool"
+	"github.com/c1ayooo/cyber/agent"
+	aop "github.com/c1ayooo/cyber/aop"
+	coretool "github.com/c1ayooo/cyber/core/tool"
 	"mvdan.cc/sh/v3/syntax"
 )
 

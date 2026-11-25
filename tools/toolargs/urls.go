@@ -5,8 +5,8 @@ import (
 	"regexp"
 	"sort"
 
-	"github.com/chainreactors/cyber/agent/provider"
-	aop "github.com/chainreactors/cyber/aop"
+	"github.com/c1ayooo/cyber/agent/provider"
+	aop "github.com/c1ayooo/cyber/aop"
 )
 
 var taskURL = regexp.MustCompile(`https?://[^\s<>"'` + "`" + `]+`)

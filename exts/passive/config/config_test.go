@@ -3,7 +3,7 @@ package config
 import (
 	"testing"
 
-	cfg "github.com/chainreactors/cyber/pkg/config"
+	cfg "github.com/c1ayooo/cyber/pkg/config"
 )
 
 func resolveSections(t *testing.T, file, cli cfg.Values, env map[string]string) *cfg.Resolved {

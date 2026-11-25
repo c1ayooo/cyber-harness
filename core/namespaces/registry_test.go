@@ -4,9 +4,9 @@ import (
 	"context"
 	"testing"
 
-	"github.com/chainreactors/cyber/aop"
-	execpb "github.com/chainreactors/cyber/aop/exec"
-	filepb "github.com/chainreactors/cyber/aop/file"
+	"github.com/c1ayooo/cyber/aop"
+	execpb "github.com/c1ayooo/cyber/aop/exec"
+	filepb "github.com/c1ayooo/cyber/aop/file"
 	"google.golang.org/protobuf/proto"
 )
 

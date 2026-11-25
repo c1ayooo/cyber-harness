@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	coretool "github.com/chainreactors/cyber/core/tool"
+	coretool "github.com/c1ayooo/cyber/core/tool"
 )
 
 func shellOutput(s string) string {

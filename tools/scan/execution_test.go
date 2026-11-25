@@ -11,11 +11,11 @@ import (
 	"testing"
 	"time"
 
-	aop "github.com/chainreactors/cyber/aop"
-	toolpb "github.com/chainreactors/cyber/aop/tool"
-	coreevents "github.com/chainreactors/cyber/core/events"
-	"github.com/chainreactors/cyber/core/operation"
-	"github.com/chainreactors/cyber/tools/scan/engine"
+	aop "github.com/c1ayooo/cyber/aop"
+	toolpb "github.com/c1ayooo/cyber/aop/tool"
+	coreevents "github.com/c1ayooo/cyber/core/events"
+	"github.com/c1ayooo/cyber/core/operation"
+	"github.com/c1ayooo/cyber/tools/scan/engine"
 	"github.com/chainreactors/sdk/spray"
 	"github.com/chainreactors/utils/parsers"
 )

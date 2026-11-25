@@ -5,8 +5,8 @@ package main
 import (
 	"path/filepath"
 
-	"github.com/chainreactors/cyber/core/extension"
-	"github.com/chainreactors/cyber/exts/record"
+	"github.com/c1ayooo/cyber/core/extension"
+	"github.com/c1ayooo/cyber/exts/record"
 )
 
 func recordExtension(config appConfig, workDir string) (extension.Extension, error) {

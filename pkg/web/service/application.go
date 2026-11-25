@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/chainreactors/cyber/agent/provider"
-	aop "github.com/chainreactors/cyber/aop"
-	"github.com/chainreactors/cyber/pkg/aopconn"
-	profile "github.com/chainreactors/cyber/pkg/profile"
+	"github.com/c1ayooo/cyber/agent/provider"
+	aop "github.com/c1ayooo/cyber/aop"
+	"github.com/c1ayooo/cyber/pkg/aopconn"
+	profile "github.com/c1ayooo/cyber/pkg/profile"
 )
 
 func (s *Service) providers() *provider.State {

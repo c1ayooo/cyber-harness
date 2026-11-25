@@ -4,11 +4,11 @@ package subagent
 import (
 	"context"
 
-	"github.com/chainreactors/cyber/agent/session"
-	"github.com/chainreactors/cyber/agent/subagent"
-	"github.com/chainreactors/cyber/agent/subagent/sessionexec"
-	"github.com/chainreactors/cyber/core/extension"
-	coretool "github.com/chainreactors/cyber/core/tool"
+	"github.com/c1ayooo/cyber/agent/session"
+	"github.com/c1ayooo/cyber/agent/subagent"
+	"github.com/c1ayooo/cyber/agent/subagent/sessionexec"
+	"github.com/c1ayooo/cyber/core/extension"
+	coretool "github.com/c1ayooo/cyber/core/tool"
 )
 
 type Extension struct{ registry *subagent.Registry }

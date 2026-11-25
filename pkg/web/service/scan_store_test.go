@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	scanpb "github.com/chainreactors/cyber/pkg/web/scan"
+	scanpb "github.com/c1ayooo/cyber/pkg/web/scan"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )

@@ -8,14 +8,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/chainreactors/cyber/agent"
-	"github.com/chainreactors/cyber/agent/inbox"
-	"github.com/chainreactors/cyber/agent/provider"
-	"github.com/chainreactors/cyber/agent/session"
-	"github.com/chainreactors/cyber/agent/subagent"
-	aop "github.com/chainreactors/cyber/aop"
-	coretool "github.com/chainreactors/cyber/core/tool"
-	types "github.com/chainreactors/cyber/core/types"
+	"github.com/c1ayooo/cyber/agent"
+	"github.com/c1ayooo/cyber/agent/inbox"
+	"github.com/c1ayooo/cyber/agent/provider"
+	"github.com/c1ayooo/cyber/agent/session"
+	"github.com/c1ayooo/cyber/agent/subagent"
+	aop "github.com/c1ayooo/cyber/aop"
+	coretool "github.com/c1ayooo/cyber/core/tool"
+	types "github.com/c1ayooo/cyber/core/types"
 )
 
 func TestSubagentFailureAllowsParentModelToContinue(t *testing.T) {

@@ -9,8 +9,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/chainreactors/cyber/agent/provider"
-	"github.com/chainreactors/cyber/aop"
+	"github.com/c1ayooo/cyber/agent/provider"
+	"github.com/c1ayooo/cyber/aop"
 )
 
 func (w *Worker) summarize(input string) (string, error) {

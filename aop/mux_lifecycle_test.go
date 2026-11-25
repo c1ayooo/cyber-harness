@@ -6,7 +6,7 @@ import (
 	"sync"
 	"testing"
 
-	filepb "github.com/chainreactors/cyber/aop/file"
+	filepb "github.com/c1ayooo/cyber/aop/file"
 	"google.golang.org/protobuf/proto"
 )
 

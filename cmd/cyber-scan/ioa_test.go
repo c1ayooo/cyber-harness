@@ -6,10 +6,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/chainreactors/cyber/core/extension"
-	ioaserver "github.com/chainreactors/cyber/exts/ioa/server"
-	ioatools "github.com/chainreactors/cyber/tools/ioa"
-	ioaservice "github.com/chainreactors/cyber/tools/ioa/server"
+	"github.com/c1ayooo/cyber/core/extension"
+	ioaserver "github.com/c1ayooo/cyber/exts/ioa/server"
+	ioatools "github.com/c1ayooo/cyber/tools/ioa"
+	ioaservice "github.com/c1ayooo/cyber/tools/ioa/server"
 	ioaclient "github.com/chainreactors/ioa/client"
 	"github.com/chainreactors/ioa/protocols"
 )

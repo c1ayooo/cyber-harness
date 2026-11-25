@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/chainreactors/cyber/tools/scan/pipeline"
+	"github.com/c1ayooo/cyber/tools/scan/pipeline"
 	"github.com/chainreactors/utils/parsers"
 )
 

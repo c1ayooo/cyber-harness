@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/chainreactors/cyber/core/telemetry"
+	"github.com/c1ayooo/cyber/core/telemetry"
 	"github.com/projectdiscovery/uncover/sources"
 )
 

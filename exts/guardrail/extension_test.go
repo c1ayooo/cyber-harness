@@ -7,14 +7,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/chainreactors/cyber/aop"
-	"github.com/chainreactors/cyber/core/events"
-	"github.com/chainreactors/cyber/core/extension"
+	"github.com/c1ayooo/cyber/aop"
+	"github.com/c1ayooo/cyber/core/events"
+	"github.com/c1ayooo/cyber/core/extension"
 
-	"github.com/chainreactors/cyber/core/hooks"
-	"github.com/chainreactors/cyber/core/operation"
-	toolhooks "github.com/chainreactors/cyber/core/tool/hooks"
-	"github.com/chainreactors/cyber/pkg/console/api"
+	"github.com/c1ayooo/cyber/core/hooks"
+	"github.com/c1ayooo/cyber/core/operation"
+	toolhooks "github.com/c1ayooo/cyber/core/tool/hooks"
+	"github.com/c1ayooo/cyber/pkg/console/api"
 	"google.golang.org/protobuf/proto"
 )
 

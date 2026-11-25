@@ -5,9 +5,9 @@ import (
 	"reflect"
 	"testing"
 
-	passiveconfig "github.com/chainreactors/cyber/exts/passive/config"
+	passiveconfig "github.com/c1ayooo/cyber/exts/passive/config"
 
-	cfg "github.com/chainreactors/cyber/pkg/config"
+	cfg "github.com/c1ayooo/cyber/pkg/config"
 )
 
 func TestParseCLIReconCommandsAndFlags(t *testing.T) {

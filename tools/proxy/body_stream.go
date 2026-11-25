@@ -3,7 +3,7 @@ package proxy
 import (
 	"sync"
 
-	"github.com/chainreactors/cyber/core/eventbus"
+	"github.com/c1ayooo/cyber/core/eventbus"
 )
 
 // bodyStream is the Cyber observation side of an io.TeeReader. Bytes passed

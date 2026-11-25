@@ -20,11 +20,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/chainreactors/cyber/agent"
-	"github.com/chainreactors/cyber/agent/provider"
-	jevapi "github.com/chainreactors/cyber/agent/provider/jev"
-	"github.com/chainreactors/cyber/aop"
-	browserext "github.com/chainreactors/cyber/exts/browser"
+	"github.com/c1ayooo/cyber/agent"
+	"github.com/c1ayooo/cyber/agent/provider"
+	jevapi "github.com/c1ayooo/cyber/agent/provider/jev"
+	"github.com/c1ayooo/cyber/aop"
+	browserext "github.com/c1ayooo/cyber/exts/browser"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 )

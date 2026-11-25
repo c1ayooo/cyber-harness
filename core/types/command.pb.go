@@ -7,7 +7,7 @@
 package types
 
 import (
-	aop "github.com/chainreactors/cyber/aop"
+	aop "github.com/c1ayooo/cyber/aop"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -423,35 +423,13 @@ func (*CommandProtocolMessage_Receipt) isCommandProtocolMessage_Message() {}
 var File_types_command_proto protoreflect.FileDescriptor
 
 const file_types_command_proto_rawDesc = "" +
-	"\n" +
-	"\x13types/command.proto\x12\rcyber.command\x1a\x11aop/content.proto\"s\n" +
-	"\vCommandSpec\x12\x12\n" +
-	"\x04name\x18\x01 \x01(\tR\x04name\x12\x18\n" +
-	"\aaliases\x18\x02 \x03(\tR\aaliases\x12\x14\n" +
-	"\x05usage\x18\x03 \x01(\tR\x05usage\x12 \n" +
-	"\vdescription\x18\x04 \x01(\tR\vdescription\"H\n" +
-	"\x0eCommandCatalog\x126\n" +
-	"\bcommands\x18\x01 \x03(\v2\x1a.cyber.command.CommandSpecR\bcommands\"C\n" +
-	"\x0eCommandRequest\x12\x1d\n" +
-	"\n" +
-	"session_id\x18\x01 \x01(\tR\tsessionId\x12\x12\n" +
-	"\x04line\x18\x02 \x01(\tR\x04line\"\x81\x01\n" +
-	"\rCommandResult\x12\x18\n" +
-	"\acommand\x18\x03 \x01(\tR\acommand\x12\"\n" +
-	"\fpresentation\x18\x04 \x01(\tR\fpresentation\x12&\n" +
-	"\acontent\x18\x05 \x03(\v2\f.aop.ContentR\acontentJ\x04\b\x01\x10\x02J\x04\b\x02\x10\x03\"h\n" +
-	"\x0eCommandReceipt\x12!\n" +
-	"\foperation_id\x18\x01 \x01(\tR\voperationId\x12\x1d\n" +
-	"\n" +
-	"session_id\x18\x02 \x01(\tR\tsessionId\x12\x14\n" +
-	"\x05state\x18\x03 \x01(\tR\x05state\"\x8c\x02\n" +
-	"\x16CommandProtocolMessage\x129\n" +
-	"\arequest\x18\n" +
-	" \x01(\v2\x1d.cyber.command.CommandRequestH\x00R\arequest\x126\n" +
-	"\x06result\x18\v \x01(\v2\x1c.cyber.command.CommandResultH\x00R\x06result\x129\n" +
-	"\acatalog\x18\f \x01(\v2\x1d.cyber.command.CommandCatalogH\x00R\acatalog\x129\n" +
-	"\areceipt\x18\r \x01(\v2\x1d.cyber.command.CommandReceiptH\x00R\areceiptB\t\n" +
-	"\amessageB1Z/github.com/chainreactors/cyber/core/types;typesb\x06proto3"
+	"\n\x13types/command.proto\x12\rcyber.command\x1a\x11aop/content.proto\"s\n\vCommandSpec\x12\x12\n\x04name\x18\x01 \x01(\tR\x04name\x12\x18\n\aaliases\x18\x02 \x03(\tR\aaliases\x12\x14\n\x05usage\x18\x03 " +
+	"\x01(\tR\x05usage\x12 \n\vdescription\x18\x04 \x01(\tR\vdescription\"H\n\x0eCommandCatalog\x126\n\bcommands\x18\x01 \x03(\v2\x1a.cyber.command.CommandSpecR\bcommands\"C\n\x0eComman" +
+	"dRequest\x12\x1d\n\nsession_id\x18\x01 \x01(\tR\tsessionId\x12\x12\n\x04line\x18\x02 \x01(\tR\x04line\"\x81\x01\n\rCommandResult\x12\x18\n\acommand\x18\x03 \x01(\tR\acommand\x12\"\n\fpresentation\x18\x04 \x01(\tR\fp" +
+	"resentation\x12&\n\acontent\x18\x05 \x03(\v2\f.aop.ContentR\acontentJ\x04\b\x01\x10\x02J\x04\b\x02\x10\x03\"h\n\x0eCommandReceipt\x12!\n\foperation_id\x18\x01 \x01(\tR\voperationId\x12\x1d\n\nsession_" +
+	"id\x18\x02 \x01(\tR\tsessionId\x12\x14\n\x05state\x18\x03 \x01(\tR\x05state\"\x8c\x02\n\x16CommandProtocolMessage\x129\n\arequest\x18\n \x01(\v2\x1d.cyber.command.CommandRequestH\x00R\arequest\x12" +
+	"6\n\x06result\x18\v \x01(\v2\x1c.cyber.command.CommandResultH\x00R\x06result\x129\n\acatalog\x18\f \x01(\v2\x1d.cyber.command.CommandCatalogH\x00R\acatalog\x129\n\areceipt\x18\r " +
+	"\x01(\v2\x1d.cyber.command.CommandReceiptH\x00R\areceiptB\t\n\amessageB+Z)github.com/c1ayooo/cyber/core/types;typesb\x06proto3"
 
 var (
 	file_types_command_proto_rawDescOnce sync.Once

@@ -3,7 +3,7 @@ package service
 import (
 	"testing"
 
-	aop "github.com/chainreactors/cyber/aop"
+	aop "github.com/c1ayooo/cyber/aop"
 )
 
 func TestAcceptedTurnDisconnectedBeforeDispatchStillEnds(t *testing.T) {

@@ -5,9 +5,9 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/chainreactors/cyber/core/extension"
-	webpkg "github.com/chainreactors/cyber/pkg/web"
-	service "github.com/chainreactors/cyber/tools/ioa/server"
+	"github.com/c1ayooo/cyber/core/extension"
+	webpkg "github.com/c1ayooo/cyber/pkg/web"
+	service "github.com/c1ayooo/cyber/tools/ioa/server"
 )
 
 type Extension struct {

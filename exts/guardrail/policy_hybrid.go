@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	toolhooks "github.com/chainreactors/cyber/core/tool/hooks"
+	toolhooks "github.com/c1ayooo/cyber/core/tool/hooks"
 	"google.golang.org/protobuf/proto"
 )
 

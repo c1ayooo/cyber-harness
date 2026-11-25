@@ -11,8 +11,8 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/chainreactors/cyber/core/operation"
-	"github.com/chainreactors/cyber/tools/headless"
+	"github.com/c1ayooo/cyber/core/operation"
+	"github.com/c1ayooo/cyber/tools/headless"
 	"github.com/go-rod/rod"
 	"github.com/go-rod/rod/lib/proto"
 	"github.com/go-rod/stealth"

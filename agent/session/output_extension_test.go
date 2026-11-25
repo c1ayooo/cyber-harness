@@ -4,9 +4,9 @@ import (
 	"context"
 	"testing"
 
-	coreevents "github.com/chainreactors/cyber/core/events"
-	"github.com/chainreactors/cyber/core/extension"
-	telemetry "github.com/chainreactors/cyber/exts/telemetry"
+	coreevents "github.com/c1ayooo/cyber/core/events"
+	"github.com/c1ayooo/cyber/core/extension"
+	telemetry "github.com/c1ayooo/cyber/exts/telemetry"
 )
 
 // loadtelemetry mounts a recorder against the stream it should observe. The

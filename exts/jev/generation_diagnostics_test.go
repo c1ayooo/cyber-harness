@@ -5,9 +5,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/chainreactors/cyber/agent/provider"
-	jev "github.com/chainreactors/cyber/agent/provider/jev"
-	aop "github.com/chainreactors/cyber/aop"
+	"github.com/c1ayooo/cyber/agent/provider"
+	jev "github.com/c1ayooo/cyber/agent/provider/jev"
+	aop "github.com/c1ayooo/cyber/aop"
 )
 
 func TestClaimGenerationPreservesTheDeclaredArtifact(t *testing.T) {

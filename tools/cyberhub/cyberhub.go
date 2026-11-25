@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	coretool "github.com/chainreactors/cyber/core/tool"
+	coretool "github.com/c1ayooo/cyber/core/tool"
 	"github.com/chainreactors/fingers/alias"
 	fingerslib "github.com/chainreactors/fingers/fingers"
 	"github.com/chainreactors/neutron/templates"

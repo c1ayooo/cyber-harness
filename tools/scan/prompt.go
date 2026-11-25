@@ -1,6 +1,6 @@
 package scan
 
-import "github.com/chainreactors/cyber/agent/prompt"
+import "github.com/c1ayooo/cyber/agent/prompt"
 
 const (
 	// ScannerSystemTarget is the system prompt target of a single-scanner

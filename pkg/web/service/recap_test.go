@@ -5,8 +5,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/chainreactors/cyber/aop"
-	"github.com/chainreactors/cyber/core/types"
+	"github.com/c1ayooo/cyber/aop"
+	"github.com/c1ayooo/cyber/core/types"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
