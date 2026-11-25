@@ -317,7 +317,7 @@ func TestIngestRejectRemovesBodyFiles(t *testing.T) {
 			hub.ingestFiles(Flow{Host: "drop.test", Flow: &traffic.Flow{
 				Request:  &traffic.HttpRequest{Method: "GET", Url: "https://drop.test/"},
 				Response: &traffic.HttpResponse{StatusCode: 200},
-			}}, [2]*os.File{nil, file})
+			}}, [2]*os.File{nil, file}, nil)
 			if got := store.Count(); got != 0 {
 				t.Fatalf("rejected flow count = %d, want 0", got)
 			}

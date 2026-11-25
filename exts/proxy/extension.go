@@ -7,6 +7,7 @@ import (
 	"github.com/chainreactors/cyber/core/extension"
 	"github.com/chainreactors/cyber/core/hooks"
 	coretool "github.com/chainreactors/cyber/core/tool"
+	guardrailext "github.com/chainreactors/cyber/exts/guardrail"
 	cfg "github.com/chainreactors/cyber/pkg/config"
 	proxytool "github.com/chainreactors/cyber/tools/proxy"
 )
@@ -47,6 +48,12 @@ func (e *Extension) Load(scope *extension.Scope) error {
 	}
 	e.resource = resource
 	hub := resource.ProxyHub
+	// The scope judge is the guardrail runtime when one is installed (it loads
+	// ahead of this extension). An embedder without guardrail keeps a judgeless
+	// hub: the proxy stays a pure capture/routing relay.
+	if runtime, judgeErr := extension.Use[*guardrailext.Runtime](scope); judgeErr == nil {
+		hub.SetScopeJudge(runtime)
+	}
 
 	binding, err := proxytool.TrafficNamespace(hub)
 	if err != nil {

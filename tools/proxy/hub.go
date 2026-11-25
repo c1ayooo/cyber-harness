@@ -14,11 +14,40 @@ import (
 	"sync/atomic"
 	"time"
 
+	aop "github.com/chainreactors/cyber/aop"
+	operationpb "github.com/chainreactors/cyber/aop/operation"
 	traffic "github.com/chainreactors/cyber/aop/traffic"
 	"github.com/chainreactors/cyber/core/hooks"
+	"github.com/chainreactors/cyber/core/operation"
 	cfg "github.com/chainreactors/cyber/pkg/config"
 	mitmproxy "github.com/chainreactors/utils/mitmproxy/proxy"
 )
+
+// ScopeJudge decides whether the proxy may forward one attributed request.
+// The guardrail runtime implements it structurally (no import), so the judge
+// can reuse the pending-review lifecycle for held requests.
+type ScopeJudge interface {
+	JudgeScopeRequest(req ScopeRequest) ScopeDecision
+}
+
+// ScopeRequest is one proxied request with its attribution.
+type ScopeRequest struct {
+	Invocation operation.Invocation
+	Call       *aop.ToolCall
+	Operation  *operationpb.Ref
+}
+
+// ScopeDecision is the judge's answer. Judged=false means "not my business":
+// forward untouched. Hold is set only for a review verdict; it blocks until
+// the review resolves (true = approved, forward) or expires/is refused
+// (false = refuse).
+type ScopeDecision struct {
+	Judged bool
+	Action string // record | review | block
+	RuleID string
+	Reason string
+	Hold   func(ctx context.Context) bool
+}
 
 // ProxyHub is the runner-level MITM proxy capability that every tool routes
 // through. It is the STABLE front hop: its local address is injected once into
@@ -64,6 +93,19 @@ type ProxyHub struct {
 
 	correlationMu sync.RWMutex
 	correlations  map[string]*correlationLease
+
+	// scopeJudge is the optional test-range judge; nil keeps the proxy a pure
+	// capture/routing relay with byte-identical behavior.
+	scopeJudge ScopeJudge
+}
+
+// SetScopeJudge installs the test-range judge. Safe before Start; judging
+// reads it per request.
+func (h *ProxyHub) SetScopeJudge(judge ScopeJudge) {
+	if h == nil {
+		return
+	}
+	h.scopeJudge = judge
 }
 
 // State returns the live egress selection capability. Lifecycle remains owned

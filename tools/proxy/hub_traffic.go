@@ -10,11 +10,17 @@ import (
 	traffic "github.com/chainreactors/cyber/aop/traffic"
 	corehooks "github.com/chainreactors/cyber/core/hooks"
 	"github.com/chainreactors/cyber/core/operation"
+	"github.com/chainreactors/cyber/core/scoperules"
 	toolhooks "github.com/chainreactors/cyber/core/tool/hooks"
 	"google.golang.org/protobuf/proto"
 )
 
-func (h *ProxyHub) ingestFiles(flow Flow, files [2]*os.File) {
+// ingestFiles commits a completed capture and fires the completion hooks.
+// verdict is the scope judge's answer for this exchange; it is keyed by the
+// canonical flow id before any hook consumer can observe the flow, so the
+// observe extension can attach it as the TrafficVerdict sidecar without a
+// race.
+func (h *ProxyHub) ingestFiles(flow Flow, files [2]*os.File, verdict *scoperules.Verdict) {
 	if h.store == nil {
 		return
 	}
@@ -27,6 +33,9 @@ func (h *ProxyHub) ingestFiles(flow Flow, files [2]*os.File) {
 		flow.Operation = &operationpb.Ref{Correlation: operationpb.Correlation_CORRELATION_UNATTRIBUTED}
 	}
 	stored := h.store.addFiles(flow, files)
+	if verdict != nil {
+		scoperules.RecordVerdict(stored.Id, *verdict)
+	}
 	message := h.store.flowToProto(&stored)
 	ctx := operation.ContextWithInvocation(context.Background(), correlation.Invocation)
 	makeEvent := func() toolhooks.FlowEvent {

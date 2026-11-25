@@ -440,6 +440,43 @@ the Tianwu checkout at `425e6175`.
     is quick-reference text only, so no session data, configuration or ledger
     migration is involved.
 
+20. **`fix(session): accept both fork extension namespaces`**
+    `agent/session/protocol.go`, `agent/session/scoperules_test.go`.
+    The control plane renamed its fork namespace (`tianwu.*` → `4zrcin.*`),
+    so every extension it sends now carries the new type URL while this file
+    still matched only the old one — the host silently ignored WorkDir,
+    ToolEnv and RunGoal again (workdir fell back to the agent process
+    directory, evaluator goals fell back to input derivation, tool env
+    vanished). Every fork extension parser now matches a URL list covering
+    both generations; payloads are unchanged. Test:
+    `go test ./agent/session -run 'TestForkExtensions|TestTurnScopeRules'
+    -count=1`.
+
+21. **`feat(scoperules): judge proxied HTTP against the control plane's test range`**
+    `core/scoperules/`, `agent/session/protocol.go`, `exts/guardrail/scoperules.go`,
+    `tools/proxy/hub.go`, `tools/proxy/mitm.go`, `tools/proxy/hub_traffic.go`,
+    `exts/observe/extension.go`, `exts/proxy/extension.go`.
+    The Tianwu/4zrcin control plane sends the project's machine-matchable test
+    range (manifest `scope_rules` JSON) as a per-turn fork extension
+    (`tianwu.ScopeRules` / `4zrcin.ScopeRules`, mirrors 15/16/17). The session
+    registers one set per session (`core/scoperules`, invalid sets are logged
+    and ignored); the guardrail runtime implements the proxy's `ScopeJudge`
+    seam: first-hit rule matching over method/host/path, miss falls to the
+    default action. `record` rides only the flow's `TrafficVerdict` sidecar
+    (one tool call fans out into many requests — journaling every record would
+    flood the run journal); `review` holds the request on the ordinary
+    pending-review lifecycle (synthetic tool `http.request`, operator answers
+    through the existing guardrail Pending/Resolve RPC, expiry cancels);
+    `block` short-circuits the exchange with a synthetic 403 that is itself
+    captured; `shadow` judges and records but never holds or refuses. Only
+    requests with a session attribution are judged; the outer CONNECT is not
+    (relay-mode HTTPS only exposes the CONNECT host, so HTTPS coverage follows
+    decrypt capture). A judgeless hub behaves byte-identically to before.
+    Tests: `go test ./core/scoperules ./exts/guardrail -run TestJudgeScope
+    ./tools/proxy -run TestScopeJudge ./agent/session -count=1`.
+    Rollback: rebuild without the judge wiring (`SetScopeJudge` call) or with
+    no `scope_rules` extension sent — both leave record-only behavior.
+
 ## Superseded patches
 
 These commits were on `tianwu/fixes` and are intentionally **not** carried after

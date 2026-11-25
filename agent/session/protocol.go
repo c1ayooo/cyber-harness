@@ -4,11 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"strings"
 
 	aop "github.com/chainreactors/cyber/aop"
+	"github.com/chainreactors/cyber/core/scoperules"
 	types "github.com/chainreactors/cyber/core/types"
 	protobuf "google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 // workDirExtensionURL is the Tianwu fork's per-session workspace extension on
@@ -17,7 +20,37 @@ import (
 // directory sends it here instead of editing the shared schema. The value is
 // JSON: {"work_dir":"<absolute path>","single_task":true}. The optional
 // scheduling flag uses the runtime's existing SingleTask mailbox policy.
+//
+// Patch 20 (2026-11-25): the control plane renamed its fork namespace from
+// tianwu.* to 4zrcin.*, so every extension it sends now carries the new type
+// URL while this file still matched only the old one — the host silently
+// ignored WorkDir/ToolEnv/RunGoal again. Both spellings are accepted for the
+// same payload; the old URL keeps pre-rename control planes working.
 const workDirExtensionURL = "type.googleapis.com/tianwu.WorkDir"
+
+// forkWorkDirExtensionURLs lists every type URL the WorkDir payload has been
+// published under, oldest first.
+var forkWorkDirExtensionURLs = []string{
+	"type.googleapis.com/tianwu.WorkDir",
+	"type.googleapis.com/4zrcin.WorkDir",
+}
+
+// extensionWithURL returns the first extension whose type URL matches one of
+// the given fork URLs. Fork payloads have carried two namespaces across the
+// tianwu → 4zrcin rename; matching by list keeps both generations working.
+func extensionWithURL(extensions []*anypb.Any, urls []string) *anypb.Any {
+	for _, extension := range extensions {
+		if extension == nil {
+			continue
+		}
+		for _, url := range urls {
+			if extension.GetTypeUrl() == url {
+				return extension
+			}
+		}
+	}
+	return nil
+}
 
 type workDirExtension struct {
 	WorkDir    string `json:"work_dir"`
@@ -31,13 +64,10 @@ func sessionWorkspace(req *aop.OpenSessionRequest) workDirExtension {
 	if req == nil {
 		return workDirExtension{}
 	}
-	for _, extension := range req.GetExtensions() {
-		if extension == nil || extension.GetTypeUrl() != workDirExtensionURL {
-			continue
-		}
+	if extension := extensionWithURL(req.GetExtensions(), forkWorkDirExtensionURLs); extension != nil {
 		var value workDirExtension
 		if err := json.Unmarshal(extension.GetValue(), &value); err != nil {
-			continue
+			return workDirExtension{}
 		}
 		value.WorkDir = strings.TrimSpace(value.WorkDir)
 		if value.WorkDir != "" || value.SingleTask {
@@ -47,14 +77,12 @@ func sessionWorkspace(req *aop.OpenSessionRequest) workDirExtension {
 	return workDirExtension{}
 }
 
-// runGoalExtensionURL is the Tianwu fork's per-turn evaluator goal extension on
-// RunTurnRequest. Upstream derives the evaluator goal from the user input text
-// (NewLoopConfigWithInput); a control plane that owns the intent already knows
-// the short goal the evaluator should judge and keeps the executor's own brief
-// separate. The value is JSON: {"goal":"...","eval_rounds":"..."}, where
-// eval_rounds uses the same pacing spec as AgentRunOptions.eval_rounds. An
-// absent extension keeps the upstream behavior exactly.
-const runGoalExtensionURL = "type.googleapis.com/tianwu.RunGoal"
+// runGoalExtensionURLs lists every type URL the RunGoal payload has been
+// published under (see the WorkDir namespace note above).
+var runGoalExtensionURLs = []string{
+	"type.googleapis.com/tianwu.RunGoal",
+	"type.googleapis.com/4zrcin.RunGoal",
+}
 
 type runGoalExtension struct {
 	Goal string `json:"goal"`
@@ -87,50 +115,67 @@ func turnRunGoal(req *aop.RunTurnRequest) (goal, rounds string) {
 	if req == nil {
 		return "", ""
 	}
-	for _, extension := range req.GetExtensions() {
-		if extension == nil || extension.GetTypeUrl() != runGoalExtensionURL {
-			continue
-		}
+	if extension := extensionWithURL(req.GetExtensions(), runGoalExtensionURLs); extension != nil {
 		var value runGoalExtension
-		if err := json.Unmarshal(extension.GetValue(), &value); err != nil {
-			continue
-		}
-		goal, rounds = strings.TrimSpace(value.Goal), evalRoundsText(value.EvalRounds)
-		if goal != "" || rounds != "" {
-			return goal, rounds
+		if err := json.Unmarshal(extension.GetValue(), &value); err == nil {
+			goal, rounds = strings.TrimSpace(value.Goal), evalRoundsText(value.EvalRounds)
+			if goal != "" || rounds != "" {
+				return goal, rounds
+			}
 		}
 	}
 	return "", ""
 }
 
 // turnWorkDir returns the workspace a control plane attached to this turn. It
-// rides the same tianwu.WorkDir extension the session opening carries: a resumed
-// turn never re-opens its session, so a session the host re-created after a
-// restart would otherwise keep the agent's process directory as its workspace.
+// rides the same WorkDir extension the session opening carries: a resumed turn
+// never re-opens its session, so a session the host re-created after a restart
+// would otherwise keep the agent's process directory as its workspace.
 func turnWorkDir(req *aop.RunTurnRequest) string {
 	if req == nil {
 		return ""
 	}
-	for _, extension := range req.GetExtensions() {
-		if extension == nil || extension.GetTypeUrl() != workDirExtensionURL {
-			continue
-		}
+	if extension := extensionWithURL(req.GetExtensions(), forkWorkDirExtensionURLs); extension != nil {
 		var value workDirExtension
-		if err := json.Unmarshal(extension.GetValue(), &value); err != nil {
-			continue
+		if err := json.Unmarshal(extension.GetValue(), &value); err == nil {
+			return strings.TrimSpace(value.WorkDir)
 		}
-		return strings.TrimSpace(value.WorkDir)
 	}
 	return ""
 }
 
-// toolEnvExtensionURL is the control plane's per-turn tool environment extension
-// on RunTurnRequest: JSON {"env":{"KEY":"VALUE",…}}. The host gives the names no
-// meaning beyond passing them to every tool subprocess of the turn, so a session
-// shell can reach the control plane's API without the model guessing URLs. The
-// values are not logged, journaled, or echoed. A host that predates it ignores
-// the unknown extension.
-const toolEnvExtensionURL = "type.googleapis.com/tianwu.ToolEnv"
+// toolEnvExtensionURLs lists every type URL the ToolEnv payload has been
+// published under (see the WorkDir namespace note above).
+var toolEnvExtensionURLs = []string{
+	"type.googleapis.com/tianwu.ToolEnv",
+	"type.googleapis.com/4zrcin.ToolEnv",
+}
+
+// scopeRulesExtensionURLs is the control plane's per-turn test-range rule set
+// (manifest scope_rules JSON). The proxy's scope judge reads what this
+// registers; a set that fails to parse is logged and ignored — the request
+// pipeline stays record-only rather than judging on garbage.
+var scopeRulesExtensionURLs = []string{
+	"type.googleapis.com/tianwu.ScopeRules",
+	"type.googleapis.com/4zrcin.ScopeRules",
+}
+
+// turnScopeRules registers the test-range rule set a control plane attached to
+// this turn. The set rides every turn (disabled drafts included) so the proxy
+// judges each request against what the project manifest held when the run
+// dispatched — never a stale push-once copy.
+func turnScopeRules(req *aop.RunTurnRequest) {
+	if req == nil {
+		return
+	}
+	extension := extensionWithURL(req.GetExtensions(), scopeRulesExtensionURLs)
+	if extension == nil {
+		return
+	}
+	if err := scoperules.SetRules(req.GetSessionId(), extension.GetValue()); err != nil {
+		log.Printf("aop: ignore invalid scope rules for session %s: %v", req.GetSessionId(), err)
+	}
+}
 
 type toolEnvExtension struct {
 	Env map[string]string `json:"env"`
@@ -141,13 +186,10 @@ func turnToolEnv(req *aop.RunTurnRequest) []string {
 	if req == nil {
 		return nil
 	}
-	for _, extension := range req.GetExtensions() {
-		if extension == nil || extension.GetTypeUrl() != toolEnvExtensionURL {
-			continue
-		}
+	if extension := extensionWithURL(req.GetExtensions(), toolEnvExtensionURLs); extension != nil {
 		var value toolEnvExtension
 		if err := json.Unmarshal(extension.GetValue(), &value); err != nil {
-			continue
+			return nil
 		}
 		if len(value.Env) == 0 {
 			return nil
@@ -198,6 +240,9 @@ func (rt *Runtime) RunAOPTurn(ctx context.Context, req *aop.RunTurnRequest) *aop
 			break
 		}
 	}
+	// The test-range rule set registers before the turn starts so the proxy
+	// judges this turn's requests against it.
+	turnScopeRules(req)
 	var message *aop.Message
 	if req.Input != nil {
 		message = protobuf.CloneOf(req.Input)

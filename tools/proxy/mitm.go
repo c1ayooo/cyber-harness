@@ -2,6 +2,7 @@ package proxy
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -12,9 +13,11 @@ import (
 	"sync"
 	"time"
 
+	aop "github.com/chainreactors/cyber/aop"
 	operationpb "github.com/chainreactors/cyber/aop/operation"
 	traffic "github.com/chainreactors/cyber/aop/traffic"
 	"github.com/chainreactors/cyber/core/operation"
+	"github.com/chainreactors/cyber/core/scoperules"
 	"github.com/chainreactors/cyber/core/telemetry"
 	coretool "github.com/chainreactors/cyber/core/tool"
 	cfg "github.com/chainreactors/cyber/pkg/config"
@@ -22,6 +25,11 @@ import (
 	goflags "github.com/jessevdk/go-flags"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
+
+// httpRequestToolName is the synthetic tool name the scope judge's calls
+// carry. It mirrors the value documented in exts/guardrail (the judge cannot
+// be imported here without a cycle through agent/session).
+const httpRequestToolName = "http.request"
 
 // ---------------------------------------------------------------------------
 // MitmCommand — top-level "mitm" command
@@ -191,6 +199,10 @@ func correlationTokenOf(f *mitmproxy.Flow) string {
 }
 
 func (a *captureAddon) Requestheaders(f *mitmproxy.Flow) {
+	// The scope judge runs before capture so a refused request also produces a
+	// capture record of the synthetic 403, and so a held request blocks the
+	// forwarding goroutine — the library short-circuits any Response set here.
+	verdict, judged := a.judgeRequest(f)
 	if a.hub == nil || a.hub.stopping.Load() || !a.hub.recording.Load() || f == nil || f.Request == nil {
 		return
 	}
@@ -206,6 +218,20 @@ func (a *captureAddon) Requestheaders(f *mitmproxy.Flow) {
 		return
 	}
 	state := newCaptureState(a.hub, f)
+	if judged {
+		state.setVerdict(verdict)
+	}
+	if f.Response != nil {
+		// A judge-refused exchange never reaches the engine's response stage,
+		// so the synthetic refusal is hydrated here to stay visible in the
+		// traffic view.
+		state.flow.Response = &traffic.HttpResponse{
+			StatusCode: int32(f.Response.StatusCode),
+			Headers:    traffic.HeadersFromHTTP(f.Response.Header),
+			Body:       f.Response.Body,
+		}
+		state.flow.ContentType = f.Response.Header.Get("Content-Type")
+	}
 	f.Stream = true // Capture observes native streams; no buffered-body branch.
 	a.pending.Store(f.Id.String(), state)
 }
@@ -255,6 +281,76 @@ func (a *captureAddon) state(f *mitmproxy.Flow) *captureState {
 	return nil
 }
 
+// judgeRequest runs the optional test-range judge on one attributed request.
+//
+// Only requests with a session attribution (a per-execution egress lease) are
+// judged: unattributed traffic is the host's own plumbing, not the model's.
+// The judge can hold the forwarding goroutine (review) or short-circuit the
+// exchange with a synthetic 403 (block) by setting Flow.Response, which the
+// mitmproxy engine treats as the final reply. The returned verdict travels on
+// the capture state and is keyed by the store's canonical flow id once the
+// flow completes, so the observe extension can attach it as the flow's
+// TrafficVerdict sidecar.
+func (a *captureAddon) judgeRequest(f *mitmproxy.Flow) (scoperules.Verdict, bool) {
+	if a.hub == nil || a.hub.scopeJudge == nil || f == nil || f.Request == nil || f.Request.URL == nil {
+		return scoperules.Verdict{}, false
+	}
+	// The inner request is judged, not the outer CONNECT: in relay mode only
+	// the CONNECT host is visible, and a method/path rule cannot judge it
+	// honestly. HTTPS coverage therefore follows decrypt capture.
+	if strings.EqualFold(f.Request.Method, http.MethodConnect) {
+		return scoperules.Verdict{}, false
+	}
+	correlation := a.hub.resolveCorrelation(correlationTokenOf(f))
+	defer correlation.finish()
+	if correlation.invocation.SessionID == "" {
+		return scoperules.Verdict{}, false
+	}
+	call := &aop.ToolCall{Name: httpRequestToolName, Arguments: &aop.EncodedValue{Data: scopeRequestArguments(f)}}
+	decision := a.hub.scopeJudge.JudgeScopeRequest(ScopeRequest{
+		Invocation: correlation.invocation, Call: call, Operation: correlation.operation,
+	})
+	if !decision.Judged {
+		return scoperules.Verdict{}, false
+	}
+	ctx := operation.ContextWithInvocation(context.Background(), correlation.invocation)
+	switch decision.Action {
+	case scoperules.ActionReview:
+		if decision.Hold != nil && decision.Hold(ctx) {
+			return scoperules.Verdict{Action: scoperules.ActionReview, RuleID: decision.RuleID, Reason: decision.Reason}, true // approved: forward untouched
+		}
+		f.Response = scopeRefusal(f.Request)
+	case scoperules.ActionBlock:
+		f.Response = scopeRefusal(f.Request)
+	}
+	return scoperules.Verdict{Action: decision.Action, RuleID: decision.RuleID, Reason: decision.Reason}, true
+}
+
+// scopeRequestArguments builds the synthetic call's arguments: the request
+// identity the control plane renders and the flow id the verdict sidecar keys
+// on.
+func scopeRequestArguments(f *mitmproxy.Flow) []byte {
+	payload, _ := json.Marshal(map[string]string{
+		"method":  f.Request.Method,
+		"url":     f.Request.URL.String(),
+		"flow_id": f.Id.String(),
+	})
+	return payload
+}
+
+// scopeRefusal is the synthetic reply a block (or refused review) produces.
+// 403 with a small JSON body: the tool that issued the request sees an HTTP
+// failure, not a transport error.
+func scopeRefusal(req *mitmproxy.Request) *mitmproxy.Response {
+	body, _ := json.Marshal(map[string]string{
+		"error": "scope_rules_refused",
+		"host":  req.URL.Host,
+	})
+	header := http.Header{}
+	header.Set("Content-Type", "application/json")
+	return &mitmproxy.Response{StatusCode: http.StatusForbidden, Header: header, Body: body}
+}
+
 type captureState struct {
 	hub        *ProxyHub
 	mu         sync.Mutex
@@ -263,6 +359,16 @@ type captureState struct {
 	bodies     [2]*bodyStream
 	files      [2]*bodyFile
 	captureErr error
+	// verdict is the scope judge's answer for this request, recorded into the
+	// sidecar registry under the canonical flow id once the capture completes.
+	verdict *scoperules.Verdict
+}
+
+// setVerdict attaches the judge's verdict (request goroutine, before finish).
+func (s *captureState) setVerdict(verdict scoperules.Verdict) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.verdict = &verdict
 }
 
 func newCaptureState(hub *ProxyHub, f *mitmproxy.Flow) *captureState {
@@ -397,7 +503,10 @@ func (s *captureState) completeCapture(err error, discard bool) {
 		flow.Error = err.Error()
 	}
 	flow.Complete = err == nil && flow.Response != nil && flow.Response.StatusCode != 0
-	s.hub.ingestFiles(flow, files)
+	s.mu.Lock()
+	verdict := s.verdict
+	s.mu.Unlock()
+	s.hub.ingestFiles(flow, files, verdict)
 }
 
 func appendPreview(dst, src []byte, max int) []byte {

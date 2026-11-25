@@ -5,6 +5,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"sync"
@@ -17,6 +18,7 @@ import (
 	corehooks "github.com/chainreactors/cyber/core/hooks"
 	"github.com/chainreactors/cyber/core/operation"
 	procbus "github.com/chainreactors/cyber/core/proc"
+	"github.com/chainreactors/cyber/core/scoperules"
 	"github.com/chainreactors/cyber/core/telemetry"
 	coretool "github.com/chainreactors/cyber/core/tool"
 	toolhooks "github.com/chainreactors/cyber/core/tool/hooks"
@@ -245,7 +247,16 @@ func (e *Extension) fileAccess(ctx context.Context, event toolhooks.FileEvent) (
 
 func (e *Extension) flowCompleted(ctx context.Context, event toolhooks.FlowEvent) (struct{}, error) {
 	// ProxyHub gives this boundary an owned, hydrated copy after FlowStore commit.
-	e.emit(ctx, event.Flow, event.Operation)
+	// A judged request additionally carries its scope-rule verdict as the
+	// control plane's TrafficVerdict sidecar; the registry keys by flow id and
+	// this take consumes it exactly once.
+	var sidecars []proto.Message
+	if verdict, ok := scoperules.TakeVerdict(event.Flow.GetId()); ok {
+		if encoded, err := json.Marshal(verdict); err == nil {
+			sidecars = append(sidecars, &anypb.Any{TypeUrl: "type.googleapis.com/4zrcin.TrafficVerdict", Value: encoded})
+		}
+	}
+	e.emit(ctx, event.Flow, event.Operation, sidecars...)
 	return struct{}{}, nil
 }
 

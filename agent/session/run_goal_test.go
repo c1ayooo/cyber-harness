@@ -29,31 +29,31 @@ func TestTurnRunGoalExtension(t *testing.T) {
 		{name: "nil request"},
 		{
 			name:   "trimmed goal and rounds",
-			req:    request(extension(runGoalExtensionURL, `{"goal":" verify admin access ","eval_rounds":" 2 "}`)),
+			req:    request(extension(forkRunGoalExtensionURL(), `{"goal":" verify admin access ","eval_rounds":" 2 "}`)),
 			goal:   "verify admin access",
 			rounds: "2",
 		},
 		{
 			name:   "numeric rounds",
-			req:    request(extension(runGoalExtensionURL, `{"goal":"verify admin access","eval_rounds":3}`)),
+			req:    request(extension(forkRunGoalExtensionURL(), `{"goal":"verify admin access","eval_rounds":3}`)),
 			goal:   "verify admin access",
 			rounds: "3",
 		},
 		{
 			name: "goal only",
-			req:  request(extension(runGoalExtensionURL, `{"goal":"verify admin access"}`)),
+			req:  request(extension(forkRunGoalExtensionURL(), `{"goal":"verify admin access"}`)),
 			goal: "verify admin access",
 		},
 		{
 			name: "other extensions are ignored",
 			req: request(
-				extension(workDirExtensionURL, `{"work_dir":"C:\\case"}`),
-				extension(runGoalExtensionURL, `{"goal":"verify admin access"}`),
+				extension(forkWorkDirExtensionURL(), `{"work_dir":"C:\\case"}`),
+				extension(forkRunGoalExtensionURL(), `{"goal":"verify admin access"}`),
 			),
 			goal: "verify admin access",
 		},
-		{name: "malformed value", req: request(extension(runGoalExtensionURL, `{`))},
-		{name: "empty value", req: request(extension(runGoalExtensionURL, `{"goal":"","eval_rounds":""}`))},
+		{name: "malformed value", req: request(extension(forkRunGoalExtensionURL(), `{`))},
+		{name: "empty value", req: request(extension(forkRunGoalExtensionURL(), `{"goal":"","eval_rounds":""}`))},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			goal, rounds := turnRunGoal(test.req)
@@ -100,7 +100,7 @@ func TestRunAOPTurnRunGoalShapesEvaluatorGoal(t *testing.T) {
 	}{
 		{
 			name:       "extension goal and rounds",
-			extension:  &anypb.Any{TypeUrl: runGoalExtensionURL, Value: []byte(`{"goal":"verify admin access","eval_rounds":"2"}`)},
+			extension:  &anypb.Any{TypeUrl: forkRunGoalExtensionURL(), Value: []byte(`{"goal":"verify admin access","eval_rounds":"2"}`)},
 			wantGoal:   "## Goal\nverify admin access",
 			wantRounds: "hard ceiling 2,",
 		},

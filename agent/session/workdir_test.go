@@ -17,7 +17,7 @@ func TestTurnWorkDirDecodesTheTianwuExtension(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	req := &aop.RunTurnRequest{Extensions: []*anypb.Any{{TypeUrl: workDirExtensionURL, Value: raw}}}
+	req := &aop.RunTurnRequest{Extensions: []*anypb.Any{{TypeUrl: forkWorkDirExtensionURL(), Value: raw}}}
 	if got := turnWorkDir(req); got != `C:\data\projects\p\cases\in_1` {
 		t.Fatalf("turnWorkDir = %q", got)
 	}

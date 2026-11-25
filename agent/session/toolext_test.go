@@ -20,7 +20,7 @@ func TestTurnToolEnvDecodesTheControlPlaneExtension(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	req := &aop.RunTurnRequest{Extensions: []*anypb.Any{{TypeUrl: toolEnvExtensionURL, Value: raw}}}
+	req := &aop.RunTurnRequest{Extensions: []*anypb.Any{{TypeUrl: forkToolEnvExtensionURL(), Value: raw}}}
 	env := turnToolEnv(req)
 	got := map[string]bool{}
 	for _, kv := range env {
