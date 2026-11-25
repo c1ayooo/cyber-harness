@@ -373,35 +373,39 @@ require (
 
 replace github.com/wasilibs/go-re2 => github.com/chainreactors/native v1.11.1-native.1
 
-replace github.com/projectdiscovery/katana => github.com/chainreactors/katana v1.6.2-0.20260914161750-0811dfe2d87c
+replace github.com/projectdiscovery/katana => github.com/c1ayooo/katana v1.6.2-0.20260914161750-0811dfe2d87c
 
 replace github.com/chainreactors/cyber/aop => ./aop
 replace (
-	github.com/chainreactors/crtm => ./third_party/chainreactors/crtm
-	github.com/chainreactors/files => ./third_party/chainreactors/files
-	github.com/chainreactors/fingers => ./third_party/chainreactors/fingers
+	github.com/chainreactors/crtm => github.com/c1ayooo/crtm v0.0.3-0.20260924103954-9432523918ae
+	github.com/chainreactors/files => github.com/c1ayooo/files v0.0.0-20240716182835-7884ee1e77f0
+	github.com/chainreactors/fingers => github.com/c1ayooo/fingers v1.2.2-0.20260714063144-070758342f45
+	github.com/chainreactors/ioa => github.com/c1ayooo/ioa v0.1.2-0.20261114095210-c8126691b2f2
+	github.com/chainreactors/logs => github.com/c1ayooo/logs v0.0.0-20260624034259-9aaea4aa52cc
+	github.com/chainreactors/neutron => github.com/c1ayooo/neutron v0.1.1-0.20260714062907-716c6b167cb6
+	github.com/chainreactors/parsers => github.com/c1ayooo/parsers v0.0.0-20260608085142-3d2c51baa8fe
+	github.com/chainreactors/proton => github.com/c1ayooo/proton v0.3.3-0.20260707162538-471f99ea6131
+	github.com/chainreactors/proxyclient => github.com/c1ayooo/proxyclient v1.1.1-0.20260728110701-74504679dc47
+	github.com/chainreactors/sdk => github.com/c1ayooo/sdk v0.3.4-0.20260708104745-dcad8620f5e9
+	github.com/chainreactors/spray => github.com/c1ayooo/spray v1.3.3-0.20260704194611-7ce7b850d447
+	github.com/chainreactors/utils => github.com/c1ayooo/utils v0.0.0-20260711153742-f3d210a5fa9d
+	github.com/chainreactors/words => github.com/c1ayooo/words v0.0.0-20260520145736-270600e60fb4
+	github.com/chainreactors/zombie => github.com/c1ayooo/zombie v1.3.1-0.20260809133033-0d0df6fa50f5
+
+	// 子目录模块：fork 内 go.mod 仍声明 github.com/chainreactors/... 路径，
+	// replace 到 fork 会报 "module declares its path as ... but was required as ..."，
+	// 因此保留本地 third_party 副本。
 	github.com/chainreactors/gogo/v2 => ./third_party/chainreactors/gogo/v2
-	github.com/chainreactors/ioa => ./third_party/chainreactors/ioa
 	github.com/chainreactors/libcstx/go => ./third_party/chainreactors/libcstx/go
-	github.com/chainreactors/logs => ./third_party/chainreactors/logs
-	github.com/chainreactors/neutron => ./third_party/chainreactors/neutron
 	github.com/chainreactors/neutron/operators/full => ./third_party/chainreactors/neutron/operators/full
-	github.com/chainreactors/parsers => ./third_party/chainreactors/parsers
-	github.com/chainreactors/proton => ./third_party/chainreactors/proton
-	github.com/chainreactors/proxyclient => ./third_party/chainreactors/proxyclient
 	github.com/chainreactors/proxyclient/extra => ./third_party/chainreactors/proxyclient/extra
-	github.com/chainreactors/sdk => ./third_party/chainreactors/sdk
 	github.com/chainreactors/sdk/gogo => ./third_party/chainreactors/sdk/gogo
 	github.com/chainreactors/sdk/spray => ./third_party/chainreactors/sdk/spray
 	github.com/chainreactors/sdk/zombie => ./third_party/chainreactors/sdk/zombie
-	github.com/chainreactors/spray => ./third_party/chainreactors/spray
 	github.com/chainreactors/tui/console => ./third_party/chainreactors/tui/console
 	github.com/chainreactors/tui/readline => ./third_party/chainreactors/tui/readline
-	github.com/chainreactors/utils => ./third_party/chainreactors/utils
 	github.com/chainreactors/utils/cert => ./third_party/chainreactors/utils/cert
 	github.com/chainreactors/utils/mitmproxy => ./third_party/chainreactors/utils/mitmproxy
 	github.com/chainreactors/utils/parsers => ./third_party/chainreactors/utils/parsers
 	github.com/chainreactors/utils/proc => ./third_party/chainreactors/utils/proc
-	github.com/chainreactors/words => ./third_party/chainreactors/words
-	github.com/chainreactors/zombie => ./third_party/chainreactors/zombie
 )
