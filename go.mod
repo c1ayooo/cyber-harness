@@ -376,3 +376,32 @@ replace github.com/wasilibs/go-re2 => github.com/chainreactors/native v1.11.1-na
 replace github.com/projectdiscovery/katana => github.com/chainreactors/katana v1.6.2-0.20260914161750-0811dfe2d87c
 
 replace github.com/chainreactors/cyber/aop => ./aop
+replace (
+	github.com/chainreactors/crtm => ./third_party/chainreactors/crtm
+	github.com/chainreactors/files => ./third_party/chainreactors/files
+	github.com/chainreactors/fingers => ./third_party/chainreactors/fingers
+	github.com/chainreactors/gogo/v2 => ./third_party/chainreactors/gogo/v2
+	github.com/chainreactors/ioa => ./third_party/chainreactors/ioa
+	github.com/chainreactors/libcstx/go => ./third_party/chainreactors/libcstx/go
+	github.com/chainreactors/logs => ./third_party/chainreactors/logs
+	github.com/chainreactors/neutron => ./third_party/chainreactors/neutron
+	github.com/chainreactors/neutron/operators/full => ./third_party/chainreactors/neutron/operators/full
+	github.com/chainreactors/parsers => ./third_party/chainreactors/parsers
+	github.com/chainreactors/proton => ./third_party/chainreactors/proton
+	github.com/chainreactors/proxyclient => ./third_party/chainreactors/proxyclient
+	github.com/chainreactors/proxyclient/extra => ./third_party/chainreactors/proxyclient/extra
+	github.com/chainreactors/sdk => ./third_party/chainreactors/sdk
+	github.com/chainreactors/sdk/gogo => ./third_party/chainreactors/sdk/gogo
+	github.com/chainreactors/sdk/spray => ./third_party/chainreactors/sdk/spray
+	github.com/chainreactors/sdk/zombie => ./third_party/chainreactors/sdk/zombie
+	github.com/chainreactors/spray => ./third_party/chainreactors/spray
+	github.com/chainreactors/tui/console => ./third_party/chainreactors/tui/console
+	github.com/chainreactors/tui/readline => ./third_party/chainreactors/tui/readline
+	github.com/chainreactors/utils => ./third_party/chainreactors/utils
+	github.com/chainreactors/utils/cert => ./third_party/chainreactors/utils/cert
+	github.com/chainreactors/utils/mitmproxy => ./third_party/chainreactors/utils/mitmproxy
+	github.com/chainreactors/utils/parsers => ./third_party/chainreactors/utils/parsers
+	github.com/chainreactors/utils/proc => ./third_party/chainreactors/utils/proc
+	github.com/chainreactors/words => ./third_party/chainreactors/words
+	github.com/chainreactors/zombie => ./third_party/chainreactors/zombie
+)
