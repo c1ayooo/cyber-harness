@@ -2,6 +2,14 @@ package resources
 
 //go:generate go run ./templates_gen.go -t ../templates -o template.go
 
+// The built-in high-risk command corpus (fork patch 23b) regenerates
+// separately, without a template checkout:
+//
+//	go run ./builtin_gen.go
+//
+// The generated guardrail_builtin_gen.go is committed; an edit to
+// guardrail_builtin.yaml must run the command and commit both files.
+
 import (
 	"context"
 	"encoding/json"

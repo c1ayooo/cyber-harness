@@ -1,0 +1,34 @@
+# 内置高危命令语料（fork patch 23b，docs/04）。
+#
+# 保底审计的模式集：外传与破坏类命令，guardrail 在任何策略配置（含无
+# provider 的 capture 节点）下无条件产生审计记录，reason 带 `builtin.` 前缀。
+# 这份语料永远嵌入二进制，不随 emptyresources 裁剪（与 templates bundle
+# 不同：模板是能力，保底审计是责任）。
+#
+# 字段：id（审计 reason 里的稳定标识）、pattern（Go 正则，对命令文本匹配）、
+# desc（人话描述，审计行直接呈现）。pattern 在生成期编译验证。
+patterns:
+  - id: recursive-force-delete
+    pattern: '(^|[;&|]\s*|\$\()\s*rm\s+(-[a-zA-Z]*[rf][a-zA-Z]*\s+)+(/|~|\$HOME|\.)\s*$'
+    desc: 递归强制删除根目录、家目录或当前目录
+  - id: remote-script-exec
+    pattern: '(curl|wget|fetch)[^|;]*\|\s*(sudo\s+)?(ba|z|da|k)?sh(\s|$)'
+    desc: 下载脚本并直接管道执行
+  - id: disk-overwrite
+    pattern: '\bdd\b[^|;]*\bof=/dev/(sd[a-z]|nvme|hd[a-z]|disk)'
+    desc: 用 dd 直接覆写块设备
+  - id: filesystem-recreate
+    pattern: '\bmkfs(\.\w+)?\b'
+    desc: 创建文件系统（破坏目标卷已有数据）
+  - id: world-writable-sweep
+    pattern: 'chmod\s+-R\s+0?777\s+/(\s|$)'
+    desc: 递归赋予全盘写权限
+  - id: history-and-key-exfil
+    pattern: '(cat|cp|tar)\s[^|;]*(\.ssh|id_rsa|id_ed25519|\.aws/credentials|\.netrc)[^|;]*\|\s*(curl|wget|nc\b|ssh)'
+    desc: 私钥/凭据外传
+  - id: credential-env-exfil
+    pattern: '(printenv|env)\b[^|;]*\|\s*(curl|wget|nc\b)'
+    desc: 环境变量（含密钥）外传
+  - id: fork-bomb
+    pattern: ':\(\)\s*\{\s*:\|:&\s*\};:'
+    desc: fork 炸弹

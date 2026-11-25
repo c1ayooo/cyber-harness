@@ -12,11 +12,15 @@
 package scoperules
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"net"
+	"net/netip"
 	"net/url"
 	"strings"
 	"sync"
+	"time"
 )
 
 // Actions are the three verdicts a rule row or the default action can carry.
@@ -36,8 +40,9 @@ const (
 )
 
 // Rule is one manifest row. Method is "*" or verbs joined by "|"; Host is "*",
-// an exact hostname, or "*.example.com" (every subdomain); PathPrefix is a
-// literal URL path prefix ("/" = everything).
+// an exact hostname, "*.example.com" (every subdomain), or a CIDR block
+// ("10.0.0.0/8", matched against the target's resolved address); PathPrefix is
+// a literal URL path prefix ("/" = everything).
 type Rule struct {
 	ID         string `json:"id"`
 	Action     string `json:"action"`
@@ -150,6 +155,15 @@ func hostMatches(pattern, host string) bool {
 	if pattern == "*" {
 		return true
 	}
+	// CIDR rows (fork patch 23a, docs/04): "10.0.0.0/8" matches the target's
+	// resolved address — an IP-literal host is matched directly, a hostname is
+	// resolved (cached, bounded) first. The control plane's schema validates
+	// the same shapes (project/scope_rules.go), so the two sides stay in lock
+	// step; an unparseable value falls back to the exact-hostname comparison,
+	// which can only miss — a version-mismatched rule set must never over-fence.
+	if strings.Contains(pattern, "/") {
+		return cidrHostMatches(pattern, host)
+	}
 	// "*.example.com" (and the legacy ".example.com" spelling) matches every
 	// subdomain but not the base host itself.
 	if suffix, ok := strings.CutPrefix(pattern, "*."); ok {
@@ -159,6 +173,87 @@ func hostMatches(pattern, host string) bool {
 		return host != base && strings.HasSuffix(host, "."+base)
 	}
 	return host == pattern
+}
+
+// cidrHostMatches matches one CIDR row against the request host. Failure at
+// every stage (bad prefix, unresolvable hostname, timeout) is a miss, never an
+// error verdict: fencing is a safety property, and blocking on infrastructure
+// noise would fence the operator out of their own range.
+func cidrHostMatches(pattern, host string) bool {
+	prefix, err := netip.ParsePrefix(pattern)
+	if err != nil {
+		// Unknown shape: exact-hostname fallback (the control plane normalizes
+		// CIDR rows before storing, so this line is defensive only).
+		return host == pattern
+	}
+	prefix = prefix.Masked()
+	if addr, err := netip.ParseAddr(host); err == nil {
+		return prefix.Contains(addr.WithZone("").Unmap())
+	}
+	for _, addr := range resolveHost(host) {
+		if prefix.Contains(addr) {
+			return true
+		}
+	}
+	return false
+}
+
+// The DNS side of the CIDR branch runs on the proxy data path, so lookups are
+// cached and bounded: one entry per hostname (positive and negative results
+// alike), oldest entries evicted at the cap, every entry expiring on its own.
+// lookupHost is a variable for tests; production uses net.DefaultResolver.
+var (
+	dnsMu      sync.Mutex
+	dnsCache   = map[string]dnsEntry{}
+	dnsRing    []string
+	lookupHost = func(ctx context.Context, host string) ([]string, error) {
+		return net.DefaultResolver.LookupHost(ctx, host)
+	}
+)
+
+const (
+	dnsTTL     = 5 * time.Minute
+	dnsTimeout = 2 * time.Second
+	dnsMax     = 512
+)
+
+type dnsEntry struct {
+	addrs   []netip.Addr
+	expires time.Time
+}
+
+func resolveHost(host string) []netip.Addr {
+	dnsMu.Lock()
+	if e, ok := dnsCache[host]; ok && time.Now().Before(e.expires) {
+		dnsMu.Unlock()
+		return e.addrs
+	}
+	dnsMu.Unlock()
+
+	ctx, cancel := context.WithTimeout(context.Background(), dnsTimeout)
+	defer cancel()
+	names, err := lookupHost(ctx, host)
+	var addrs []netip.Addr
+	if err == nil {
+		for _, name := range names {
+			if addr, aerr := netip.ParseAddr(name); aerr == nil {
+				addrs = append(addrs, addr.WithZone("").Unmap())
+			}
+		}
+	}
+	// A failed or empty resolution is cached too: an unreachable target must
+	// not turn every request into a fresh timeout.
+	dnsMu.Lock()
+	defer dnsMu.Unlock()
+	if _, exists := dnsCache[host]; !exists {
+		dnsRing = append(dnsRing, host)
+		if len(dnsRing) > dnsMax {
+			delete(dnsCache, dnsRing[0])
+			dnsRing = dnsRing[1:]
+		}
+	}
+	dnsCache[host] = dnsEntry{addrs: addrs, expires: time.Now().Add(dnsTTL)}
+	return addrs
 }
 
 func requestTarget(rawURL string) (host, path string) {

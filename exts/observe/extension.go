@@ -8,11 +8,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"path/filepath"
 	"sync"
 
 	aop "github.com/c1ayooo/cyber/aop"
 	filepb "github.com/c1ayooo/cyber/aop/file"
 	operationpb "github.com/c1ayooo/cyber/aop/operation"
+	"github.com/c1ayooo/cyber/core/artifactsync"
 	coreevents "github.com/c1ayooo/cyber/core/events"
 	"github.com/c1ayooo/cyber/core/extension"
 	corehooks "github.com/c1ayooo/cyber/core/hooks"
@@ -35,6 +37,10 @@ const (
 	Processes Kind = "processes"
 	Files     Kind = "files"
 	HTTP      Kind = "http"
+	// Artifacts (fork patch 23c): changed files under the case directory are
+	// shipped back to the control plane as 4zrcin.Artifact sidecars, so a
+	// remote node without a shared filesystem still delivers its evidence.
+	Artifacts Kind = "artifacts"
 )
 
 type Options struct {
@@ -62,7 +68,7 @@ func New(options Options) (*Extension, error) {
 	kinds := make(map[Kind]bool, len(options.Kinds))
 	for _, kind := range options.Kinds {
 		switch kind {
-		case Tools, Commands, Processes, Files, HTTP:
+		case Tools, Commands, Processes, Files, HTTP, Artifacts:
 			if kinds[kind] {
 				return nil, fmt.Errorf("duplicate observation kind %q", kind)
 			}
@@ -149,10 +155,19 @@ func eventFor(ctx context.Context, payload proto.Message, correlation *operation
 		}
 	}
 	for _, sidecar := range sidecars {
-		if sidecar != nil {
-			if err := aop.SetTypedExtension(event, sidecar); err != nil {
-				return nil, err
-			}
+		if sidecar == nil {
+			continue
+		}
+		if anyMsg, ok := sidecar.(*anypb.Any); ok {
+			// Pre-built sidecars are already typed Any values (the JSON-in-Any
+			// fork extensions such as 4zrcin.TrafficVerdict and 4zrcin.Artifact).
+			// Wrapping them again would nest Any-in-Any and the control plane's
+			// exact-URL match would never see the real type URL.
+			event.Extensions = append(event.Extensions, anyMsg)
+			continue
+		}
+		if err := aop.SetTypedExtension(event, sidecar); err != nil {
+			return nil, err
 		}
 	}
 	return event, nil
@@ -201,8 +216,9 @@ func (e *Extension) commandCompleted(ctx context.Context, event toolhooks.Comman
 
 func (e *Extension) processStarting(ctx context.Context, event toolhooks.ProcessEvent) (struct{}, error) {
 	// Snapshot preparation is deliberately synchronous with the real pre-start
-	// boundary; no work is performed when file observation is not selected.
-	if e.kinds[Files] {
+	// boundary; no work is performed when neither file observation nor artifact
+	// sync is selected — both live off the same before/after diff.
+	if e.kinds[Files] || e.kinds[Artifacts] {
 		e.processSnapshot(ctx, event)
 	}
 	return struct{}{}, nil
@@ -216,14 +232,18 @@ func (e *Extension) processStarted(ctx context.Context, event toolhooks.ProcessE
 }
 
 func (e *Extension) processCompleted(ctx context.Context, event toolhooks.ProcessCompletion) (struct{}, error) {
-	if e.kinds[Files] {
-		e.finishSnapshot(ctx, event)
+	// The artifact sidecars ride the process-completed event: one batch per
+	// command, derived from the same snapshot diff the file observations use.
+	var sidecars []proto.Message
+	if e.kinds[Artifacts] || e.kinds[Files] {
+		sidecars = e.finishSnapshot(ctx, event)
 	}
 	if e.kinds[Processes] {
 		if event.Session != nil {
-			e.emitCompleted(ctx, "process", event.Process.Command, event.Lifecycle, procbus.SessionToProto(event.Session))
+			args := append([]proto.Message{procbus.SessionToProto(event.Session)}, sidecars...)
+			e.emitCompleted(ctx, "process", event.Process.Command, event.Lifecycle, args...)
 		} else {
-			e.emitCompleted(ctx, "process", event.Process.Command, event.Lifecycle)
+			e.emitCompleted(ctx, "process", event.Process.Command, event.Lifecycle, sidecars...)
 		}
 	}
 	return struct{}{}, nil
@@ -241,7 +261,22 @@ func (e *Extension) fileAccess(ctx context.Context, event toolhooks.FileEvent) (
 		sum := sha256.Sum256(event.Data)
 		access.Digest = hex.EncodeToString(sum[:])
 	}
-	e.emit(ctx, access, event.Operation)
+	var sidecars []proto.Message
+	// In-band artifact (fork patch 23c): a write/create whose content the hook
+	// already carried ships as a sidecar without a second disk read.
+	if e.kinds[Artifacts] && len(event.Data) > 0 &&
+		(event.Op == filepb.AccessOp_ACCESS_OP_WRITE || event.Op == filepb.AccessOp_ACCESS_OP_CREATE || event.Op == filepb.AccessOp_ACCESS_OP_EDIT) {
+		rel := event.Path
+		if event.Directory != "" {
+			if r, err := filepath.Rel(event.Directory, event.Path); err == nil {
+				rel = r
+			}
+		}
+		if encoded, err := artifactsync.FromData("file", rel, event.Data, 0); err == nil {
+			sidecars = append(sidecars, encoded)
+		}
+	}
+	e.emit(ctx, access, event.Operation, sidecars...)
 	return struct{}{}, nil
 }
 
@@ -304,26 +339,46 @@ func (e *Extension) processSnapshot(ctx context.Context, event toolhooks.Process
 	}
 }
 
-func (e *Extension) finishSnapshot(ctx context.Context, event toolhooks.ProcessCompletion) {
+// finishSnapshot diffs the pre-start snapshot against the case directory,
+// emits the FileAccess observations (Files kind) and returns the artifact
+// sidecars for the changed files (fork patch 23c) to ride the caller's
+// completed event.
+func (e *Extension) finishSnapshot(ctx context.Context, event toolhooks.ProcessCompletion) []proto.Message {
 	id := event.Operation.GetOperationId()
 	e.mu.Lock()
 	before, ok := e.snapshots[id]
 	delete(e.snapshots, id)
 	e.mu.Unlock()
 	if !ok {
-		return
+		return nil
 	}
 	after, err := TakeSnapshot(event.Process.Directory, e.fileOptions())
 	if err != nil {
 		e.snapshotError(ctx, event.Operation, event.Process.Directory, err)
-		return
+		return nil
 	}
+	var sidecars []proto.Message
 	for _, change := range DiffSnapshots(before, after) {
-		e.emit(ctx, &filepb.Access{
-			Id: aop.EnvelopeID(), Op: change.Op, Source: filepb.AccessSource_ACCESS_SOURCE_SNAPSHOT,
-			Path: change.Path, WorkDir: event.Process.Directory, Size: change.Size, Timestamp: timestamppb.Now(),
-		}, event.Operation)
+		if e.kinds[Files] {
+			e.emit(ctx, &filepb.Access{
+				Id: aop.EnvelopeID(), Op: change.Op, Source: filepb.AccessSource_ACCESS_SOURCE_SNAPSHOT,
+				Path: change.Path, WorkDir: event.Process.Directory, Size: change.Size, Timestamp: timestamppb.Now(),
+			}, event.Operation)
+		}
+		if !e.kinds[Artifacts] || change.Op == filepb.AccessOp_ACCESS_OP_DELETE {
+			continue
+		}
+		rel, relErr := filepath.Rel(event.Process.Directory, change.Path)
+		if relErr != nil || rel == "." {
+			continue
+		}
+		for _, encoded := range artifactsync.Collect("process", []artifactsync.Change{
+			{RelPath: rel, AbsPath: change.Path},
+		}, artifactsync.Limits{}) {
+			sidecars = append(sidecars, encoded)
+		}
 	}
+	return sidecars
 }
 
 func (e *Extension) snapshotError(ctx context.Context, correlation *operationpb.Ref, directory string, err error) {

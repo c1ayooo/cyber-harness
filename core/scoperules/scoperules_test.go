@@ -1,8 +1,11 @@
 package scoperules
 
 import (
+	"context"
 	"encoding/json"
+	"net"
 	"testing"
+	"time"
 )
 
 const validSet = `{
@@ -158,5 +161,93 @@ func TestVerdictRegistryTakeAndBound(t *testing.T) {
 	}
 	if len(verdictByFlow) > maxVerdicts {
 		t.Fatalf("registry grew to %d", len(verdictByFlow))
+	}
+}
+
+// The CIDR branch (fork patch 23a): "10.0.0.0/8" rows match the target's
+// resolved address; every failure mode is a miss, never an invented verdict.
+func TestJudgeCIDRHosts(t *testing.T) {
+	t.Cleanup(func() {
+		lookupHost = func(ctx context.Context, host string) ([]string, error) {
+			return net.DefaultResolver.LookupHost(ctx, host)
+		}
+	})
+
+	set := func(host string) *Set {
+		s, err := Parse([]byte(`{"enabled":true,"default_action":"record","rules":[{"id":"c1","action":"block","method":"*","host":"` + host + `","path_prefix":"/"}]}`))
+		if err != nil {
+			t.Fatal(err)
+		}
+		return s
+	}
+	verdict := func(host string) (Verdict, bool) {
+		return set("10.0.0.0/8").Judge("GET", "http://"+host+"/a")
+	}
+
+	// IP-literal hosts match directly, in and out of the block.
+	if v, judged := verdict("10.1.2.3"); !judged || v.Action != "block" {
+		t.Fatalf("in-block literal: verdict=%+v judged=%v", v, judged)
+	}
+	if v, judged := verdict("192.168.1.1"); !judged || v.Action != "record" {
+		t.Fatalf("out-of-block literal must fall through to default: verdict=%+v judged=%v", v, judged)
+	}
+	// Hostnames resolve: a resolved address inside the block matches.
+	lookupHost = func(ctx context.Context, host string) ([]string, error) {
+		return []string{"10.9.9.9"}, nil
+	}
+	if v, judged := verdict("target.example.com"); !judged || v.Action != "block" {
+		t.Fatalf("resolved in-block: verdict=%+v judged=%v", v, judged)
+	}
+	// Resolution failure is a miss, not an error verdict.
+	lookupHost = func(ctx context.Context, host string) ([]string, error) {
+		return nil, context.DeadlineExceeded
+	}
+	if v, judged := verdict("dark.example.com"); !judged || v.Action != "record" {
+		t.Fatalf("unresolvable host must fall through: verdict=%+v judged=%v", v, judged)
+	}
+	// IPv6 blocks and zones.
+	s6, err := Parse([]byte(`{"enabled":true,"default_action":"record","rules":[{"id":"c6","action":"block","method":"*","host":"fe80::/16","path_prefix":"/"}]}`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if v, judged := s6.Judge("GET", "http://[fe80::1]:8080/x"); !judged || v.Action != "block" {
+		t.Fatalf("ipv6 in-block: verdict=%+v judged=%v", v, judged)
+	}
+	// An unparseable row falls back to the exact-hostname comparison — it can
+	// only miss against real request hosts (version-mismatch safety).
+	if v, judged := set("not-a-cidr/x").Judge("GET", "http://10.0.0.1/"); !judged || v.Action != "record" {
+		t.Fatalf("malformed row must fall through: verdict=%+v judged=%v", v, judged)
+	}
+}
+
+// The DNS cache behind the CIDR branch: repeated lookups hit the cache (the
+// stub is called once), entries expire, and the cache is bounded.
+func TestResolveHostCache(t *testing.T) {
+	original := lookupHost
+	t.Cleanup(func() { lookupHost = original })
+	dnsMu.Lock()
+	dnsCache = map[string]dnsEntry{}
+	dnsRing = nil
+	dnsMu.Unlock()
+
+	calls := 0
+	lookupHost = func(ctx context.Context, host string) ([]string, error) {
+		calls++
+		return []string{"10.0.0.1"}, nil
+	}
+	for i := 0; i < 3; i++ {
+		if addrs := resolveHost("cached.example.com"); len(addrs) != 1 {
+			t.Fatalf("resolve %d returned %v", i, addrs)
+		}
+	}
+	if calls != 1 {
+		t.Fatalf("cache miss on repeat lookup: calls=%d", calls)
+	}
+	dnsMu.Lock()
+	dnsCache["cached.example.com"] = dnsEntry{expires: time.Now().Add(-time.Minute)}
+	dnsMu.Unlock()
+	resolveHost("cached.example.com")
+	if calls != 2 {
+		t.Fatalf("expired entry did not re-resolve: calls=%d", calls)
 	}
 }

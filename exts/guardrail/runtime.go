@@ -237,6 +237,12 @@ func (r *Runtime) Admit(ctx context.Context, ev toolhooks.CallEvent) (toolhooks.
 	if err := ctx.Err(); err != nil {
 		return denied("guardrail invocation canceled"), err
 	}
+	// The guaranteed audit (fork patch 23b) runs before every policy concern:
+	// no policy, no scope, no mode and no provider state can suppress it. It
+	// only records — the call continues through the normal flow below.
+	if reason := BuiltinCommandReason(ev.Call); reason != "" {
+		r.emitBuiltinAudit(ctx, ev, reason)
+	}
 	if policy == nil {
 		return toolhooks.Admission{}, nil
 	}

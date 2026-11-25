@@ -498,6 +498,47 @@ the 4zrcin checkout at `425e6175`.
     Rollback: revert — the command regains its inline assembly and the
     embedding form disappears.
 
+23. **`feat(core): the capture node fences, audits and ships evidence`** (2026-11-26)
+    `core/scoperules/`, `exts/guardrail/` (+ `tools/resources/guardrail_builtin.yaml`,
+    `tools/resources/builtin_gen.go`, generated `guardrail_builtin_gen.go`),
+    `core/artifactsync/` (new), `exts/observe/extension.go`.
+    The remote capture node's minimal capability set (docs/04 T3): fence
+    judgment, guaranteed audit, evidence return.
+
+    - **23a — CIDR rows** (`core/scoperules/hostMatches`): a rule host containing
+      `/` parses as a CIDR prefix and matches the target's resolved address —
+      IP-literal hosts directly, hostnames through a bounded, cached resolver
+      (5 min TTL, 2 s timeout, 512 entries, negative results cached too). Every
+      failure mode is a miss, never an invented verdict; an unparseable row
+      falls back to the exact-hostname comparison (version-mismatch safety).
+    - **23b — guaranteed audit** (`exts/guardrail`): a built-in corpus of
+      destructive/exfiltration command patterns (rm -rf /, curl|sh, dd of=/dev/sd,
+      mkfs, chmod -R 777 /, fork bomb, credential exfil) is audited
+      unconditionally before the policy nil-check, scope filter and mode logic —
+      a capture node without any provider still records the audit rows the
+      control plane renders with the `builtin.` source badge. The corpus lives
+      in `tools/resources/guardrail_builtin.yaml` (compiled at generation time,
+      `go run ./builtin_gen.go` from `tools/resources`), ships in every binary
+      form with no build tag — the audit duty is not a capability, unlike the
+      template resources. The corpus only records; the call then flows through
+      the normal policy path unchanged.
+    - **23c — evidence sidecars** (`core/artifactsync` + `exts/observe`): a new
+      observe kind `artifacts` ships changed case-directory files as
+      `4zrcin.Artifact` JSON sidecars (path/kind/media_type/size/sha256/base64
+      data) — process completions carry their snapshot diff, in-band file
+      writes carry their hook content. Limits: 8 MiB per file, 16 files / 64 MiB
+      per batch; `.zrcin` node metadata and deletions never ship. Old hubs
+      ignore the unknown sidecar; old nodes never send it. This also fixes a
+      latent bug: `observe`'s emit wrapped pre-built `*anypb.Any` sidecars in a
+      second Any layer, so the control plane's exact-URL match could never see
+      `4zrcin.TrafficVerdict` on the wire — pre-built Any sidecars are now
+      appended directly.
+    Tests: `core/scoperules` (CIDR hit/miss/IPv6/resolver cache), `exts/guardrail`
+    (no-policy guaranteed audit, shadow survival, corpus table),
+    `exts/observe` (sidecar round trip, `.zrcin` exclusion, single-Any wire
+    shape). Rollback: revert; the control plane keeps working without the
+    sidecars (shared-filesystem path untouched).
+
 25. **`docs(fork): the control plane is zrcin`** (2026-11-26)
     `FORK.md` only — no harness code changes.
     The 4zrcin repository renamed its identity (`cmd/tw` → `cmd/zrcin`,
