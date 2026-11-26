@@ -100,6 +100,10 @@ type RunInput struct {
 	// empty session workspace (a resumed turn after a host restart) and is
 	// refused when it disagrees with one the session already has.
 	WorkDir string
+	// Seed is the case files a control plane without a shared filesystem sends
+	// with this turn (fork patch 26). They are written under the workspace
+	// before the turn runs.
+	Seed []CaseSeedFile
 
 	automatic bool
 }
@@ -1400,6 +1404,12 @@ func (s *sessionState) executeRun(ctx context.Context, turnID string, input RunI
 	// another on the same host).
 	ctx = operation.ContextWithToolEnv(ctx, input.ToolEnv)
 	if err := applyTurnWorkDir(s.agent, input.WorkDir); err != nil {
+		return nil, err
+	}
+	// The seed lands after the workspace is settled and before the turn runs:
+	// a remote node reads the same case tree a shared filesystem would have
+	// given it (fork patch 26).
+	if err := applyCaseSeed(s.agent, input.Seed); err != nil {
 		return nil, err
 	}
 	if input.automatic {

@@ -2,6 +2,7 @@ package session
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -145,6 +146,57 @@ func turnWorkDir(req *aop.RunTurnRequest) string {
 		}
 	}
 	return ""
+}
+
+// caseSeedExtensionURLs lists every type URL the CaseSeed payload has been
+// published under (same fork namespace generations as WorkDir). The payload is
+// {"files":[{"path":".zrcin/context.json","mode":420,"data":"<base64>"}]};
+// paths are relative to the turn's workspace.
+var caseSeedExtensionURLs = []string{
+	"type.googleapis.com/tianwu.CaseSeed",
+	"type.googleapis.com/4zrcin.CaseSeed",
+}
+
+// CaseSeedFile is one file of a turn seed (fork patch 26).
+type CaseSeedFile struct {
+	Path string
+	Mode uint32
+	Data []byte
+}
+
+type caseSeedExtension struct {
+	Files []struct {
+		Path string `json:"path"`
+		Mode uint32 `json:"mode"`
+		Data string `json:"data"`
+	} `json:"files"`
+}
+
+// turnCaseSeed decodes the files a control plane sends with this turn. A
+// malformed payload is an error: a control plane that believes it delivered
+// the inputs must learn that it did not, instead of the model reading stale
+// or missing context.
+func turnCaseSeed(req *aop.RunTurnRequest) ([]CaseSeedFile, error) {
+	if req == nil {
+		return nil, nil
+	}
+	extension := extensionWithURL(req.GetExtensions(), caseSeedExtensionURLs)
+	if extension == nil {
+		return nil, nil
+	}
+	var value caseSeedExtension
+	if err := json.Unmarshal(extension.GetValue(), &value); err != nil {
+		return nil, fmt.Errorf("case seed payload: %w", err)
+	}
+	files := make([]CaseSeedFile, 0, len(value.Files))
+	for i, file := range value.Files {
+		data, err := base64.StdEncoding.DecodeString(file.Data)
+		if err != nil {
+			return nil, fmt.Errorf("case seed file %d data: %w", i, err)
+		}
+		files = append(files, CaseSeedFile{Path: file.Path, Mode: file.Mode, Data: data})
+	}
+	return files, nil
 }
 
 // toolEnvExtensionURLs lists every type URL the ToolEnv payload has been
@@ -348,10 +400,15 @@ func (rt *Runtime) RunAOPTurn(ctx context.Context, req *aop.RunTurnRequest) *aop
 	if evalRounds == "" {
 		evalRounds = options.EvalRounds
 	}
+	seed, seedErr := turnCaseSeed(req)
+	if seedErr != nil {
+		response.Outcome = &aop.RunTurnResponse_Rejected{Rejected: rejection("FAILED_PRECONDITION", seedErr.Error())}
+		return response
+	}
 	_, err := rt.RunSession(ctx, req.SessionId, RunInput{
 		TurnID: req.TurnId, Message: message, Continue: req.ContinueSession,
 		MaxTurns: int(req.MaxTurns), EvalCriteria: options.EvalCriteria, EvalRounds: evalRounds, EvalGoal: evalGoal,
-		ToolEnv: turnToolEnv(req), WorkDir: turnWorkDir(req),
+		ToolEnv: turnToolEnv(req), WorkDir: turnWorkDir(req), Seed: seed,
 	})
 	if err != nil {
 		response.Outcome = &aop.RunTurnResponse_Rejected{Rejected: rejection("FAILED_PRECONDITION", err.Error())}
