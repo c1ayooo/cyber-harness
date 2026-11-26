@@ -69,6 +69,11 @@ type Verdict struct {
 	Shadow bool   `json:"shadow,omitempty"`
 }
 
+// maxRules mirrors the control plane's rule-table cap (project MaxScopeRules,
+// raised to 512 with the allowlist fence): the two sides must accept the same
+// set, or a saved manifest would fail to register on the node.
+const maxRules = 512
+
 var validAction = map[string]bool{ActionRecord: true, ActionReview: true, ActionBlock: true}
 
 // Parse decodes and validates one manifest rule set. The control plane is the
@@ -81,8 +86,8 @@ func Parse(raw []byte) (*Set, error) {
 	if !validAction[set.DefaultAction] {
 		return nil, fmt.Errorf("scope rules: default_action %q is not record/review/block", set.DefaultAction)
 	}
-	if len(set.Rules) > 64 {
-		return nil, fmt.Errorf("scope rules: more than 64 rows")
+	if len(set.Rules) > maxRules {
+		return nil, fmt.Errorf("scope rules: more than %d rows", maxRules)
 	}
 	for i := range set.Rules {
 		rule := &set.Rules[i]
@@ -164,15 +169,14 @@ func hostMatches(pattern, host string) bool {
 	if strings.Contains(pattern, "/") {
 		return cidrHostMatches(pattern, host)
 	}
-	// "*.example.com" (and the legacy ".example.com" spelling) matches every
-	// subdomain but not the base host itself.
-	if suffix, ok := strings.CutPrefix(pattern, "*."); ok {
-		return host != suffix && strings.HasSuffix(host, "."+suffix)
-	}
-	if base, ok := strings.CutPrefix(pattern, "."); ok {
-		return host != base && strings.HasSuffix(host, "."+base)
-	}
-	return host == pattern
+	// One domain row covers the bare host and every subdomain (fork patch 26,
+	// the allowlist fence). The legacy "*." and "." spellings normalize onto
+	// the same comparison — the control plane stores the bare domain, so a row
+	// written "*.example.com" and one written "example.com" match the identical
+	// set. The base-host exclusion the wildcard forms used to carry is gone:
+	// an operator fencing a domain fences the domain itself.
+	base := strings.TrimPrefix(strings.TrimPrefix(pattern, "*."), ".")
+	return host == base || strings.HasSuffix(host, "."+base)
 }
 
 // cidrHostMatches matches one CIDR row against the request host. Failure at

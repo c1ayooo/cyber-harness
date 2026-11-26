@@ -650,6 +650,25 @@ the 4zrcin checkout at `425e6175`.
     artifacts-only case: carrier with sidecars on change, nothing on a no-op completion).
     Rollback: revert — the flag was inert alone, so no working configuration changes.
 
+29. **`feat(scoperules): one domain row covers the bare host and every subdomain`** (2026-11-26)
+    `core/scoperules/scoperules.go`, `core/scoperules/scoperules_test.go`.
+    The control plane's fence moves to allowlist semantics (4zrcin spec #1): a domain row
+    must fence the domain itself, not only its subdomains. `hostMatches` now strips the
+    legacy `*.`/`.` prefixes and compares bare-host-or-subdomain, so an exact host row, a
+    `*.host` row and a `.host` row all match the identical set — the control plane
+    canonicalizes those spellings onto the bare domain on save and the engine agrees. The
+    base-host exclusion the wildcard forms used to carry is deliberately gone. The row cap
+    rises to 512 (`maxRules`), mirroring the control plane's raised `MaxScopeRules`.
+    Also fixed a latent test bug: `manyRules` closes the JSON array itself, so the old
+    "too many rows" case appended a second `]}` and failed on JSON syntax instead of the
+    row cap — the cap had never actually been exercised.
+    Tests: `go test ./core/scoperules ./exts/guardrail -run TestJudgeScope
+    ./tools/proxy -run TestScopeJudge -count=1` (host-form table over the three spellings
+    in/out/leak/suffix-domain; the 512-row set parses, 513 is refused; the guardrail and
+    proxy judge suites stay green under the new semantics).
+    Rollback: revert — the control plane still sends rows the previous engine judges
+    (exact-host rows just fence fewer requests), and no wire shape changes.
+
 ## Superseded patches
 
 These commits were on `tianwu/fixes` and are intentionally **not** carried after

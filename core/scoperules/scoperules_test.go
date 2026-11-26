@@ -39,7 +39,9 @@ func TestParseRejectsInvalidSets(t *testing.T) {
 		"bad row action":     `{"enabled":true,"default_action":"record","rules":[{"id":"x","action":"hold","host":"a.com"}]}`,
 		"row without host":   `{"enabled":true,"default_action":"record","rules":[{"id":"x","action":"record"}]}`,
 		"path without slash": `{"enabled":true,"default_action":"record","rules":[{"id":"x","action":"record","host":"a.com","path_prefix":"api"}]}`,
-		"too many rows":      `{"enabled":true,"default_action":"record","rules":[` + manyRules(65) + `]}`,
+		// manyRules closes the array itself; appending another "]" here would
+		// fail on JSON syntax instead of the row cap (the old case did).
+		"too many rows":      `{"enabled":true,"default_action":"record","rules":[` + manyRules(maxRules+1),
 	} {
 		t.Run(name, func(t *testing.T) {
 			if _, err := Parse([]byte(raw)); err == nil {
@@ -75,7 +77,9 @@ func TestJudgeFirstHitWins(t *testing.T) {
 		{"GET", "https://api.example.com/v2/users", ActionReview, ""},  // miss row 1 → default
 		{"POST", "https://api.example.com/v1/users", ActionReview, ""}, // method mismatch → default
 		{"POST", "http://other.internal.example/x", ActionBlock, "sr-2"},
-		{"GET", "http://internal.example/x", ActionReview, ""}, // wildcard does not match base host
+		// One domain row covers the bare host too (fork patch 26): the operator
+		// fencing *.internal.example fenced internal.example with it.
+		{"GET", "http://internal.example/x", ActionBlock, "sr-2"},
 		{"POST", "https://anything.test/admin/login", ActionReview, "sr-3"},
 		{"DELETE", "https://anything.test/admin", ActionReview, "sr-3"},
 		{"DELETE", "https://anything.test/administrator", ActionReview, "sr-3"}, // prefix, not segment match
@@ -92,15 +96,39 @@ func TestJudgeFirstHitWins(t *testing.T) {
 	}
 }
 
+// One domain row covers the bare host and every subdomain (fork patch 26),
+// whatever spelling the row carried: an exact host, the "*." form and the
+// legacy "." form all land on the same comparison, so the control plane can
+// canonicalize "*.example.com" onto "example.com" without changing behavior.
 func TestJudgeHostForms(t *testing.T) {
-	set := &Set{Enabled: true, DefaultAction: ActionRecord, Rules: []Rule{
-		{ID: "dot", Action: ActionBlock, Method: "*", Host: ".example.com"},
-	}}
-	if verdict, _ := set.Judge("GET", "https://sub.example.com/x"); verdict.Action != ActionBlock {
-		t.Fatalf("legacy dot form did not match subdomain: %+v", verdict)
+	set := func(host string) *Set {
+		return &Set{Enabled: true, DefaultAction: ActionRecord, Rules: []Rule{
+			{ID: "row", Action: ActionBlock, Method: "*", Host: host},
+		}}
 	}
-	if verdict, _ := set.Judge("GET", "https://example.com/x"); verdict.Action != ActionRecord {
-		t.Fatalf("dot form matched the base host: %+v", verdict)
+	for _, host := range []string{"example.com", "*.example.com", ".example.com"} {
+		s := set(host)
+		if verdict, _ := s.Judge("GET", "https://example.com/x"); verdict.Action != ActionBlock {
+			t.Fatalf("row %q did not match the bare host: %+v", host, verdict)
+		}
+		if verdict, _ := s.Judge("GET", "https://sub.example.com/x"); verdict.Action != ActionBlock {
+			t.Fatalf("row %q did not match a subdomain: %+v", host, verdict)
+		}
+		if verdict, _ := s.Judge("GET", "https://example.org/x"); verdict.Action != ActionRecord {
+			t.Fatalf("row %q leaked outside its domain: %+v", host, verdict)
+		}
+		// A longer domain sharing the textual suffix is not a subdomain.
+		if verdict, _ := s.Judge("GET", "https://notexample.com/x"); verdict.Action != ActionRecord {
+			t.Fatalf("row %q matched a suffix-only domain: %+v", host, verdict)
+		}
+	}
+}
+
+// The row cap mirrors the control plane's rule-table limit; 512 rows parse.
+func TestParseAcceptsUpToTheCap(t *testing.T) {
+	raw := `{"enabled":true,"default_action":"record","rules":[` + manyRules(maxRules)
+	if _, err := Parse([]byte(raw)); err != nil {
+		t.Fatalf("Parse rejected a %d-row set: %v", maxRules, err)
 	}
 }
 
