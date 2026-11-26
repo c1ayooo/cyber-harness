@@ -1,3 +1,5 @@
+//go:build !captureonly
+
 package main
 
 import (

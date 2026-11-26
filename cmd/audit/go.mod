@@ -19,6 +19,9 @@ require (
 	github.com/VividCortex/ewma v1.2.0 // indirect
 	github.com/alecthomas/chroma/v2 v2.27.0 // indirect
 	github.com/andybalholm/brotli v1.2.1 // indirect
+	github.com/antchfx/htmlquery v1.3.6 // indirect
+	github.com/antchfx/xmlquery v1.5.1 // indirect
+	github.com/antchfx/xpath v1.3.6 // indirect
 	github.com/anytls/sing-anytls v0.0.11 // indirect
 	github.com/apernet/hysteria/core/v2 v2.9.2 // indirect
 	github.com/apernet/quic-go v0.59.1-0.20260425001925-6c6cc9bcb716 // indirect
@@ -34,6 +37,7 @@ require (
 	github.com/chainreactors/fingers v1.2.2-0.20260714063144-070758342f45 // indirect
 	github.com/chainreactors/logs v0.0.0-20260624034259-9aaea4aa52cc // indirect
 	github.com/chainreactors/neutron v0.1.1-0.20260714062907-716c6b167cb6 // indirect
+	github.com/chainreactors/neutron/operators/full v0.1.1-0.20260704194031-f57d0a560e32 // indirect
 	github.com/chainreactors/proton v0.3.3-0.20260707162538-471f99ea6131 // indirect
 	github.com/chainreactors/proxyclient v1.1.1-0.20260728110701-74504679dc47 // indirect
 	github.com/chainreactors/proxyclient/extra v0.0.0-20260527160727-36cf133952c3 // indirect
@@ -45,6 +49,7 @@ require (
 	github.com/chainreactors/utils/mitmproxy v0.0.0-20261002195803-fc9e07c4b4fd // indirect
 	github.com/chainreactors/utils/parsers v0.0.3 // indirect
 	github.com/chainreactors/utils/proc v0.0.0-20261002195803-fc9e07c4b4fd // indirect
+	github.com/chainreactors/words v0.0.0-20260520145736-270600e60fb4 // indirect
 	github.com/charlievieth/fastwalk v1.0.14 // indirect
 	github.com/charmbracelet/bubbles v1.0.0 // indirect
 	github.com/charmbracelet/bubbletea v1.3.10 // indirect
@@ -62,6 +67,7 @@ require (
 	github.com/creack/pty v1.1.24 // indirect
 	github.com/denisbrodbeck/machineid v1.0.1 // indirect
 	github.com/djherbis/times v1.6.0 // indirect
+	github.com/dlclark/regexp2 v1.12.0 // indirect
 	github.com/dlclark/regexp2/v2 v2.5.2 // indirect
 	github.com/dsnet/compress v0.0.2-0.20230904184137-39efe44ab707 // indirect
 	github.com/edsrzf/mmap-go v1.2.0 // indirect
@@ -87,6 +93,8 @@ require (
 	github.com/hashicorp/go-version v1.9.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/invopop/jsonschema v0.14.0 // indirect
+	github.com/itchyny/gojq v0.12.19 // indirect
+	github.com/itchyny/timefmt-go v0.1.8 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
 	github.com/klauspost/compress v1.18.6 // indirect
@@ -139,6 +147,7 @@ require (
 	github.com/yuin/goldmark v1.8.6 // indirect
 	github.com/yuin/goldmark-emoji v1.0.6 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
+	go.yaml.in/yaml/v2 v2.4.2 // indirect
 	go.yaml.in/yaml/v3 v3.0.5 // indirect
 	go.yaml.in/yaml/v4 v4.0.0-rc.2 // indirect
 	golang.org/x/crypto v0.57.0 // indirect
@@ -151,6 +160,7 @@ require (
 	golang.org/x/text v0.43.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	mvdan.cc/sh/v3 v3.14.1 // indirect
+	sigs.k8s.io/yaml v1.6.0 // indirect
 )
 
 replace github.com/c1ayooo/cyber => ../..

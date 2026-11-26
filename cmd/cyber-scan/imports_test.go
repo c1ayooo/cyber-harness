@@ -1,4 +1,4 @@
-//go:build !record
+//go:build !record && !captureonly
 
 package main
 

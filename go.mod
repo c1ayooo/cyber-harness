@@ -167,9 +167,9 @@ require (
 	github.com/bahlo/generic-list-go v0.2.0 // indirect
 	github.com/bradfitz/gomemcache v0.0.0-20260422231931-4d751bb6e37c // indirect
 	github.com/buger/jsonparser v1.1.2 // indirect
+	github.com/c1ayooo/cyber/aop v0.0.0-20260818112202-76d90a72b2c5
 	github.com/carapace-sh/carapace-shlex v1.1.1 // indirect
 	github.com/censys/censys-sdk-go v0.19.1 // indirect
-	github.com/c1ayooo/cyber/aop v0.0.0-20260818112202-76d90a72b2c5
 	github.com/chainreactors/files v0.0.0-20240716182835-7884ee1e77f0 // indirect
 	github.com/chainreactors/neutron/operators/full v0.1.1-0.20260704194031-f57d0a560e32 // indirect
 	github.com/chainreactors/parsers v0.0.0-20260608085142-3d2c51baa8fe // indirect
@@ -376,33 +376,34 @@ replace github.com/wasilibs/go-re2 => github.com/chainreactors/native v1.11.1-na
 replace github.com/projectdiscovery/katana => github.com/c1ayooo/katana v1.6.2-0.20260914161750-0811dfe2d87c
 
 replace github.com/c1ayooo/cyber/aop => ./aop
+
 replace (
 	github.com/chainreactors/crtm => github.com/c1ayooo/crtm v0.0.3-0.20260924103954-9432523918ae
 	github.com/chainreactors/files => github.com/c1ayooo/files v0.0.0-20240716182835-7884ee1e77f0
 	github.com/chainreactors/fingers => github.com/c1ayooo/fingers v1.2.2-0.20260714063144-070758342f45
+
+	github.com/chainreactors/gogo/v2 => github.com/c1ayooo/gogo/v2 v2.15.1-0.20260728051744-a278b33d8744
 	github.com/chainreactors/ioa => github.com/c1ayooo/ioa v0.1.2-0.20261114095210-c8126691b2f2
+	github.com/chainreactors/libcstx/go => github.com/c1ayooo/libcstx/go v0.4.2-0.20260915062605-a4bd085cbb12
 	github.com/chainreactors/logs => github.com/c1ayooo/logs v0.0.0-20260624034259-9aaea4aa52cc
 	github.com/chainreactors/neutron => github.com/c1ayooo/neutron v0.1.1-0.20260714062907-716c6b167cb6
+	github.com/chainreactors/neutron/operators/full => github.com/c1ayooo/neutron/operators/full v0.1.1-0.20260704194031-f57d0a560e32
 	github.com/chainreactors/parsers => github.com/c1ayooo/parsers v0.0.0-20260608085142-3d2c51baa8fe
 	github.com/chainreactors/proton => github.com/c1ayooo/proton v0.3.3-0.20260707162538-471f99ea6131
 	github.com/chainreactors/proxyclient => github.com/c1ayooo/proxyclient v1.1.1-0.20260728110701-74504679dc47
-	github.com/chainreactors/sdk => github.com/c1ayooo/sdk v0.3.4-0.20260708104745-dcad8620f5e9
-	github.com/chainreactors/spray => github.com/c1ayooo/spray v1.3.3-0.20260704194611-7ce7b850d447
-	github.com/chainreactors/utils => github.com/c1ayooo/utils v0.0.0-20260711153742-f3d210a5fa9d
-	github.com/chainreactors/words => github.com/c1ayooo/words v0.0.0-20260520145736-270600e60fb4
-	github.com/chainreactors/zombie => github.com/c1ayooo/zombie v1.3.1-0.20260809133033-0d0df6fa50f5
-
-	github.com/chainreactors/gogo/v2 => github.com/c1ayooo/gogo/v2 v2.15.1-0.20260728051744-a278b33d8744
-	github.com/chainreactors/libcstx/go => github.com/c1ayooo/libcstx/go v0.4.2-0.20260915062605-a4bd085cbb12
-	github.com/chainreactors/neutron/operators/full => github.com/c1ayooo/neutron/operators/full v0.1.1-0.20260704194031-f57d0a560e32
 	github.com/chainreactors/proxyclient/extra => github.com/c1ayooo/proxyclient/extra v0.0.0-20260527160727-36cf133952c3
+	github.com/chainreactors/sdk => github.com/c1ayooo/sdk v0.3.4-0.20260708104745-dcad8620f5e9
 	github.com/chainreactors/sdk/gogo => github.com/c1ayooo/sdk/gogo v0.0.0-20260708104745-dcad8620f5e9
 	github.com/chainreactors/sdk/spray => github.com/c1ayooo/sdk/spray v0.0.0-20260708104745-dcad8620f5e9
 	github.com/chainreactors/sdk/zombie => github.com/c1ayooo/sdk/zombie v0.0.0-20260708104745-dcad8620f5e9
+	github.com/chainreactors/spray => github.com/c1ayooo/spray v1.3.3-0.20260704194611-7ce7b850d447
 	github.com/chainreactors/tui/console => github.com/c1ayooo/tui/console v0.0.0-20260712082522-2ba36ad7841f
 	github.com/chainreactors/tui/readline => github.com/c1ayooo/tui/readline v0.0.0-20261010062516-bb32632d1a4e
+	github.com/chainreactors/utils => github.com/c1ayooo/utils v0.0.0-20260711153742-f3d210a5fa9d
 	github.com/chainreactors/utils/cert => github.com/c1ayooo/utils/cert v0.0.0-20260722180147-5b1816060721
 	github.com/chainreactors/utils/mitmproxy => github.com/c1ayooo/utils/mitmproxy v0.0.0-20261002195803-fc9e07c4b4fd
 	github.com/chainreactors/utils/parsers => github.com/c1ayooo/utils/parsers v0.0.3
 	github.com/chainreactors/utils/proc => github.com/c1ayooo/utils/proc v0.0.0-20261002195803-fc9e07c4b4fd
+	github.com/chainreactors/words => github.com/c1ayooo/words v0.0.0-20260520145736-270600e60fb4
+	github.com/chainreactors/zombie => github.com/c1ayooo/zombie v1.3.1-0.20260809133033-0d0df6fa50f5
 )

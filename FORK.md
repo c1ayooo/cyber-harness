@@ -539,6 +539,41 @@ the 4zrcin checkout at `425e6175`.
     shape). Rollback: revert; the control plane keeps working without the
     sidecars (shared-filesystem path untouched).
 
+24. **`feat(tools): the capture recipe - resources and engines compile out`** (2026-11-26)
+    `tools/resources/` (two-file mode), `cmd/cyber-scan/` (recipe split), test
+    forms.
+
+    - **Resources two-file mode** (docs/04 §3.2): `template.go` (the generated
+      472K engine-template bundle) gains `//go:build !emptyresources`; its
+      empty twin `resources_empty.go` (`//go:build emptyresources`) provides
+      the same single private `loadEmbeddedConfig` returning nil — the public
+      surface (`Init/Set/Config`) is untouched and every consumer compiles
+      unchanged. The generator emits the tag, so re-syncing cannot drop it.
+      `guardrail_builtin_gen.go` stays tag-free: the guaranteed audit corpus
+      ships in every binary form. `resources_test.go` is `!emptyresources`
+      (it asserts embedded-bundle behavior).
+    - **Engine recipe boundary** (docs/04 §3.3): the scan-capture binary
+      (`-tags captureonly`) compiles an empty engine block — `engineExtensions`
+      has a full twin (`extensions_engines.go`) and an empty twin
+      (`extensions_capture.go`), and `discovery.go`/`scanner_catalog.go` gain
+      empty capture twins, so the scanner/proton/discovery extension packages
+      and the gogo/spray/zombie/neutron/katana chains behind them never link.
+      Measured: full scan 185 MB -> capture 158 MB (-15%). The traffic proxy,
+      the guardrail (with the guaranteed audit) and the evidence sidecars stay.
+      The hub connection still resolves through `CYBER_CYBERHUB_*` env/config;
+      the CLI flag groups owned by the engine extensions are compiled out with
+      them (a T5 acceptance item if a flag surface is needed on capture nodes).
+    - **Test forms**: the CLI/scanner-catalog test files that assert the full
+      recipe's surface carry `!captureonly` (the capture binary genuinely has
+      no `scan` subcommand or scanner catalog); shared test helpers moved to an
+      untagged `cli_helpers_test.go`; `TestScannerManifestTags` unchanged (the
+      noconsole smoke stays build-only, as the gate designed). Also fixed the
+      pre-existing `cmd/audit` module's stale go.sum (its own module; a tidy
+      was missing after the fingers bump).
+    Tests: default, `emptyresources`, and `emptyresources+captureonly` forms
+    green for the touched packages; full tree builds in all three. Rollback:
+    revert — the default build never changes.
+
 25. **`docs(fork): the control plane is zrcin`** (2026-11-26)
     `FORK.md` only — no harness code changes.
     The 4zrcin repository renamed its identity (`cmd/tw` → `cmd/zrcin`,

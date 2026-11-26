@@ -13,14 +13,11 @@ import (
 	guardrailext "github.com/c1ayooo/cyber/exts/guardrail"
 	mcpext "github.com/c1ayooo/cyber/exts/mcp"
 	okfext "github.com/c1ayooo/cyber/exts/okf"
-	protonext "github.com/c1ayooo/cyber/exts/proton"
-	scannerext "github.com/c1ayooo/cyber/exts/scanner"
 	searchext "github.com/c1ayooo/cyber/exts/search"
 	subagentext "github.com/c1ayooo/cyber/exts/subagent"
 	terminalext "github.com/c1ayooo/cyber/exts/terminal"
 	cfg "github.com/c1ayooo/cyber/pkg/config"
 	harness "github.com/c1ayooo/cyber/pkg/harness"
-	"github.com/c1ayooo/cyber/tools/katana"
 	"github.com/c1ayooo/cyber/tools/scan"
 )
 
@@ -66,12 +63,12 @@ func extensions(config appConfig, loop agent.Loop, workDir string, proxy extensi
 	}
 	extensions = append(extensions, arsenal)
 
-	if !config.SkipEngines {
-		config.Scanner.Crawler = katana.Crawl
-		extensions = append(extensions, scannerext.New(config.Scanner, workDir), protonext.New(protonext.Config{Directory: workDir}))
-
-		extensions = append(extensions, discoveryExtensions(config)...)
-	}
+	// The engine block is the recipe boundary (docs/04 §3.3): the scan-capture
+	// build (-tags captureonly) compiles an empty twin, so the scanner, proton
+	// and discovery extension packages — and with them the gogo/spray/zombie/
+	// neutron/katana tool chains — never enter that binary. The traffic proxy
+	// and guardrail above are the capture recipe's actual payload.
+	extensions = append(extensions, engineExtensions(config, workDir)...)
 	if optionalToolEnabled(config.OptionalTools, "search") {
 		extensions = append(extensions, searchext.New(searchext.Options{TavilyKeys: config.TavilyKeys}))
 	}

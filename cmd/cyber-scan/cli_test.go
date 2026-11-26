@@ -1,3 +1,5 @@
+//go:build !captureonly
+
 package main
 
 import (
@@ -16,7 +18,6 @@ import (
 	aop "github.com/c1ayooo/cyber/aop"
 	toolpb "github.com/c1ayooo/cyber/aop/tool"
 	"github.com/c1ayooo/cyber/core/telemetry"
-	ioaclient "github.com/c1ayooo/cyber/exts/ioa/client"
 	scannerext "github.com/c1ayooo/cyber/exts/scanner"
 	searchext "github.com/c1ayooo/cyber/exts/search"
 	taskcli "github.com/c1ayooo/cyber/pkg/cli/task"
@@ -25,15 +26,6 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/types/known/anypb"
 )
-
-func containsAny(value string, candidates ...string) bool {
-	for _, candidate := range candidates {
-		if strings.Contains(value, candidate) {
-			return true
-		}
-	}
-	return false
-}
 
 func TestParseCLIScanExtractsLLMAndPassesScannerArgs(t *testing.T) {
 	parsed, err := parseCLI([]string{
@@ -394,23 +386,6 @@ func TestParseCLIDefaultsOverallTimeoutForExtensionCommands(t *testing.T) {
 	}
 	if parsed.Option.Timeout != 45 {
 		t.Fatalf("timeout = %d, want 45", parsed.Option.Timeout)
-	}
-}
-
-func TestDirectScannerModeSuppressesInitInfoByDefault(t *testing.T) {
-	var logBuf bytes.Buffer
-	logger := telemetry.NewLogger(telemetry.LogConfig{Output: &logBuf})
-	err := runDirectScannerMode(context.Background(), newCyberScanProfile, &cfg.Option{
-		MiscOptions: cfg.MiscOptions{NoColor: true},
-	}, []string{"scan", "-i", "http://127.0.0.1:1", "--timeout", "1", "--no-color"}, logger, taskcli.NewOutput(&cfg.Option{}, nil, nil))
-	if err != nil {
-		t.Fatalf("RunDirectScannerMode() error = %v", err)
-	}
-	logText := logBuf.String()
-	for _, unwanted := range []string{"provider init", "engine=fingers", "resources type="} {
-		if strings.Contains(logText, unwanted) {
-			t.Fatalf("normal mode leaked init log %q:\n%s", unwanted, logText)
-		}
 	}
 }
 
@@ -1018,13 +993,4 @@ func TestAppConfigUsesCompiledDefaults(t *testing.T) {
 	if search.TavilyKeys != "BUILTIN_TAVILY" {
 		t.Fatalf("compiled tavily default was not resolved: %#v", search)
 	}
-}
-
-func readClientOptions(t *testing.T, option *cfg.Option) ioaclient.Options {
-	t.Helper()
-	value, err := ioaclient.ReadOptions(option)
-	if err != nil {
-		t.Fatal(err)
-	}
-	return value
 }
