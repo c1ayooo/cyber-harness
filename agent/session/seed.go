@@ -16,8 +16,10 @@ import (
 const (
 	// SeedFileLimit mirrors artifactsync's per-file cap.
 	SeedFileLimit = 8 << 20
-	// SeedFilesLimit and SeedTotalLimit mirror the per-batch caps.
-	SeedFilesLimit = 16
+	// SeedFilesLimit is above the artifacts batch cap: a seed carries the whole
+	// case context (knowledge-base copies alone can be dozens of files), while
+	// the byte caps still bound the transfer.
+	SeedFilesLimit = 256
 	SeedTotalLimit = 64 << 20
 )
 
