@@ -145,14 +145,30 @@ type Limits struct {
 }
 
 // skipsArtifact excludes the node's own metadata from evidence: .zrcin holds
-// the node's private facts and state, not run output.
+// the node's private state, not run output. Default-deny: only the two handoff
+// files a control plane reads back may ship (fork patch 27) — everything else
+// under .zrcin (auth, identity.json, aop-session.json, offsets, future files)
+// stays excluded, so a new private file cannot leak by accident.
 func skipsArtifact(relPath string) bool {
-	for _, part := range strings.Split(filepath.ToSlash(relPath), "/") {
+	parts := strings.Split(filepath.ToSlash(relPath), "/")
+	last := -1
+	for i, part := range parts {
 		if part == ".zrcin" {
-			return true
+			last = i
 		}
 	}
-	return false
+	if last < 0 {
+		return false
+	}
+	rest := parts[last+1:]
+	if len(rest) != 1 {
+		return true
+	}
+	switch rest[0] {
+	case "facts.jsonl", "worker-note.md":
+		return false
+	}
+	return true
 }
 
 func buildPayload(kind, relPath, absPath string, maxBytes int) (Payload, error) {

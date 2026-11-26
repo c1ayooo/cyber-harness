@@ -603,6 +603,53 @@ the 4zrcin checkout at `425e6175`.
     control plane's embedding work (webhost `Listener`, docs/03 §11 P5); 24
     is the egress proxy.
 
+26. **`feat(session): a turn seed materialises the case for nodes without a shared filesystem`** (2026-11-26)
+    `agent/session/protocol.go`, `agent/session/seed.go` (new), `agent/session/session.go`,
+    `agent/session/seed_test.go` (new).
+    A control plane on another machine cannot expect the node to see its case directory, and
+    prompts reference those paths. `RunTurnRequest` gains the `4zrcin.CaseSeed` fork extension
+    (JSON-in-Any, both `tianwu.*`/`4zrcin.*` namespaces recognized like WorkDir):
+    `{"files":[{"path":".zrcin/context.json","mode":420,"data":"<base64>"}]}` with paths
+    relative to the turn's workspace. `executeRun` applies the seed after `applyTurnWorkDir`
+    and before the turn runs: parent directories created, files written atomically (temp +
+    rename), mode masked to permission bits (default 0600). Safety: absolute paths, `..`
+    segments and existing symlinked ancestors are refused; a seed without a workspace fails
+    the turn; limits mirror artifactsync (8 MiB per file, 16 files / 64 MiB per request).
+    A malformed payload rejects the turn at `RunTurn` ("FAILED_PRECONDITION") instead of
+    silently dropping the inputs. An absent extension changes nothing.
+    Tests: `go test ./agent/session -run 'TestTurnCaseSeed|TestApplyCaseSeed' -count=1`
+    (both namespaces, apply/modes, escapes/absolute/symlink, limits, missing workspace).
+    Rollback: revert — old control planes never send the extension.
+
+27. **`feat(artifactsync): the handoff files ship, everything else under .zrcin stays private`** (2026-11-26)
+    `core/artifactsync/artifactsync.go`, `core/artifactsync/artifactsync_test.go` (new),
+    `exts/observe/artifact_internal_test.go`.
+    `skipsArtifact` used to exclude the whole `.zrcin` directory. A node without a shared
+    filesystem never got its declared facts or notes back, so the control plane's ledger ingest
+    could not settle the run. The rule is now default-deny: only `.zrcin/facts.jsonl` and
+    `.zrcin/worker-note.md` ship; `auth`, `identity.json`, `aop-session.json`, offsets,
+    cursor-repair files and any future file stay excluded, and nothing nested deeper ships.
+    Tests: `go test ./core/artifactsync ./exts/observe -count=1` (table over the allowlist;
+    the sidecar round trip now ships the two handoff files and still refuses `auth`).
+    Rollback: revert — old nodes never enable the `artifacts` kind, and the two extra files
+    are plain sidecars the control plane may ignore.
+
+28. **`feat(observe): the artifacts kind is self-sufficient`** (2026-11-26)
+    `exts/observe/extension.go`, `exts/observe/artifact_internal_test.go`,
+    `pkg/config/options.go`.
+    `--observe artifacts` parsed but subscribed to no hook: the sidecars ride the
+    process-completion snapshot diff and the in-band file writes, which were only subscribed
+    for the `processes`/`files` kinds, so an artifacts-only node shipped nothing. `artifacts`
+    now subscribes to those hooks itself and emits a carrier event only when it actually
+    carries artifacts (a completion that changed nothing publishes no event); the file hook
+    likewise publishes its observation only when the kind asks for observations or the write
+    carries sidecars. Existing combinations (`processes,artifacts`, `files,artifacts`,
+    `processes,files,artifacts`) keep their exact behaviour. The `--observe` help text lists
+    `artifacts`.
+    Tests: `go test ./exts/observe -run 'TestArtifacts' -count=1` (the full matrix plus an
+    artifacts-only case: carrier with sidecars on change, nothing on a no-op completion).
+    Rollback: revert — the flag was inert alone, so no working configuration changes.
+
 ## Superseded patches
 
 These commits were on `tianwu/fixes` and are intentionally **not** carried after

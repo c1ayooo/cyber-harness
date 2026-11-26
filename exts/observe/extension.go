@@ -123,14 +123,18 @@ func (e *Extension) Load(scope *extension.Scope) error {
 			toolhooks.CommandCompleted.On(e.hooks, source, e.commandCompleted),
 		)
 	}
-	if e.kinds[Processes] || e.kinds[Files] {
+	// The artifacts kind needs the same hooks as processes/files: its sidecars
+	// ride the process-completion snapshot diff and the in-band file writes
+	// (fork patch 28). Without this, `--observe artifacts` alone parsed but
+	// subscribed to nothing and shipped nothing.
+	if e.kinds[Processes] || e.kinds[Files] || e.kinds[Artifacts] {
 		e.subs = append(e.subs,
 			toolhooks.ProcessStarting.On(e.hooks, source, e.processStarting),
 			toolhooks.ProcessStartedObserved.On(e.hooks, source, e.processStarted),
 			toolhooks.ProcessCompleted.On(e.hooks, source, e.processCompleted),
 		)
 	}
-	if e.kinds[Files] {
+	if e.kinds[Files] || e.kinds[Artifacts] {
 		e.subs = append(e.subs, toolhooks.FileAccessObserved.On(e.hooks, source, e.fileAccess))
 	}
 	if e.kinds[HTTP] {
@@ -238,7 +242,10 @@ func (e *Extension) processCompleted(ctx context.Context, event toolhooks.Proces
 	if e.kinds[Artifacts] || e.kinds[Files] {
 		sidecars = e.finishSnapshot(ctx, event)
 	}
-	if e.kinds[Processes] {
+	// Emit the carrier when the process observation itself is wanted, or when
+	// this batch actually carries artifacts: an artifacts-only node ships a
+	// minimal completion per changed batch and nothing otherwise (patch 28).
+	if e.kinds[Processes] || (e.kinds[Artifacts] && len(sidecars) > 0) {
 		if event.Session != nil {
 			args := append([]proto.Message{procbus.SessionToProto(event.Session)}, sidecars...)
 			e.emitCompleted(ctx, "process", event.Process.Command, event.Lifecycle, args...)
@@ -276,7 +283,11 @@ func (e *Extension) fileAccess(ctx context.Context, event toolhooks.FileEvent) (
 			sidecars = append(sidecars, encoded)
 		}
 	}
-	e.emit(ctx, access, event.Operation, sidecars...)
+	// Same rule as the process carrier: a file observation is only published
+	// when someone asked for it, or when it carries artifact sidecars.
+	if e.kinds[Files] || len(sidecars) > 0 {
+		e.emit(ctx, access, event.Operation, sidecars...)
+	}
 	return struct{}{}, nil
 }
 
