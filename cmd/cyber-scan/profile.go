@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -96,7 +97,12 @@ func buildCyberScanProfile(config config) (*cyberScanProfile, error) {
 	capture := config.Base.MitmCapture == nil || *config.Base.MitmCapture
 	proxyExtension := proxyext.New(proxyext.Config{
 		WorkDir: workDir, Proxy: config.Base.Scanner.Resources.Proxy,
-		Capture: capture, Storage: config.Base.TrafficStorage,
+		// The control plane is whatever server URL this node serves (fork
+		// patch 36): its host is exempt from fence judging and capture, so a
+		// direction's bookkeeping calls always work. Empty for a profile
+		// without an agent server (the Web service profile).
+		ControlPlaneHost: controlPlaneHost(config.Option),
+		Capture:          capture, Storage: config.Base.TrafficStorage,
 	})
 	// One loop for the profile: the scanner and the session run against the
 	// same installation rather than each being handed its own. A profile that
@@ -502,4 +508,21 @@ func (p *cyberScanProfile) CommitProvider(ctx context.Context, config provider.P
 		return fmt.Errorf("provider controller is unavailable")
 	}
 	return p.providerController.Reload(ctx, config, commit)
+}
+
+// controlPlaneHost extracts the host of the profile's agent server URL — the
+// control plane this node serves and the one host the fence must never gate
+// (fork patch 36). An empty or unparseable URL exempts nothing.
+func controlPlaneHost(option *cfg.Option) string {
+	if option == nil {
+		return ""
+	}
+	raw := strings.TrimSpace(option.ServerURL)
+	if raw == "" {
+		return ""
+	}
+	if parsed, err := url.Parse(raw); err == nil {
+		return strings.ToLower(parsed.Hostname())
+	}
+	return ""
 }

@@ -2,6 +2,7 @@ package proxy
 
 import (
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -285,4 +286,57 @@ func (bareScopeJudge) JudgeScopeRequest(req ScopeRequest) ScopeDecision {
 
 func (bareScopeJudge) JudgeScopeConnect(req ScopeRequest) ScopeDecision {
 	return ScopeDecision{}
+}
+
+// The control plane is the executor's own management plane (fork patch 36):
+// a bookkeeping call to it is forwarded unjudged and uncaptured, even when
+// the allowlist fence does not name the host. Before the skip, every such
+// call was held for review — the operator approved one call per step.
+func TestScopeJudgeControlPlaneIsPlatformPlumbing(t *testing.T) {
+	target := startTestTarget(64)
+	defer target.Close()
+
+	hub := startHub(t, true)
+	hub.SetScopeJudge(stubScopeJudge{})
+	// The test target lives on 127.0.0.1; naming that host as the control
+	// plane exempts it — exactly the deployment shape this patch serves (the
+	// executor's API base and the scan share the node).
+	hub.SetControlPlaneHost("127.0.0.1")
+	// The allowlist names one host; the target is deliberately NOT on it.
+	if err := scoperules.SetRules("sess-loop", []byte(`{"enabled":true,"default_action":"review","rules":[{"id":"sr-ok","action":"record","method":"*","host":"in-range.test","path_prefix":"/"}]}`)); err != nil {
+		t.Fatal(err)
+	}
+	client := attributedClient(t, hub, "sess-loop", "tool-1")
+	if tr, ok := client.Transport.(*http.Transport); ok {
+		tr.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	}
+	resp, err := client.Get(localhost(target.URL) + "/api/intents/in_x/run")
+	if err != nil {
+		t.Fatalf("control-plane call through hub: %v", err)
+	}
+	resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("control-plane status = %d, want forwarded 200", resp.StatusCode)
+	}
+	// Uncaptured: nothing in the flow store, no verdict sidecar.
+	time.Sleep(200 * time.Millisecond)
+	for _, flow := range hub.store.Query(QueryOpts{}) {
+		t.Fatalf("control-plane call captured: %+v", flow)
+	}
+	// A different session whose control plane is elsewhere still judges this
+	// host: the exemption is the node's own plumbing, not the address.
+	other := startHub(t, true)
+	other.SetScopeJudge(stubScopeJudge{})
+	if err := scoperules.SetRules("sess-strict", []byte(`{"enabled":true,"default_action":"review","rules":[]}`)); err != nil {
+		t.Fatal(err)
+	}
+	resp3, err := attributedClient(t, other, "sess-strict", "tool-3").Get(localhost(target.URL) + "/x")
+	if err != nil {
+		t.Fatalf("out-of-range call: %v", err)
+	}
+	body3, _ := io.ReadAll(resp3.Body)
+	resp3.Body.Close()
+	if resp3.StatusCode != http.StatusForbidden || !containsString(string(body3), "scope_rules_refused") {
+		t.Fatalf("without the exemption the miss must refuse: %d %s", resp3.StatusCode, body3)
+	}
 }

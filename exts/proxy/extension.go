@@ -18,9 +18,13 @@ type Config struct {
 	WorkDir string
 	// Proxy is the upstream the host was started with. It is also the fallback
 	// the proxy commands report when no hub route applies.
-	Proxy   string
-	Capture bool
-	Storage cfg.TrafficOptions
+	Proxy string
+	// ControlPlaneHost is the control plane's host (the agent server URL's
+	// host). Requests naming it — the executor's own bookkeeping — forward
+	// unjudged and uncaptured (fork patch 36). Empty exempts nothing.
+	ControlPlaneHost string
+	Capture          bool
+	Storage          cfg.TrafficOptions
 }
 
 // Extension owns one proxy Resource and publishes it as the Endpoint
@@ -46,6 +50,7 @@ func (e *Extension) Load(scope *extension.Scope) error {
 	if err != nil {
 		return err
 	}
+	resource.ProxyHub.SetControlPlaneHost(e.config.ControlPlaneHost)
 	e.resource = resource
 	hub := resource.ProxyHub
 	// The scope judge is the guardrail runtime when one is installed (it loads

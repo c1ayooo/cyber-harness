@@ -199,6 +199,12 @@ func correlationTokenOf(f *mitmproxy.Flow) string {
 }
 
 func (a *captureAddon) Requestheaders(f *mitmproxy.Flow) {
+	// The control plane is the executor's own management plane (fork patch
+	// 36): its calls forward unjudged and uncaptured, before any judge or
+	// capture state exists.
+	if f != nil && f.Request != nil && f.Request.URL != nil && a.hub.controlPlaneExempt(f.Request.URL.Hostname()) {
+		return
+	}
 	// The scope judge runs before capture so a refused request also produces a
 	// capture record of the synthetic 403, and so a held request blocks the
 	// forwarding goroutine — the library short-circuits any Response set here.
@@ -293,6 +299,9 @@ func (a *captureAddon) state(f *mitmproxy.Flow) *captureState {
 // TrafficVerdict sidecar.
 func (a *captureAddon) judgeRequest(f *mitmproxy.Flow) (scoperules.Verdict, bool) {
 	if a.hub == nil || a.hub.scopeJudge == nil || f == nil || f.Request == nil || f.Request.URL == nil {
+		return scoperules.Verdict{}, false
+	}
+	if a.hub.controlPlaneExempt(f.Request.URL.Hostname()) {
 		return scoperules.Verdict{}, false
 	}
 	correlation := a.hub.resolveCorrelation(correlationTokenOf(f))

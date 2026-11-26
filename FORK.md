@@ -733,6 +733,26 @@ the 4zrcin checkout at `425e6175`.
     Rollback: revert — no extension is sent, nothing registers, and every
     judge path is byte-identical to before.
 
+32. **`feat(webshell): manage shells through the control plane's ledger`** (2026-11-26)
+    `cmd/cyber-scan/extensions.go`, `go.mod` (requires the standalone
+    `github.com/c1ayooo/4zwebshell` module: `webshell/` protocol library,
+    `tools/` typed tools, `extension/` assembly).
+    The scan product installs a webshell tool set (`webshell_list`,
+    `webshell_register`, `webshell_exec`, `webshell_files`, `webshell_info`,
+    `webshell_remove`). The ledger and the sealed credential live in the
+    control plane; the tools read one shell's connection material from the
+    participant API with the run's own identity (`$ZRCIN_AGENT` /
+    `$ZRCIN_AUTH` — the same face that already hands out access material) and
+    run the operation in the scan process, so the traffic leaves the node that
+    hosts the run. What an operation observed is posted back to the ledger.
+    A turn without a session identity makes the tools unavailable rather than
+    guessing a URL.
+    The protocol is not copied into this fork: the module is the one source,
+    and both 4zrcin and this fork consume it through a local `replace`.
+    Tests: `go test github.com/c1ayooo/4zwebshell/...` (protocol, sealing, the
+    tool face against a fake control plane and a fake target shell).
+    Rollback: drop the extension line and the `require`/`replace` from
+    `go.mod`; no other package imports the module.
 
 33. **`feat(scoperules): the verdict travels verbatim, and child sessions inherit the fence`** (2026-11-26)
     `tools/proxy/{hub.go,mitm.go,scope_judge_test.go}`, `exts/guardrail/{scoperules.go,scoperules_test.go}`,
@@ -789,6 +809,32 @@ the 4zrcin checkout at `425e6175`.
     Tests: same command (the write-tool negative through `Admit` — no denial, no events — beside
     the bare-string positive; the existing command fence dance keeps passing).
     Rollback: revert — patterns judge every tool call's text again.
+
+36. **`fix(proxy): the control plane's own calls are platform plumbing`** (2026-11-26)
+    `tools/proxy/{hub.go,mitm.go,scope_judge_test.go}`, `exts/proxy/extension.go`,
+    `cmd/cyber-scan/profile.go`.
+    Under an enforced allowlist fence every attributed request missed the rule
+    table unless the target was on it — including the executor's own
+    bookkeeping calls to the control plane (`POST /api/intents/{id}/run`, the
+    facts API): the pre-patch-30 judge held each one for review, so a
+    direction spent its whole turn feeding the operator an endless approval
+    queue, one approved call per step. The proxy now knows the control
+    plane's host — the agent server URL's host, wired through the proxy
+    extension config — and treats requests naming it as platform plumbing:
+    forwarded unjudged and uncaptured, before any judge or capture state
+    exists (capturing them leaked their Authorization headers into the
+    traffic view). When the control plane itself lives on loopback, the whole
+    loopback family counts as the platform; a public control-plane host
+    matches exactly. Deliberate: a deny row naming the control plane cannot
+    take effect through the proxy — the platform must always reach itself
+    (the fence is a statement about the target range; docs/01 §10.10 already
+    defers node isolation).
+    Tests: `go test ./tools/proxy ./exts/guardrail ./exts/proxy ./agent/session ./agent/subagent/... ./core/scoperules ./core/globalfence -count=1`
+    (an exempted call forwards 200 with an empty flow store and no sidecar;
+    a node without that control plane still refuses the same host; every
+    pre-existing judge test keeps passing).
+    Rollback: revert — the executor's own calls are judged like target
+    traffic again.
 
 ## Superseded patches
 
