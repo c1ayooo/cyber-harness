@@ -322,3 +322,35 @@ func TestResolveHostCache(t *testing.T) {
 		t.Fatalf("expired entry did not re-resolve: calls=%d", calls)
 	}
 }
+
+// A child session (a subagent's fresh id) inherits the parent's registered
+// rule set (fork patch 33): the control plane registers per session at
+// RunTurnRequest time, a channel the child's turns never see. A parent with
+// nothing registered inherits nothing, and empty/self ids are no-ops.
+func TestInheritSessionRules(t *testing.T) {
+	if err := SetRules("sess-parent", []byte(`{"enabled":true,"default_action":"record","rules":[{"id":"sr-1","action":"block","method":"*","host":"blocked.test"}]}`)); err != nil {
+		t.Fatal(err)
+	}
+	InheritSessionRules("sess-parent", "sess-child")
+	verdict, judged := JudgeSession("sess-child", "GET", "http://blocked.test/x")
+	if !judged || verdict.Action != ActionBlock || verdict.RuleID != "sr-1" {
+		t.Fatalf("child verdict = %+v judged=%v", verdict, judged)
+	}
+	if v, judged := JudgeSession("sess-child", "GET", "http://other.test/x"); !judged || !v.DefaultMissed {
+		t.Fatalf("child fallback = %+v judged=%v", v, judged)
+	}
+
+	// A parent that never registered fences nothing.
+	InheritSessionRules("sess-ghost", "sess-orphan")
+	if _, judged := JudgeSession("sess-orphan", "GET", "http://x/"); judged {
+		t.Fatal("unknown parent registered rules on the child")
+	}
+
+	// Empty and self ids are no-ops, not panics and not registrations.
+	InheritSessionRules("", "sess-x")
+	InheritSessionRules("sess-parent", "")
+	InheritSessionRules("sess-parent", "sess-parent")
+	if _, judged := JudgeSession("sess-x", "GET", "http://x/"); judged {
+		t.Fatal("empty parent registered rules")
+	}
+}

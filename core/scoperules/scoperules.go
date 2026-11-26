@@ -72,6 +72,11 @@ type Verdict struct {
 	// reading it as a verdict the operator wrote by hand. Absent on a hit, so
 	// old control planes ignore the field entirely.
 	DefaultMissed bool `json:"default_missed,omitempty"`
+	// Passive marks a static subresource a page pulled by itself
+	// (Sec-Fetch-Dest script/style/image/font, fork patch 34): an out-of-range
+	// passive request is forwarded and recorded instead of queuing a pending
+	// asset. Absent on every deliberate request.
+	Passive bool `json:"passive,omitempty"`
 }
 
 // maxRules mirrors the control plane's rule-table cap (project MaxScopeRules,
@@ -386,6 +391,36 @@ func JudgeSession(sessionID, method, rawURL string) (Verdict, bool) {
 	set := storeSets[sessionID]
 	storeMu.RUnlock()
 	return set.Judge(method, rawURL)
+}
+
+// InheritSessionRules copies the parent session's rule set to the child
+// session's slot (fork patch 33). The agent's own subagent tool opens child
+// sessions with fresh ids that never see a RunTurnRequest, so without this
+// their requests judge nothing. The copy shares the parent's parsed set — it
+// is read-only after Parse — and the next turn re-registers the root's newest
+// set; a child that lives across a rule edit keeps the set it was born with,
+// which is the honest reading of "registered for that session". A parent with
+// no registered set inherits nothing.
+func InheritSessionRules(parentID, childID string) {
+	if parentID == "" || childID == "" || parentID == childID {
+		return
+	}
+	storeMu.RLock()
+	set := storeSets[parentID]
+	storeMu.RUnlock()
+	if set == nil {
+		return
+	}
+	storeMu.Lock()
+	defer storeMu.Unlock()
+	if _, exists := storeSets[childID]; !exists {
+		storeRing = append(storeRing, childID)
+		if len(storeRing) > maxSessions {
+			delete(storeSets, storeRing[0])
+			storeRing = storeRing[1:]
+		}
+	}
+	storeSets[childID] = set
 }
 
 // ---------------------------------------------------------------------------

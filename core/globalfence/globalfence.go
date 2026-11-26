@@ -202,3 +202,30 @@ func DomainHit(sessionID, host string) (DomainRule, bool) {
 	}
 	return DomainRule{}, false
 }
+
+// InheritSessionRules copies the parent session's fence to the child slot
+// (fork patch 33), the same mechanism as scoperules.InheritSessionRules: a
+// subagent's fresh session id never sees a RunTurnRequest, so without the
+// copy its commands and tunnels would fence nothing. The parsed Set is
+// read-only after Parse, so sharing the pointer is safe.
+func InheritSessionRules(parentID, childID string) {
+	if parentID == "" || childID == "" || parentID == childID {
+		return
+	}
+	storeMu.RLock()
+	set := storeSets[parentID]
+	storeMu.RUnlock()
+	if set == nil {
+		return
+	}
+	storeMu.Lock()
+	defer storeMu.Unlock()
+	if _, exists := storeSets[childID]; !exists {
+		storeRing = append(storeRing, childID)
+		if len(storeRing) > maxSessions {
+			delete(storeSets, storeRing[0])
+			storeRing = storeRing[1:]
+		}
+	}
+	storeSets[childID] = set
+}

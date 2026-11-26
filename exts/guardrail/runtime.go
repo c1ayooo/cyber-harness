@@ -184,6 +184,33 @@ func toolCommandText(call *aop.ToolCall) string {
 	return string(raw)
 }
 
+// commandLikeCall reports whether a tool call IS a command — its arguments
+// are a bare command string, or an object carrying one of the documented
+// command fields (fork patch 35). Everything else is a different shape of
+// work: a write tool whose content quotes a blocked command is a document,
+// and judging its text would hold every report that mentions one.
+func commandLikeCall(call *aop.ToolCall) bool {
+	if call == nil {
+		return false
+	}
+	raw := call.GetArguments().GetData()
+	var value any
+	if json.Unmarshal(raw, &value) != nil {
+		return false
+	}
+	switch typed := value.(type) {
+	case string:
+		return strings.TrimSpace(typed) != ""
+	case map[string]any:
+		for _, key := range []string{"command", "cmd", "script", "input", "code"} {
+			if text, ok := typed[key].(string); ok && strings.TrimSpace(text) != "" {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 // evaluate preserves the original call for each stage and never exposes provider
 // failures through the tool result. The hook boundary handles panics. Sentinel
 // errors that describe the policy shape (disabled policy, absent consequence
@@ -249,21 +276,26 @@ func (r *Runtime) Admit(ctx context.Context, ev toolhooks.CallEvent) (toolhooks.
 	// configured, and a review red line holds the call on the ordinary
 	// approval lifecycle — the operator decides this exact invocation, not a
 	// model judge. The reason carries the global.<id> prefix the control
-	// plane badges.
-	if rule, hit := globalfence.JudgeCommand(operation.InvocationFromContext(ctx).SessionID, toolCommandText(ev.Call)); hit {
-		reason := "global." + rule.ID
-		if rule.Desc != "" {
-			reason += "（" + rule.Desc + "）"
-		}
-		decision := &Decision{Action: Action_ACTION_BLOCK, Reason: reason}
-		if rule.Action == globalfence.ActionDeny {
-			r.emit(ctx, decision, ev)
+	// plane badges. Only command-like calls are judged (fork patch 35): a
+	// pattern is a statement about commands, and a write tool whose content
+	// quotes "rm -rf /" is a document, not one — judging it would hold every
+	// report that mentions a blocked command.
+	if commandLikeCall(ev.Call) {
+		if rule, hit := globalfence.JudgeCommand(operation.InvocationFromContext(ctx).SessionID, toolCommandText(ev.Call)); hit {
+			reason := "global." + rule.ID
+			if rule.Desc != "" {
+				reason += "（" + rule.Desc + "）"
+			}
+			decision := &Decision{Action: Action_ACTION_BLOCK, Reason: reason}
+			if rule.Action == globalfence.ActionDeny {
+				r.emit(ctx, decision, ev)
+				return denied(reason), nil
+			}
+			if admission := r.review(ctx, ev, decision); admission.Deny == nil {
+				return admission, nil
+			}
 			return denied(reason), nil
 		}
-		if admission := r.review(ctx, ev, decision); admission.Deny == nil {
-			return admission, nil
-		}
-		return denied(reason), nil
 	}
 	if policy == nil {
 		return toolhooks.Admission{}, nil

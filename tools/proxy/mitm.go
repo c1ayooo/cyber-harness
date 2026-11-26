@@ -309,7 +309,7 @@ func (a *captureAddon) judgeRequest(f *mitmproxy.Flow) (scoperules.Verdict, bool
 	// inner requests carry the full judgment on their own.
 	var decision ScopeDecision
 	if strings.EqualFold(f.Request.Method, http.MethodConnect) {
-		decision = a.hub.scopeJudge.JudgeConnect(req)
+		decision = a.hub.scopeJudge.JudgeScopeConnect(req)
 	} else {
 		decision = a.hub.scopeJudge.JudgeScopeRequest(req)
 	}
@@ -317,37 +317,80 @@ func (a *captureAddon) judgeRequest(f *mitmproxy.Flow) (scoperules.Verdict, bool
 		return scoperules.Verdict{}, false
 	}
 	ctx := operation.ContextWithInvocation(context.Background(), correlation.invocation)
+	// verdictOf keeps the judge's answer verbatim: the sidecar must carry every
+	// field the judge set (default_missed, passive, shadow), not a projection
+	// of the action alone. A nil verdict (a stub judge) reconstructs the old
+	// three fields.
+	verdict := verdictOf(decision)
 	switch decision.Action {
 	case scoperules.ActionReview:
 		if decision.Hold != nil && decision.Hold(ctx) {
-			return scoperules.Verdict{Action: scoperules.ActionReview, RuleID: decision.RuleID, Reason: decision.Reason}, true // approved: forward untouched
+			return verdict, true // approved: forward untouched
 		}
-		f.Response = scopeRefusal(f.Request)
+		f.Response = scopeRefusal(f.Request, decision)
 	case scoperules.ActionBlock:
-		f.Response = scopeRefusal(f.Request)
+		f.Response = scopeRefusal(f.Request, decision)
 	}
-	return scoperules.Verdict{Action: decision.Action, RuleID: decision.RuleID, Reason: decision.Reason}, true
+	return verdict, true
+}
+
+// verdictOf returns the decision's own verdict, or the historical three-field
+// reconstruction when the judge did not carry one.
+func verdictOf(decision ScopeDecision) scoperules.Verdict {
+	if decision.Verdict != nil {
+		return *decision.Verdict
+	}
+	return scoperules.Verdict{Action: decision.Action, RuleID: decision.RuleID, Reason: decision.Reason}
+}
+
+// passiveDest reports whether one Sec-Fetch-Dest value names a passive
+// subresource a page pulls by itself (scripts, stylesheets, images, fonts).
+// Navigations (document) and API calls (empty) are deliberate requests and
+// stay judgeable; anything unrecognized is not passive.
+func passiveDest(dest string) bool {
+	switch strings.ToLower(strings.TrimSpace(dest)) {
+	case "script", "style", "image", "font":
+		return true
+	}
+	return false
 }
 
 // scopeRequestArguments builds the synthetic call's arguments: the request
-// identity the control plane renders and the flow id the verdict sidecar keys
-// on.
+// identity the control plane renders, the flow id the verdict sidecar keys on,
+// and the passive hint (Sec-Fetch-Dest) the judge uses to let a page's own
+// static subresources pass the allowlist fallback.
 func scopeRequestArguments(f *mitmproxy.Flow) []byte {
-	payload, _ := json.Marshal(map[string]string{
+	dest := ""
+	if f.Request.Header != nil {
+		dest = f.Request.Header.Get("Sec-Fetch-Dest")
+	}
+	payload, _ := json.Marshal(map[string]any{
 		"method":  f.Request.Method,
 		"url":     f.Request.URL.String(),
 		"flow_id": f.Id.String(),
+		"dest":    dest,
+		"passive": passiveDest(dest),
 	})
 	return payload
 }
 
 // scopeRefusal is the synthetic reply a block (or refused review) produces.
 // 403 with a small JSON body: the tool that issued the request sees an HTTP
-// failure, not a transport error.
-func scopeRefusal(req *mitmproxy.Request) *mitmproxy.Response {
-	body, _ := json.Marshal(map[string]string{
-		"error": "scope_rules_refused",
-		"host":  req.URL.Host,
+// failure, not a transport error. The body states WHY, so a model reading its
+// tool output can stop retrying on its own: pending marks the allowlist
+// fallback (the host is out of range and queued for the operator's approval —
+// repeating the request cannot admit it), and reason carries the judge's
+// verdict prose.
+func scopeRefusal(req *mitmproxy.Request, decision ScopeDecision) *mitmproxy.Response {
+	pending := false
+	if decision.Verdict != nil && decision.Verdict.DefaultMissed && decision.Action == scoperules.ActionReview {
+		pending = true
+	}
+	body, _ := json.Marshal(map[string]any{
+		"error":   "scope_rules_refused",
+		"host":    req.URL.Host,
+		"reason":  decision.Reason,
+		"pending": pending,
 	})
 	header := http.Header{}
 	header.Set("Content-Type", "application/json")

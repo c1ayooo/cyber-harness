@@ -733,6 +733,63 @@ the 4zrcin checkout at `425e6175`.
     Rollback: revert — no extension is sent, nothing registers, and every
     judge path is byte-identical to before.
 
+
+33. **`feat(scoperules): the verdict travels verbatim, and child sessions inherit the fence`** (2026-11-26)
+    `tools/proxy/{hub.go,mitm.go,scope_judge_test.go}`, `exts/guardrail/{scoperules.go,scoperules_test.go}`,
+    `core/scoperules/{scoperules.go,scoperules_test.go}`, `core/globalfence/{globalfence.go,globalfence_test.go}`,
+    `agent/subagent/sessionexec/tool.go`.
+    The judge's answer reaches the traffic sidecar whole. `proxy.ScopeDecision` gains `Verdict`
+    (`*scoperules.Verdict`); `judgeRequest` records the judge's own verdict under the canonical
+    flow id instead of reconstructing `{action, rule_id, reason}` from the decision — which is
+    exactly what dropped `default_missed` on the wire and silently disabled the control plane's
+    asset-pending flow for real traffic (the flag existed only in synthetic tests). A judge that
+    answers without a `Verdict` (stub judges) reconstructs the old three fields byte-identically.
+    Also fixes the patch-31 assembly slip: `exts/proxy` did not compile — the `ScopeJudge`
+    interface demanded `JudgeConnect` while the judge implemented `JudgeScopeConnect`; the
+    interface and the call site now say `JudgeScopeConnect`.
+    Child sessions inherit the fence. The control plane registers per session at `RunTurnRequest`
+    time, a channel the subagent tool's freshly minted session ids never see, so a delegated
+    direction judged nothing. `scoperules.InheritSessionRules` / `globalfence.InheritSessionRules`
+    copy the parent's parsed set to the child slot at session open (read-only after Parse; an
+    unregistered parent inherits nothing); a child living across a rule edit keeps the set it was
+    born with, which is the honest reading of "registered for that session".
+    Tests: `go test ./core/scoperules ./core/globalfence ./exts/guardrail ./tools/proxy ./agent/session ./agent/subagent/... ./exts/proxy -count=1`
+    (a real proxied default miss keeps `default_missed` in the sidecar; the bare-stub
+    reconstruction is unchanged; inherit tables in both core packages; the miss decision carries
+    the verdict verbatim).
+    Rollback: revert — decisions carry no `Verdict`, the proxy reconstructs as before, and
+    delegated directions fence nothing again.
+
+34. **`feat(scoperules): a page's own static subresources pass the allowlist fallback`** (2026-11-26)
+    `tools/proxy/mitm.go`, `core/scoperules/scoperules.go`, `exts/guardrail/{scoperules.go,scoperules_test.go}`,
+    `tools/proxy/scope_judge_test.go`.
+    Under the allowlist fence every third-party script, stylesheet, image or font a page pulls by
+    itself queued a pending asset the operator had to wave through. The synthetic call now carries
+    the request's `Sec-Fetch-Dest` as a passive hint; a default miss on a passive request
+    (`script`/`style`/`image`/`font`) is rewritten to `{record, passive}` — forwarded, journaled in
+    the traffic view, never routed to the approval flow. Explicit rule rows and the instance fence
+    keep full semantics; navigations (`document`) and API calls (`empty`) stay deliberate, and a
+    client without the header (curl, wget) is never passive. The synthetic 403 body now also names
+    the verdict reason and a `pending` flag, so the model reading its tool output can stop retrying
+    an unadmittable host without a round trip.
+    Tests: same command (passive miss records without events; an explicit block row beats the
+    passive hint; a deliberate request under the same rules stays a miss; the refusal body carries
+    reason and pending).
+    Rollback: revert — passive subresources queue pending assets again and refusals return to the
+    bare `error`/`host` body.
+
+35. **`feat(guardrail): command red lines judge command-like calls only`** (2026-11-26)
+    `exts/guardrail/runtime.go`, `exts/guardrail/scoperules_test.go`.
+    The instance fence's command patterns matched every tool call's argument text: a write tool
+    whose content quoted a blocked command held the call for review — every report mentioning
+    `rm -rf /` became a pending approval. A red line is a statement about commands; `Admit` now
+    judges the command lists only when the call IS one — a bare string argument, or an object
+    carrying one of the documented command fields (`command`/`cmd`/`script`/`input`/`code`).
+    The guaranteed builtin audit stays unconditional (it records, it does not judge).
+    Tests: same command (the write-tool negative through `Admit` — no denial, no events — beside
+    the bare-string positive; the existing command fence dance keeps passing).
+    Rollback: revert — patterns judge every tool call's text again.
+
 ## Superseded patches
 
 These commits were on `tianwu/fixes` and are intentionally **not** carried after

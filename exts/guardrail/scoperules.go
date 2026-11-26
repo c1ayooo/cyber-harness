@@ -54,6 +54,17 @@ func (r *Runtime) JudgeScopeRequest(req proxy.ScopeRequest) proxy.ScopeDecision 
 		return proxy.ScopeDecision{}
 	}
 	ctx := operation.ContextWithInvocation(r.ctx, req.Invocation)
+	// A page pulls its own static subresources (scripts, styles, images,
+	// fonts) from third-party hosts all the time; under the allowlist fence
+	// each one would queue a pending asset the operator has to wave through.
+	// A passive request (Sec-Fetch-Dest) that misses the rule table is
+	// rewritten to a plain record verdict — forwarded, journaled in the
+	// traffic view, and never routed to the pending-approval flow. Deliberate
+	// requests and every explicit rule row keep the full semantics.
+	if verdict.DefaultMissed && scopeRequestPassive(req.Call) {
+		verdict = scoperules.Verdict{Action: scoperules.ActionRecord,
+			Reason: "静态资源（Sec-Fetch-Dest），范围外放行并记录", Passive: true}
+	}
 	scoperules.RecordVerdict(scopeRequestFlowID(req.Call), verdict)
 	// The quiet path covers three shapes: a record row, a shadow set, and —
 	// since the allowlist fence (fork patch 30) — a default miss. A miss never
@@ -63,20 +74,24 @@ func (r *Runtime) JudgeScopeRequest(req proxy.ScopeRequest) proxy.ScopeDecision 
 	// requests, and the control plane reads the refusal from the sidecar's
 	// default_missed flag, routing the asset — not the request — to the
 	// operator. Explicit rows keep their event-backed hold/refuse semantics.
+	// The decision carries the verdict verbatim (fork patch 33), so the
+	// proxy's sidecar keeps default_missed/passive instead of a projection.
 	if verdict.DefaultMissed || verdict.Shadow || verdict.Action == scoperules.ActionRecord {
-		return proxy.ScopeDecision{Judged: true, Action: verdict.Action, RuleID: verdict.RuleID, Reason: verdict.Reason}
+		return proxy.ScopeDecision{Judged: true, Action: verdict.Action, RuleID: verdict.RuleID, Reason: verdict.Reason,
+			Verdict: &verdict}
 	}
 	decision := &Decision{Action: scopeActionEnum(verdict.Action), Reason: verdict.Reason}
 	if verdict.Action == scoperules.ActionBlock {
 		r.emitScope(ctx, decision, req)
-		return proxy.ScopeDecision{Judged: true, Action: verdict.Action, RuleID: verdict.RuleID, Reason: verdict.Reason}
+		return proxy.ScopeDecision{Judged: true, Action: verdict.Action, RuleID: verdict.RuleID, Reason: verdict.Reason,
+			Verdict: &verdict}
 	}
 	// Review: hold the request on the pending-review lifecycle. The operator
 	// answers through the ordinary guardrail Pending/Resolve RPC; expiry uses
 	// the runtime's own review timeout.
 	approved := r.holdScopeRequest(ctx, req, decision)
 	return proxy.ScopeDecision{Judged: true, Action: verdict.Action, RuleID: verdict.RuleID, Reason: verdict.Reason,
-		Hold: func(context.Context) bool { return approved }}
+		Verdict: &verdict, Hold: func(context.Context) bool { return approved }}
 }
 
 // refuseGlobal refuses one request (or tunnel) for an instance-fence domain
@@ -90,7 +105,8 @@ func (r *Runtime) refuseGlobal(req proxy.ScopeRequest, rule globalfence.DomainRu
 	scoperules.RecordVerdict(flowID, verdict)
 	ctx := operation.ContextWithInvocation(r.ctx, req.Invocation)
 	r.emitScope(ctx, &Decision{Action: Action_ACTION_BLOCK, Reason: verdict.Reason}, req)
-	return proxy.ScopeDecision{Judged: true, Action: scoperules.ActionBlock, RuleID: verdict.RuleID, Reason: verdict.Reason}
+	return proxy.ScopeDecision{Judged: true, Action: scoperules.ActionBlock, RuleID: verdict.RuleID, Reason: verdict.Reason,
+		Verdict: &verdict}
 }
 
 // JudgeScopeConnect judges a CONNECT tunnel (fork patch 31): the instance
@@ -115,16 +131,18 @@ func (r *Runtime) JudgeScopeConnect(req proxy.ScopeRequest) proxy.ScopeDecision 
 	ctx := operation.ContextWithInvocation(r.ctx, req.Invocation)
 	scoperules.RecordVerdict(scopeRequestFlowID(req.Call), verdict)
 	if verdict.DefaultMissed || verdict.Shadow || verdict.Action == scoperules.ActionRecord {
-		return proxy.ScopeDecision{Judged: true, Action: verdict.Action, RuleID: verdict.RuleID, Reason: verdict.Reason}
+		return proxy.ScopeDecision{Judged: true, Action: verdict.Action, RuleID: verdict.RuleID, Reason: verdict.Reason,
+			Verdict: &verdict}
 	}
 	decision := &Decision{Action: scopeActionEnum(verdict.Action), Reason: verdict.Reason}
 	if verdict.Action == scoperules.ActionBlock {
 		r.emitScope(ctx, decision, req)
-		return proxy.ScopeDecision{Judged: true, Action: verdict.Action, RuleID: verdict.RuleID, Reason: verdict.Reason}
+		return proxy.ScopeDecision{Judged: true, Action: verdict.Action, RuleID: verdict.RuleID, Reason: verdict.Reason,
+			Verdict: &verdict}
 	}
 	approved := r.holdScopeRequest(ctx, req, decision)
 	return proxy.ScopeDecision{Judged: true, Action: verdict.Action, RuleID: verdict.RuleID, Reason: verdict.Reason,
-		Hold: func(context.Context) bool { return approved }}
+		Verdict: &verdict, Hold: func(context.Context) bool { return approved }}
 }
 
 // requestHost extracts the authority a synthetic call's URL names — the
@@ -203,6 +221,19 @@ func scopeRequestMethod(call *aop.ToolCall) string {
 		return value.Method
 	}
 	return ""
+}
+
+// scopeRequestPassive reads the passive hint the proxy attaches to the
+// synthetic call (Sec-Fetch-Dest naming a static subresource). A call without
+// the field — an old proxy, or a hand-built judge request — is not passive.
+func scopeRequestPassive(call *aop.ToolCall) bool {
+	var value struct {
+		Passive bool `json:"passive"`
+	}
+	if json.Unmarshal(call.GetArguments().GetData(), &value) != nil {
+		return false
+	}
+	return value.Passive
 }
 
 func scopeRequestURL(call *aop.ToolCall) string {

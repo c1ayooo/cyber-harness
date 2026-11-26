@@ -19,17 +19,18 @@ import (
 	traffic "github.com/c1ayooo/cyber/aop/traffic"
 	"github.com/c1ayooo/cyber/core/hooks"
 	"github.com/c1ayooo/cyber/core/operation"
+	"github.com/c1ayooo/cyber/core/scoperules"
 	cfg "github.com/c1ayooo/cyber/pkg/config"
 	mitmproxy "github.com/chainreactors/utils/mitmproxy/proxy"
 )
 
 // ScopeJudge decides whether the proxy may forward one attributed request.
-// JudgeConnect judges a CONNECT tunnel (host-form only); the guardrail
+// JudgeScopeConnect judges a CONNECT tunnel (host-form only); the guardrail
 // runtime implements both structurally (no import), so the judge can reuse
 // the pending-review lifecycle for held requests.
 type ScopeJudge interface {
 	JudgeScopeRequest(req ScopeRequest) ScopeDecision
-	JudgeConnect(req ScopeRequest) ScopeDecision
+	JudgeScopeConnect(req ScopeRequest) ScopeDecision
 }
 
 // ScopeRequest is one proxied request with its attribution.
@@ -43,12 +44,18 @@ type ScopeRequest struct {
 // forward untouched. Hold is set only for a review verdict; it blocks until
 // the review resolves (true = approved, forward) or expires/is refused
 // (false = refuse).
+//
+// Verdict is the judge's own scoperules.Verdict, carried verbatim so the
+// capture sidecar keeps every field the judge set (default_missed, passive,
+// shadow). When it is nil — a stub judge, or a path that answered from the
+// action alone — the proxy reconstructs {action, rule_id, reason} as before.
 type ScopeDecision struct {
-	Judged bool
-	Action string // record | review | block
-	RuleID string
-	Reason string
-	Hold   func(ctx context.Context) bool
+	Judged  bool
+	Action  string // record | review | block
+	RuleID  string
+	Reason  string
+	Hold    func(ctx context.Context) bool
+	Verdict *scoperules.Verdict
 }
 
 // ProxyHub is the runner-level MITM proxy capability that every tool routes

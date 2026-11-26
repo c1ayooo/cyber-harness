@@ -36,15 +36,15 @@ func (stubScopeJudge) JudgeScopeRequest(req ScopeRequest) ScopeDecision {
 	}
 	scoperules.RecordVerdict(flowID, verdict)
 	if verdict.Action == scoperules.ActionRecord {
-		return ScopeDecision{Judged: true, Action: verdict.Action, RuleID: verdict.RuleID, Reason: verdict.Reason}
+		return ScopeDecision{Judged: true, Action: verdict.Action, RuleID: verdict.RuleID, Reason: verdict.Reason, Verdict: &verdict}
 	}
 	return ScopeDecision{Judged: true, Action: verdict.Action, RuleID: verdict.RuleID, Reason: verdict.Reason,
-		Hold: func(context.Context) bool { return false }}
+		Verdict: &verdict, Hold: func(context.Context) bool { return false }}
 }
 
-// JudgeConnect mirrors the real judge's tunnel path: host-form project rules
+// JudgeScopeConnect mirrors the real judge's tunnel path: host-form project rules
 // via JudgeSessionConnect, with the same quiet-refusal for a default miss.
-func (stubScopeJudge) JudgeConnect(req ScopeRequest) ScopeDecision {
+func (stubScopeJudge) JudgeScopeConnect(req ScopeRequest) ScopeDecision {
 	if req.Invocation.SessionID == "" || req.Call == nil {
 		return ScopeDecision{}
 	}
@@ -58,10 +58,10 @@ func (stubScopeJudge) JudgeConnect(req ScopeRequest) ScopeDecision {
 	}
 	scoperules.RecordVerdict(flowID, verdict)
 	if verdict.Action == scoperules.ActionRecord {
-		return ScopeDecision{Judged: true, Action: verdict.Action, RuleID: verdict.RuleID, Reason: verdict.Reason}
+		return ScopeDecision{Judged: true, Action: verdict.Action, RuleID: verdict.RuleID, Reason: verdict.Reason, Verdict: &verdict}
 	}
 	return ScopeDecision{Judged: true, Action: verdict.Action, RuleID: verdict.RuleID, Reason: verdict.Reason,
-		Hold: func(context.Context) bool { return false }}
+		Verdict: &verdict, Hold: func(context.Context) bool { return false }}
 }
 
 func scopeCallArguments(req ScopeRequest) (arguments struct {
@@ -203,4 +203,86 @@ func containsString(haystack, needle string) bool {
 		}
 	}
 	return false
+}
+
+// The verdict the judge answers with travels verbatim into the sidecar
+// registry under the canonical flow id (fork patch 33): a default-miss
+// verdict keeps default_missed, the flag the control plane routes the
+// asset-pending flow on. The pre-patch behavior reconstructed the verdict
+// from the decision's action and dropped the flag.
+func TestScopeJudgeVerdictTravelsVerbatim(t *testing.T) {
+	hub := startHub(t, true)
+	hub.SetScopeJudge(stubScopeJudge{})
+	if err := scoperules.SetRules("sess-miss", []byte(`{"enabled":true,"default_action":"review","rules":[]}`)); err != nil {
+		t.Fatal(err)
+	}
+	resp, err := attributedClient(t, hub, "sess-miss", "tool-1").Get("http://outside.test/app.js")
+	if err != nil {
+		t.Fatalf("request through hub: %v", err)
+	}
+	body, _ := io.ReadAll(resp.Body)
+	resp.Body.Close()
+	if resp.StatusCode != http.StatusForbidden {
+		t.Fatalf("status = %d, want the quiet 403 refusal", resp.StatusCode)
+	}
+	flows := waitForFlows(t, hub.store, 1)
+	verdict, ok := scoperules.TakeVerdict(flows[0].GetId())
+	if !ok || verdict.Action != scoperules.ActionReview || !verdict.DefaultMissed {
+		t.Fatalf("sidecar verdict = %+v ok=%v (default_missed lost)", verdict, ok)
+	}
+	// The refusal body explains itself: the model reading its tool output can
+	// stop retrying without a round trip (fork patch 34).
+	var said struct {
+		Error   string `json:"error"`
+		Host    string `json:"host"`
+		Reason  string `json:"reason"`
+		Pending bool   `json:"pending"`
+	}
+	if json.Unmarshal(body, &said) != nil || said.Error != "scope_rules_refused" || said.Host != "outside.test" || !said.Pending || said.Reason == "" {
+		t.Fatalf("refusal body = %s", body)
+	}
+}
+
+// A verdict the judge never attached (a bare stub) reconstructs the historical
+// three fields: the proxy must not invent default_missed where the judge set
+// none.
+func TestScopeJudgeVerdictWithoutVerdictReconstructs(t *testing.T) {
+	target := startTestTarget(64)
+	defer target.Close()
+	hub := startHub(t, true)
+	hub.SetScopeJudge(bareScopeJudge{})
+	if err := scoperules.SetRules("sess-bare", []byte(judgeRules)); err != nil {
+		t.Fatal(err)
+	}
+	getThrough(t, attributedClient(t, hub, "sess-bare", "tool-1"), target.URL)
+	flows := waitForFlows(t, hub.store, 1)
+	verdict, ok := scoperules.TakeVerdict(flows[0].GetId())
+	// The request misses every row and lands on the record default; the
+	// reconstruction keeps action/reason but invents no flags.
+	if !ok || verdict.Action != scoperules.ActionRecord || verdict.RuleID != "" || verdict.DefaultMissed || verdict.Passive {
+		t.Fatalf("reconstructed verdict = %+v ok=%v", verdict, ok)
+	}
+}
+
+// bareScopeJudge answers from the action alone, like a judge predating the
+// verbatim verdict field.
+type bareScopeJudge struct{}
+
+func (bareScopeJudge) JudgeScopeRequest(req ScopeRequest) ScopeDecision {
+	if req.Invocation.SessionID == "" || req.Call == nil {
+		return ScopeDecision{}
+	}
+	arguments, _, ok := scopeCallArguments(req)
+	if !ok {
+		return ScopeDecision{}
+	}
+	verdict, judged := scoperules.JudgeSession(req.Invocation.SessionID, arguments.Method, arguments.URL)
+	if !judged {
+		return ScopeDecision{}
+	}
+	return ScopeDecision{Judged: true, Action: verdict.Action, RuleID: verdict.RuleID, Reason: verdict.Reason}
+}
+
+func (bareScopeJudge) JudgeScopeConnect(req ScopeRequest) ScopeDecision {
+	return ScopeDecision{}
 }

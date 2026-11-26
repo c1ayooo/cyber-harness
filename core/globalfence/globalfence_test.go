@@ -96,3 +96,33 @@ func TestUnknownSessionIsUnfenced(t *testing.T) {
 		t.Fatal("unregistered session inherited the domain fence")
 	}
 }
+
+// A child session inherits the parent's registered fence (fork patch 33), the
+// same mechanism the project scope rules use: a subagent's fresh session id
+// never sees a RunTurnRequest, so without the copy its commands and tunnels
+// would fence nothing.
+func TestInheritSessionRules(t *testing.T) {
+	if err := SetRules("sess-parent", []byte(`{
+		"enabled_commands": true,
+		"commands": [{"id": "gf-1", "pattern": "shutdown\\s+-h\\b", "action": "deny"}],
+		"enabled_domains": true,
+		"domains": [{"id": "gf-10", "host": "gov.cn"}]
+	}`)); err != nil {
+		t.Fatal(err)
+	}
+	InheritSessionRules("sess-parent", "sess-child")
+	if _, hit := JudgeCommand("sess-child", "shutdown -h now"); !hit {
+		t.Fatal("child command judged nothing")
+	}
+	if _, hit := DomainHit("sess-child", "www.gov.cn"); !hit {
+		t.Fatal("child domain judged nothing")
+	}
+
+	InheritSessionRules("sess-ghost", "sess-orphan")
+	if _, hit := JudgeCommand("sess-orphan", "shutdown -h now"); hit {
+		t.Fatal("unknown parent fenced the child")
+	}
+	if _, hit := DomainHit("sess-orphan", "www.gov.cn"); hit {
+		t.Fatal("unknown parent fenced the child domain")
+	}
+}

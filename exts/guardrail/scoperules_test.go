@@ -14,8 +14,8 @@ import (
 	"github.com/c1ayooo/cyber/core/globalfence"
 	"github.com/c1ayooo/cyber/core/operation"
 	"github.com/c1ayooo/cyber/core/scoperules"
-	"github.com/c1ayooo/cyber/tools/proxy"
 	toolhooks "github.com/c1ayooo/cyber/core/tool/hooks"
+	"github.com/c1ayooo/cyber/tools/proxy"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
@@ -403,5 +403,115 @@ func TestJudgeScopeRequestShadowNeverHolds(t *testing.T) {
 	}
 	if verdict, ok := scoperules.TakeVerdict("flow-7"); !ok || verdict.Action != scoperules.ActionBlock || !verdict.Shadow {
 		t.Fatalf("shadow sidecar verdict = %+v ok=%v", verdict, ok)
+	}
+}
+
+// scopeCallPassive is scopeCall with the passive hint the proxy attaches to a
+// page-pulled static subresource.
+func scopeCallPassive(t *testing.T, flowID, method, url string) *aop.ToolCall {
+	t.Helper()
+	arguments, err := json.Marshal(map[string]any{"method": method, "url": url, "flow_id": flowID, "dest": "script", "passive": true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	return &aop.ToolCall{Name: httpRequestToolName, Arguments: &aop.EncodedValue{Data: arguments}}
+}
+
+// The decision carries the verdict verbatim (fork patch 33): the proxy's
+// sidecar keeps default_missed instead of a projection of the action, which
+// is the flag the control plane's asset-pending flow routes on.
+func TestJudgeScopeRequestCarriesVerdictVerbatim(t *testing.T) {
+	runtime, _ := scopeRuntime(t)
+	if err := scoperules.SetRules("sess-a", []byte(`{"enabled":true,"default_action":"review","rules":[]}`)); err != nil {
+		t.Fatal(err)
+	}
+	decision := runtime.JudgeScopeRequest(scopeRequest("sess-a", scopeCall(t, "flow-11", "GET", "https://any.test/x")))
+	if decision.Verdict == nil || decision.Verdict.Action != scoperules.ActionReview || !decision.Verdict.DefaultMissed {
+		t.Fatalf("decision verdict = %+v", decision.Verdict)
+	}
+}
+
+// A page-pulled static subresource (Sec-Fetch-Dest script/style/image/font)
+// that misses the rule table is a record, not a pending asset: forwarded,
+// journaled in the traffic view, never routed to the approval flow (fork
+// patch 34). A deliberate request under the same rules stays a miss.
+func TestJudgeScopeRequestPassiveMissRecordsWithoutPending(t *testing.T) {
+	runtime, collected := scopeRuntime(t)
+	if err := scoperules.SetRules("sess-a", []byte(`{"enabled":true,"default_action":"review","rules":[]}`)); err != nil {
+		t.Fatal(err)
+	}
+	decision := runtime.JudgeScopeRequest(scopeRequest("sess-a", scopeCallPassive(t, "flow-12", "GET", "https://cdn.test/app.js")))
+	if !decision.Judged || decision.Action != scoperules.ActionRecord || decision.Hold != nil {
+		t.Fatalf("passive decision = %+v", decision)
+	}
+	if decision.Verdict == nil || !decision.Verdict.Passive || decision.Verdict.DefaultMissed {
+		t.Fatalf("passive verdict = %+v", decision.Verdict)
+	}
+	if events := collected(); len(events) != 0 {
+		t.Fatalf("passive miss published %d events, want 0 (sidecar only)", len(events))
+	}
+	verdict, ok := scoperules.TakeVerdict("flow-12")
+	if !ok || verdict.Action != scoperules.ActionRecord || !verdict.Passive || verdict.DefaultMissed {
+		t.Fatalf("sidecar verdict = %+v ok=%v", verdict, ok)
+	}
+
+	deliberate := runtime.JudgeScopeRequest(scopeRequest("sess-a", scopeCall(t, "flow-13", "GET", "https://cdn.test/api")))
+	if deliberate.Verdict == nil || deliberate.Verdict.Passive || !deliberate.Verdict.DefaultMissed {
+		t.Fatalf("deliberate verdict = %+v", deliberate.Verdict)
+	}
+}
+
+// An explicit rule row outranks the passive hint: a subresource the operator
+// blocked by row still blocks, and its verdict is the operator's own (fork
+// patch 34).
+func TestJudgeScopeRequestExplicitRowBeatsPassive(t *testing.T) {
+	runtime, collected := scopeRuntime(t)
+	if err := scoperules.SetRules("sess-a", []byte(`{"enabled":true,"default_action":"record","rules":[{"id":"sr-no","action":"block","method":"*","host":"blocked.test"}]}`)); err != nil {
+		t.Fatal(err)
+	}
+	decision := runtime.JudgeScopeRequest(scopeRequest("sess-a", scopeCallPassive(t, "flow-14", "GET", "https://blocked.test/app.js")))
+	if !decision.Judged || decision.Action != scoperules.ActionBlock || decision.RuleID != "sr-no" {
+		t.Fatalf("decision = %+v", decision)
+	}
+	if decision.Verdict == nil || decision.Verdict.Passive || decision.Verdict.DefaultMissed {
+		t.Fatalf("verdict = %+v", decision.Verdict)
+	}
+	if events := collected(); len(events) != 1 {
+		t.Fatalf("explicit block published %d events, want the one Decision", len(events))
+	}
+}
+
+// Command red lines judge command-like calls only (fork patch 35): a write
+// tool whose content quotes a blocked command is a document, not a command —
+// judging its text would hold every report that mentions one. A bare-string
+// argument IS a command and stays judged.
+func TestAdmitInstanceCommandFenceSkipsNonCommandCalls(t *testing.T) {
+	runtime, collected := scopeRuntime(t)
+	if err := globalfence.SetRules("sess-gf-doc", []byte(`{
+		"enabled_commands": true,
+		"commands": [{"id": "gf-doc", "pattern": "shutdown\\s+-h\\b", "desc": "关机", "action": "deny"}]
+	}`)); err != nil {
+		t.Fatal(err)
+	}
+	invocation := operation.Invocation{SessionID: "sess-gf-doc", TurnID: "turn-1"}
+	ctx := operation.ContextWithInvocation(context.Background(), invocation)
+
+	allowed, _ := runtime.Admit(ctx, toolhooks.CallEvent{
+		Call:      &aop.ToolCall{Name: "write", Arguments: &aop.EncodedValue{Data: []byte(`{"path":"/tmp/report.md","content":"to shut down the host run shutdown -h now"}`)}},
+		Operation: &operationpb.Ref{OperationId: "op-gf-doc"},
+	})
+	if allowed.Deny != nil {
+		t.Fatalf("a document quoting a red line was denied: %v", allowed.Deny)
+	}
+	if events := len(collected()); events != 0 {
+		t.Fatalf("non-command call published %d events, want 0", events)
+	}
+
+	denied, _ := runtime.Admit(ctx, toolhooks.CallEvent{
+		Call:      &aop.ToolCall{Name: "exec", Arguments: &aop.EncodedValue{Data: []byte(`"shutdown -h now"`)}},
+		Operation: &operationpb.Ref{OperationId: "op-gf-doc-2"},
+	})
+	if denied.Deny == nil {
+		t.Fatal("a bare-string command was not judged")
 	}
 }
