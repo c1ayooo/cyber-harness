@@ -539,6 +539,23 @@ the 4zrcin checkout at `425e6175`.
     shape). Rollback: revert; the control plane keeps working without the
     sidecars (shared-filesystem path untouched).
 
+25. **`feat(node): the capture recipe announces itself in the hello`** (2026-11-26)
+    `cmd/cyber-scan/recipe_default.go` / `recipe_capture.go`, `agent_transport.go`.
+
+    docs/04 T5's capability routing input: `-tags captureonly` appends
+    `scan-capture` to the registration hello's capabilities; the full recipe
+    appends nothing, so an absent marker keeps reading as full and every
+    binary built before this change routes exactly as it did. The control
+    plane (zrcin 15c4830..) consumes the marker through ListAgents →
+    nodeProber.Health → the fleet badge, and keeps implicit dispatch (an
+    intent that names no node) off capture-only nodes while honouring an
+    explicit operator placement. Verified end-to-end with two local
+    processes: the capture node's hello carries the marker, the fleet
+    interface reports it, implicit dispatch is refused at 409 with the
+    routing reason, and an explicitly placed intent dispatches (202).
+    Tests: both recipe forms green. Rollback: revert — full form is
+    byte-identical in behavior.
+
 24. **`feat(tools): the capture recipe - resources and engines compile out`** (2026-11-26)
     `tools/resources/` (two-file mode), `cmd/cyber-scan/` (recipe split), test
     forms.

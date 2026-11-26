@@ -24,7 +24,8 @@ func runAgentTransport(ctx context.Context, newProfile func(profile.Request) (pr
 		if option.OutputFormat != "text" || option.OutputFile != "" {
 			return fmt.Errorf("node transport uses the server event stream; -o/-f require a local task")
 		}
-		return node.RunWebSocketWithCapabilities(ctx, newProfile, option, logger, "scan")
+		capabilities := append([]string{"scan"}, recipeCapabilities()...)
+		return node.RunWebSocketWithCapabilities(ctx, newProfile, option, logger, capabilities...)
 	case cfg.AgentTransportStdio:
 		if option.OutputFormat != "text" && option.OutputFile == "" {
 			return fmt.Errorf("stdio transport reserves stdout for protocol messages; use -f for formatted events")
