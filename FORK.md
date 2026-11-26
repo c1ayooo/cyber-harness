@@ -669,6 +669,29 @@ the 4zrcin checkout at `425e6175`.
     Rollback: revert — the control plane still sends rows the previous engine judges
     (exact-host rows just fence fewer requests), and no wire shape changes.
 
+30. **`feat(scoperules): the default miss refuses and carries default_missed`** (2026-11-26)
+    `core/scoperules/scoperules.go`, `core/scoperules/scoperules_test.go`,
+    `exts/guardrail/scoperules.go`, `exts/guardrail/scoperules_test.go`.
+    The allowlist fence's fallback is fixed (4zrcin spec #1 工单5): out-of-range
+    traffic is refused and the ASSET — not the request — goes to the operator.
+    `Verdict` gains `default_missed` (JSON, absent on a hit and on every
+    pre-patch sidecar), set by `Judge` on the fallback branch; `JudgeScopeRequest`
+    routes a default miss through the quiet path (sidecar only, no hold, no
+    Decision/Review event) instead of the pending-review lifecycle. Holding
+    was wrong three ways: it blocked the whole run for a decision that cannot
+    admit the asset, a concurrent twin was refused anyway, and approving one
+    request left the asset out of range. Explicit rule rows keep their
+    event-backed hold (review) and refuse (block) semantics — those are
+    verdicts the operator wrote by hand. The traffic sidecar JSON gains the
+    optional flag; old control planes ignore it.
+    Tests: `go test ./core/scoperules ./exts/guardrail ./tools/proxy -count=1`
+    (the miss marks the flag and refuses immediately without events; the
+    explicit review row still holds and resolves, sidecar without the flag;
+    the no-operation-id refusal now exercises an explicit row; proxy and
+    session suites unchanged).
+    Rollback: revert — misses go back to holding on the pending lifecycle,
+    and the control plane's flag-based routing simply never fires.
+
 ## Superseded patches
 
 These commits were on `tianwu/fixes` and are intentionally **not** carried after

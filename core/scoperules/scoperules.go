@@ -67,6 +67,11 @@ type Verdict struct {
 	RuleID string `json:"rule_id,omitempty"`
 	Reason string `json:"reason,omitempty"`
 	Shadow bool   `json:"shadow,omitempty"`
+	// DefaultMissed marks a fallback verdict (no rule row matched, fork patch
+	// 30): the control plane routes it to the asset-pending flow instead of
+	// reading it as a verdict the operator wrote by hand. Absent on a hit, so
+	// old control planes ignore the field entirely.
+	DefaultMissed bool `json:"default_missed,omitempty"`
 }
 
 // maxRules mirrors the control plane's rule-table cap (project MaxScopeRules,
@@ -124,8 +129,10 @@ func (s *Set) Judge(method, rawURL string) (Verdict, bool) {
 		}
 	}
 	return Verdict{Action: s.DefaultAction,
-		Reason: "未命中测试范围规则，按默认动作 " + s.DefaultAction,
-		Shadow: s.Shadow}, true
+		Reason:        "未命中测试范围规则，按默认动作 " + s.DefaultAction,
+		Shadow:        s.Shadow,
+		DefaultMissed: true,
+	}, true
 }
 
 func ruleMatches(rule Rule, method, host, path string) bool {

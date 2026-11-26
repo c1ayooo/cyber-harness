@@ -119,12 +119,16 @@ func TestJudgeScopeRequestBlockEmitsDecision(t *testing.T) {
 	}
 }
 
+// An explicit review row still holds the request on the pending lifecycle:
+// the operator's own row named this exact request shape as human-decision
+// territory, which is different from the default miss (refused quietly, the
+// asset-pending flow owns that approval).
 func TestJudgeScopeRequestReviewHoldsAndResolves(t *testing.T) {
 	runtime, collected := scopeRuntime(t)
-	if err := scoperules.SetRules("sess-a", []byte(`{"enabled":true,"default_action":"review","rules":[]}`)); err != nil {
+	if err := scoperules.SetRules("sess-a", []byte(`{"enabled":true,"default_action":"record","rules":[{"id":"sr-review","action":"review","method":"*","host":"held.test"}]}`)); err != nil {
 		t.Fatal(err)
 	}
-	req := scopeRequest("sess-a", scopeCall(t, "flow-3", "PUT", "https://any.test/admin"))
+	req := scopeRequest("sess-a", scopeCall(t, "flow-3", "PUT", "https://held.test/admin"))
 	done := make(chan proxy.ScopeDecision, 1)
 	go func() { done <- runtime.JudgeScopeRequest(req) }()
 
@@ -169,14 +173,55 @@ func TestJudgeScopeRequestReviewHoldsAndResolves(t *testing.T) {
 	if len(events) != 2 {
 		t.Fatalf("after resolve: %d events, want 2", len(events))
 	}
+	verdict, ok := scoperules.TakeVerdict("flow-3")
+	if !ok || verdict.Action != scoperules.ActionReview || verdict.DefaultMissed {
+		t.Fatalf("sidecar verdict = %+v ok=%v", verdict, ok)
+	}
 }
 
-func TestJudgeScopeRequestReviewWithoutOperationRefuses(t *testing.T) {
-	runtime, _ := scopeRuntime(t)
+// A miss under the pending default refuses immediately (spec #1 工单4): the
+// request is dead, not held. Holding would block the whole run for a decision
+// that cannot admit the asset anyway — approving one request leaves the asset
+// out of range — and a concurrent twin would be refused regardless. The
+// refusal is quiet like a record verdict (one tool call fans out into many
+// requests; the sidecar carries default_missed and the control plane's
+// asset-pending flow owns the approval).
+func TestJudgeScopeRequestDefaultMissRefusesWithoutHold(t *testing.T) {
+	runtime, collected := scopeRuntime(t)
 	if err := scoperules.SetRules("sess-a", []byte(`{"enabled":true,"default_action":"review","rules":[]}`)); err != nil {
 		t.Fatal(err)
 	}
-	req := scopeRequest("sess-a", scopeCall(t, "flow-4", "GET", "https://any.test/"))
+	done := make(chan proxy.ScopeDecision, 1)
+	go func() {
+		done <- runtime.JudgeScopeRequest(scopeRequest("sess-a", scopeCall(t, "flow-9", "PUT", "https://any.test/admin")))
+	}()
+	var decision proxy.ScopeDecision
+	select {
+	case decision = <-done:
+	case <-time.After(2 * time.Second):
+		t.Fatal("default miss held the request instead of refusing")
+	}
+	if !decision.Judged || decision.Action != scoperules.ActionReview || decision.Hold != nil {
+		t.Fatalf("decision = %+v", decision)
+	}
+	if events := collected(); len(events) != 0 {
+		t.Fatalf("default miss published %d events, want 0 (sidecar only)", len(events))
+	}
+	verdict, ok := scoperules.TakeVerdict("flow-9")
+	if !ok || verdict.Action != scoperules.ActionReview || !verdict.DefaultMissed {
+		t.Fatalf("sidecar verdict = %+v ok=%v", verdict, ok)
+	}
+}
+
+func TestJudgeScopeRequestReviewWithoutOperationRefuses(t *testing.T) {
+	// An explicit review row with no operation id cannot be answered by the
+	// control plane: refuse rather than hold forever. (The default miss no
+	// longer reaches the hold path at all — see the default-miss test.)
+	runtime, _ := scopeRuntime(t)
+	if err := scoperules.SetRules("sess-a", []byte(`{"enabled":true,"default_action":"record","rules":[{"id":"sr-review","action":"review","method":"*","host":"held.test"}]}`)); err != nil {
+		t.Fatal(err)
+	}
+	req := scopeRequest("sess-a", scopeCall(t, "flow-4", "GET", "https://held.test/"))
 	req.Operation = &operationpb.Ref{}
 	decision := runtime.JudgeScopeRequest(req)
 	if !decision.Judged || decision.Hold == nil || decision.Hold(context.Background()) {

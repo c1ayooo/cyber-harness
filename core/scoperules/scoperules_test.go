@@ -132,6 +132,25 @@ func TestParseAcceptsUpToTheCap(t *testing.T) {
 	}
 }
 
+// The default-miss verdict carries the flag the control plane routes on
+// (spec #1 工单4): a miss refuses and queues the asset for the operator's
+// decision, so the sidecar must say "this was the fallback" — a refusal that
+// looks like an explicit row's verdict would be indistinguishable from one
+// the operator wrote by hand.
+func TestJudgeMarksDefaultMiss(t *testing.T) {
+	set := &Set{Enabled: true, DefaultAction: ActionReview, Rules: []Rule{
+		{ID: "row", Action: ActionRecord, Method: "*", Host: "allowed.test"},
+	}}
+	verdict, judged := set.Judge("GET", "https://allowed.test/x")
+	if !judged || verdict.DefaultMissed || verdict.RuleID != "row" {
+		t.Fatalf("hit verdict = %+v judged=%v", verdict, judged)
+	}
+	verdict, judged = set.Judge("GET", "https://unknown.test/x")
+	if !judged || verdict.Action != ActionReview || verdict.RuleID != "" || !verdict.DefaultMissed {
+		t.Fatalf("miss verdict = %+v judged=%v", verdict, judged)
+	}
+}
+
 func TestJudgeDisabledAndShadow(t *testing.T) {
 	disabled := &Set{Enabled: false, DefaultAction: ActionBlock}
 	if _, judged := disabled.Judge("GET", "https://a.com/"); judged {

@@ -46,8 +46,15 @@ func (r *Runtime) JudgeScopeRequest(req proxy.ScopeRequest) proxy.ScopeDecision 
 	}
 	ctx := operation.ContextWithInvocation(r.ctx, req.Invocation)
 	scoperules.RecordVerdict(scopeRequestFlowID(req.Call), verdict)
-	if verdict.Shadow || verdict.Action == scoperules.ActionRecord {
-		// Quiet fact: the sidecar carries it; no interception to journal.
+	// The quiet path covers three shapes: a record row, a shadow set, and —
+	// since the allowlist fence (fork patch 30) — a default miss. A miss never
+	// holds (approving one request cannot admit the asset, and a held request
+	// blocks the whole run while its concurrent twins are refused anyway) and
+	// publishes no Decision/Review event: one tool call fans out into many
+	// requests, and the control plane reads the refusal from the sidecar's
+	// default_missed flag, routing the asset — not the request — to the
+	// operator. Explicit rows keep their event-backed hold/refuse semantics.
+	if verdict.DefaultMissed || verdict.Shadow || verdict.Action == scoperules.ActionRecord {
 		return proxy.ScopeDecision{Judged: true, Action: verdict.Action, RuleID: verdict.RuleID, Reason: verdict.Reason}
 	}
 	decision := &Decision{Action: scopeActionEnum(verdict.Action), Reason: verdict.Reason}
