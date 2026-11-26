@@ -692,6 +692,47 @@ the 4zrcin checkout at `425e6175`.
     Rollback: revert — misses go back to holding on the pending lifecycle,
     and the control plane's flag-based routing simply never fires.
 
+31. **`feat(globalfence): the instance's red lines fence every project`** (2026-11-26)
+    `core/globalfence/` (new), `core/scoperules/scoperules.go` (+ `HostMatches`
+    export, `JudgeConnect`, `JudgeSessionConnect`, `JudgeConnectHostForm` test),
+    `agent/session/protocol.go` (+ `turnGlobalFence`, both namespaces),
+    `exts/guardrail/{runtime.go,scoperules.go,scoperules_test.go}`,
+    `tools/proxy/{hub.go,mitm.go,scope_judge_test.go}`.
+    The instance fence (4zrcin spec #1 工单3): command patterns that never
+    execute and domains that are never reached, on every project and node the
+    instance drives. The control plane sends the set every turn as
+    `4zrcin.GlobalFence` (both namespaces); the session registers it per
+    session like the project scope rules, so a save takes effect next round
+    without a restart and remote nodes are covered like any fence.
+
+    - **Command deny** judges in `Admit` after the guaranteed audit and before
+      every policy concern: a `deny` red line refuses even with no provider
+      (its Decision event carries the `global.<id>` reason prefix the control
+      plane badges); a `review` red line holds the call on the ordinary
+      approval lifecycle. Uncompilable patterns are refused at registration —
+      a pattern that failed at match time would silently stop fencing.
+    - **Domain deny** wins before the project fence in `JudgeScopeRequest`:
+      a project row allowlisting a denied domain still cannot reach it. The
+      refusal publishes a Decision (hits are rare; the audit row is worth its
+      journal line) and the sidecar names `global:<id>`.
+    - **CONNECT tunnels** gain `JudgeConnect` (the `ScopeJudge` interface
+      grows the method): the instance fence judges fully; the project fence
+      judges its host form only — rows match on host alone (a method/path row
+      refines decrypted inner requests, not the tunnel), CIDR rows match
+      literal IPs directly and hostnames through the cached resolver, and an
+      unmatched tunnel refuses under the allowlist default instead of passing
+      unjudged. In relay mode this host-form pass/fail IS the fence.
+    Domain matching delegates to the exported `scoperules.HostMatches`, so a
+    domain row in either list means the identical thing to the matcher. Old
+    control planes never send the extension; absent sets fence nothing.
+    Tests: `go test ./core/globalfence ./core/scoperules ./exts/guardrail
+    ./tools/proxy ./agent/session -count=1` (parse/switch/idempotency/
+    unknown-session table; command deny+review through `Admit` with the
+    resolve dance; global-domain wins over a project allowlist; CONNECT
+    host-form table and the tunnel refusal paths).
+    Rollback: revert — no extension is sent, nothing registers, and every
+    judge path is byte-identical to before.
+
 ## Superseded patches
 
 These commits were on `tianwu/fixes` and are intentionally **not** carried after

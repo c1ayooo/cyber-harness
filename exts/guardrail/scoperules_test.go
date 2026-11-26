@@ -3,6 +3,7 @@ package guardrail
 import (
 	"context"
 	"encoding/json"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -10,9 +11,11 @@ import (
 	aop "github.com/c1ayooo/cyber/aop"
 	operationpb "github.com/c1ayooo/cyber/aop/operation"
 	"github.com/c1ayooo/cyber/core/events"
+	"github.com/c1ayooo/cyber/core/globalfence"
 	"github.com/c1ayooo/cyber/core/operation"
 	"github.com/c1ayooo/cyber/core/scoperules"
 	"github.com/c1ayooo/cyber/tools/proxy"
+	toolhooks "github.com/c1ayooo/cyber/core/tool/hooks"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
@@ -210,6 +213,143 @@ func TestJudgeScopeRequestDefaultMissRefusesWithoutHold(t *testing.T) {
 	verdict, ok := scoperules.TakeVerdict("flow-9")
 	if !ok || verdict.Action != scoperules.ActionReview || !verdict.DefaultMissed {
 		t.Fatalf("sidecar verdict = %+v ok=%v", verdict, ok)
+	}
+}
+
+// The instance fence (spec #1 工单3) judges after the guaranteed audit and
+// before every policy concern: a deny red line refuses even when no provider
+// is configured, and a review red line holds the call on the ordinary
+// approval lifecycle. The deny's audit reason carries the global.<id> prefix
+// the control plane badges. (The deny pattern deliberately avoids the builtin
+// corpus so the event count stays one per verdict.)
+func TestAdmitInstanceCommandFence(t *testing.T) {
+	runtime, collected := scopeRuntime(t)
+	if err := globalfence.SetRules("sess-gf", []byte(`{
+		"enabled_commands": true,
+		"commands": [
+			{"id": "gf-1", "pattern": "shutdown\\s+-h\\b", "desc": "关机", "action": "deny"},
+			{"id": "gf-2", "pattern": "^curl\\b", "action": "review"}
+		],
+		"enabled_domains": true,
+		"domains": [{"id": "gf-10", "host": "gov.cn"}]
+	}`)); err != nil {
+		t.Fatal(err)
+	}
+	invocation := operation.Invocation{SessionID: "sess-gf", TurnID: "turn-1"}
+	ctx := operation.ContextWithInvocation(context.Background(), invocation)
+
+	deny, _ := runtime.Admit(ctx, toolhooks.CallEvent{
+		Call:      &aop.ToolCall{Name: "bash", Arguments: &aop.EncodedValue{Data: []byte(`{"command":"shutdown -h now"}`)}},
+		Operation: &operationpb.Ref{OperationId: "op-gf-deny"},
+	})
+	if deny.Deny == nil {
+		t.Fatal("a deny red line passed")
+	}
+	events := collected()
+	if len(events) != 1 {
+		t.Fatalf("deny published %d events, want one global Decision", len(events))
+	}
+	var decision Decision
+	if extension := events[0].Payload; extension == nil || !extension.MessageIs(&decision) || extension.UnmarshalTo(&decision) != nil {
+		t.Fatal("deny payload is not a Decision")
+	}
+	if decision.Action != Action_ACTION_BLOCK || !strings.HasPrefix(decision.Reason, "global.gf-1") {
+		t.Fatalf("deny decision = %v %q", decision.Action, decision.Reason)
+	}
+
+	// A review red line holds the call: unapproved, it refuses; the operator's
+	// approval through the ordinary RPC releases it.
+	done := make(chan toolhooks.Admission, 1)
+	go func() {
+		admission, _ := runtime.Admit(ctx, toolhooks.CallEvent{
+			Call:      &aop.ToolCall{Name: "bash", Arguments: &aop.EncodedValue{Data: []byte(`{"command":"curl https://example.test"}`)}},
+			Operation: &operationpb.Ref{OperationId: "op-gf-review"},
+		})
+		done <- admission
+	}()
+	deadline := time.After(2 * time.Second)
+	var pending bool
+	for !pending {
+		select {
+		case <-deadline:
+			t.Fatal("review red line neither held nor resolved")
+		default:
+			pending = len(collected()) > 1
+			if !pending {
+				time.Sleep(10 * time.Millisecond)
+			}
+		}
+	}
+	resolveCtx := operation.ContextWithInvocation(context.Background(), operation.Invocation{SessionID: "sess-gf", Emitter: "control"})
+	if err := runtime.Resolve(resolveCtx, "op-gf-review", true); err != nil {
+		t.Fatal(err)
+	}
+	select {
+	case admission := <-done:
+		if admission.Deny != nil {
+			t.Fatalf("approved red line still denied: %v", admission.Deny)
+		}
+	case <-time.After(2 * time.Second):
+		t.Fatal("approval did not release the held call")
+	}
+}
+
+// The instance fence wins before the project fence: a project row
+// allowlisting a globally denied domain does not un-denied it (spec #1 工单3).
+// The refusal publishes a Decision (an audit row worth its journal line) and
+// the sidecar names the global entry, not a project rule.
+func TestJudgeScopeRequestGlobalDomainWinsOverProjectAllowlist(t *testing.T) {
+	runtime, collected := scopeRuntime(t)
+	if err := scoperules.SetRules("sess-g", []byte(`{"enabled":true,"default_action":"record","rules":[{"id":"sr-ok","action":"record","method":"*","host":"gov.cn"}]}`)); err != nil {
+		t.Fatal(err)
+	}
+	if err := globalfence.SetRules("sess-g", []byte(`{"enabled_domains":true,"domains":[{"id":"gf-10","host":"gov.cn"}]}`)); err != nil {
+		t.Fatal(err)
+	}
+	decision := runtime.JudgeScopeRequest(scopeRequest("sess-g", scopeCall(t, "flow-20", "GET", "https://www.gov.cn/x")))
+	if !decision.Judged || decision.Action != scoperules.ActionBlock || decision.RuleID != "global:gf-10" || decision.Hold != nil {
+		t.Fatalf("decision = %+v", decision)
+	}
+	events := collected()
+	if len(events) != 1 {
+		t.Fatalf("global refusal published %d events, want one Decision", len(events))
+	}
+	verdict, ok := scoperules.TakeVerdict("flow-20")
+	if !ok || verdict.Action != scoperules.ActionBlock || verdict.RuleID != "global:gf-10" {
+		t.Fatalf("sidecar verdict = %+v ok=%v", verdict, ok)
+	}
+}
+
+// The CONNECT judge: a hostname row passes the tunnel quietly (relay mode's
+// pass/fail IS the fence), an unmatched tunnel refuses under the default
+// without holding, and a globally denied domain refuses with an audit event.
+func TestJudgeScopeConnect(t *testing.T) {
+	runtime, collected := scopeRuntime(t)
+	if err := scoperules.SetRules("sess-c", []byte(`{"enabled":true,"default_action":"record","rules":[{"id":"sr-host","action":"record","method":"GET","host":"allowed.test"}]}`)); err != nil {
+		t.Fatal(err)
+	}
+	quiet := runtime.JudgeScopeConnect(scopeRequest("sess-c", scopeCall(t, "flow-30", "CONNECT", "allowed.test:443")))
+	if !quiet.Judged || quiet.Action != scoperules.ActionRecord || quiet.Hold != nil {
+		t.Fatalf("allowed tunnel = %+v", quiet)
+	}
+	if events := collected(); len(events) != 0 {
+		t.Fatalf("allowed tunnel published %d events", len(events))
+	}
+	refused := runtime.JudgeScopeConnect(scopeRequest("sess-c", scopeCall(t, "flow-31", "CONNECT", "unknown.test:443")))
+	if !refused.Judged || refused.Hold != nil || refused.Action != scoperules.ActionRecord {
+		t.Fatalf("unmatched tunnel = %+v (record default forwards; review default would refuse)", refused)
+	}
+
+	// Global denial wins over a project allowlist, on the tunnel itself.
+	if err := globalfence.SetRules("sess-c", []byte(`{"enabled_domains":true,"domains":[{"id":"gf-10","host":"gov.cn"}]}`)); err != nil {
+		t.Fatal(err)
+	}
+	denied := runtime.JudgeScopeConnect(scopeRequest("sess-c", scopeCall(t, "flow-32", "CONNECT", "www.gov.cn:443")))
+	if !denied.Judged || denied.Action != scoperules.ActionBlock || denied.RuleID != "global:gf-10" {
+		t.Fatalf("global-denied tunnel = %+v", denied)
+	}
+	if events := collected(); len(events) != 1 {
+		t.Fatalf("global tunnel refusal published %d events, want one Decision", len(events))
 	}
 }
 

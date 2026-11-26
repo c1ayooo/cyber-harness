@@ -24,10 +24,12 @@ import (
 )
 
 // ScopeJudge decides whether the proxy may forward one attributed request.
-// The guardrail runtime implements it structurally (no import), so the judge
-// can reuse the pending-review lifecycle for held requests.
+// JudgeConnect judges a CONNECT tunnel (host-form only); the guardrail
+// runtime implements both structurally (no import), so the judge can reuse
+// the pending-review lifecycle for held requests.
 type ScopeJudge interface {
 	JudgeScopeRequest(req ScopeRequest) ScopeDecision
+	JudgeConnect(req ScopeRequest) ScopeDecision
 }
 
 // ScopeRequest is one proxied request with its attribution.

@@ -11,6 +11,7 @@ import (
 
 	aop "github.com/c1ayooo/cyber/aop"
 	"github.com/c1ayooo/cyber/core/egress"
+	"github.com/c1ayooo/cyber/core/globalfence"
 	"github.com/c1ayooo/cyber/core/scoperules"
 	types "github.com/c1ayooo/cyber/core/types"
 	"github.com/chainreactors/proxyclient"
@@ -232,6 +233,32 @@ func turnScopeRules(req *aop.RunTurnRequest) {
 	}
 }
 
+// globalFenceExtensionURLs is the control plane's instance-wide red lines
+// (spec #1 工单3): command patterns that never execute and domains that are
+// never reached, on every project the instance drives — judged before the
+// project fence, so a project allowlisting a denied domain still cannot reach
+// it. Same per-turn carriage and both-namespace recognition as ScopeRules.
+var globalFenceExtensionURLs = []string{
+	"type.googleapis.com/tianwu.GlobalFence",
+	"type.googleapis.com/4zrcin.GlobalFence",
+}
+
+// turnGlobalFence registers the instance fence for this turn's session. An
+// invalid payload is logged and ignored; the previous set stays in force
+// rather than opening a hole on one malformed send.
+func turnGlobalFence(req *aop.RunTurnRequest) {
+	if req == nil {
+		return
+	}
+	extension := extensionWithURL(req.GetExtensions(), globalFenceExtensionURLs)
+	if extension == nil {
+		return
+	}
+	if err := globalfence.SetRules(req.GetSessionId(), extension.GetValue()); err != nil {
+		log.Printf("aop: ignore invalid global fence for session %s: %v", req.GetSessionId(), err)
+	}
+}
+
 // egressProxyExtensionURLs is the control plane's per-turn egress proxy (the
 // project manifest "proxy" JSON: enabled/scheme/host/port/username/password
 // plus the normalized dial url). The proxy hub reads what this registers; an
@@ -388,6 +415,7 @@ func (rt *Runtime) RunAOPTurn(ctx context.Context, req *aop.RunTurnRequest) *aop
 	// in the same breath: the hub routes this session's outbound calls through
 	// the endpoint the manifest held at dispatch time.
 	turnScopeRules(req)
+	turnGlobalFence(req)
 	turnEgressProxy(req)
 	var message *aop.Message
 	if req.Input != nil {

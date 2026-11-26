@@ -6,6 +6,7 @@ import (
 	"time"
 
 	aop "github.com/c1ayooo/cyber/aop"
+	"github.com/c1ayooo/cyber/core/globalfence"
 	"github.com/c1ayooo/cyber/core/operation"
 	"github.com/c1ayooo/cyber/core/scoperules"
 	"github.com/c1ayooo/cyber/tools/proxy"
@@ -40,7 +41,15 @@ func (r *Runtime) JudgeScopeRequest(req proxy.ScopeRequest) proxy.ScopeDecision 
 	if r == nil || req.Call == nil || req.Invocation.SessionID == "" {
 		return proxy.ScopeDecision{}
 	}
-	verdict, judged := scoperules.JudgeSession(req.Invocation.SessionID, scopeRequestMethod(req.Call), scopeRequestURL(req.Call))
+	rawURL := scopeRequestURL(req.Call)
+	// The instance fence wins before the project fence (spec #1 工单3): a
+	// denied domain refuses even when a project row allowlists it. Domain
+	// hits are rare enough that the audit row is worth its journal line, and
+	// the sidecar names the global entry so the traffic view shows it.
+	if rule, hit := globalfence.DomainHit(req.Invocation.SessionID, requestHost(rawURL)); hit {
+		return r.refuseGlobal(req, rule, scopeRequestFlowID(req.Call))
+	}
+	verdict, judged := scoperules.JudgeSession(req.Invocation.SessionID, scopeRequestMethod(req.Call), rawURL)
 	if !judged {
 		return proxy.ScopeDecision{}
 	}
@@ -68,6 +77,60 @@ func (r *Runtime) JudgeScopeRequest(req proxy.ScopeRequest) proxy.ScopeDecision 
 	approved := r.holdScopeRequest(ctx, req, decision)
 	return proxy.ScopeDecision{Judged: true, Action: verdict.Action, RuleID: verdict.RuleID, Reason: verdict.Reason,
 		Hold: func(context.Context) bool { return approved }}
+}
+
+// refuseGlobal refuses one request (or tunnel) for an instance-fence domain
+// hit: the synthetic 403 is the proxy's business — here we publish the audit
+// Decision and record the sidecar verdict naming the global entry, so the
+// traffic view and the audit trail both show a red line the operator wrote,
+// not a project rule.
+func (r *Runtime) refuseGlobal(req proxy.ScopeRequest, rule globalfence.DomainRule, flowID string) proxy.ScopeDecision {
+	verdict := scoperules.Verdict{Action: scoperules.ActionBlock,
+		RuleID: "global:" + rule.ID, Reason: "全局禁访域名 " + rule.ID}
+	scoperules.RecordVerdict(flowID, verdict)
+	ctx := operation.ContextWithInvocation(r.ctx, req.Invocation)
+	r.emitScope(ctx, &Decision{Action: Action_ACTION_BLOCK, Reason: verdict.Reason}, req)
+	return proxy.ScopeDecision{Judged: true, Action: scoperules.ActionBlock, RuleID: verdict.RuleID, Reason: verdict.Reason}
+}
+
+// JudgeScopeConnect judges a CONNECT tunnel (fork patch 31): the instance
+// fence judges fully; the project fence judges its host form only — rows
+// match on host alone (a method/path row refines decrypted inner requests,
+// not the tunnel), CIDR rows match literal IPs directly and hostnames through
+// the cached resolver, and an unmatched tunnel refuses under the allowlist
+// default rather than passing unjudged. Decrypted inner requests carry the
+// full judgment; in relay mode this host-form pass/fail IS the fence.
+func (r *Runtime) JudgeScopeConnect(req proxy.ScopeRequest) proxy.ScopeDecision {
+	if r == nil || req.Call == nil || req.Invocation.SessionID == "" {
+		return proxy.ScopeDecision{}
+	}
+	rawURL := scopeRequestURL(req.Call)
+	if rule, hit := globalfence.DomainHit(req.Invocation.SessionID, scoperules.RequestHost(rawURL)); hit {
+		return r.refuseGlobal(req, rule, scopeRequestFlowID(req.Call))
+	}
+	verdict, judged := scoperules.JudgeSessionConnect(req.Invocation.SessionID, rawURL)
+	if !judged {
+		return proxy.ScopeDecision{}
+	}
+	ctx := operation.ContextWithInvocation(r.ctx, req.Invocation)
+	scoperules.RecordVerdict(scopeRequestFlowID(req.Call), verdict)
+	if verdict.DefaultMissed || verdict.Shadow || verdict.Action == scoperules.ActionRecord {
+		return proxy.ScopeDecision{Judged: true, Action: verdict.Action, RuleID: verdict.RuleID, Reason: verdict.Reason}
+	}
+	decision := &Decision{Action: scopeActionEnum(verdict.Action), Reason: verdict.Reason}
+	if verdict.Action == scoperules.ActionBlock {
+		r.emitScope(ctx, decision, req)
+		return proxy.ScopeDecision{Judged: true, Action: verdict.Action, RuleID: verdict.RuleID, Reason: verdict.Reason}
+	}
+	approved := r.holdScopeRequest(ctx, req, decision)
+	return proxy.ScopeDecision{Judged: true, Action: verdict.Action, RuleID: verdict.RuleID, Reason: verdict.Reason,
+		Hold: func(context.Context) bool { return approved }}
+}
+
+// requestHost extracts the authority a synthetic call's URL names — the
+// scoperules helper, which also handles the CONNECT authority form.
+func requestHost(rawURL string) string {
+	return scoperules.RequestHost(rawURL)
 }
 
 // holdScopeRequest publishes a pending Review and blocks until it resolves,

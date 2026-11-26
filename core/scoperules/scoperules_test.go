@@ -151,6 +151,30 @@ func TestJudgeMarksDefaultMiss(t *testing.T) {
 	}
 }
 
+// The CONNECT judge is host-form: a row passes the tunnel on its host alone
+// (whatever method/path it refines — the tunnel cannot see them), CIDR rows
+// match literal IPs directly and hostnames through the cached resolver, and
+// an unmatched tunnel takes the default action with the default-miss flag
+// (fork patch 31).
+func TestJudgeConnectHostForm(t *testing.T) {
+	set := &Set{Enabled: true, DefaultAction: ActionReview, Rules: []Rule{
+		{ID: "host-row", Action: ActionRecord, Method: "GET", Host: "allowed.test"},
+		{ID: "cidr-row", Action: ActionRecord, Method: "*", Host: "10.0.0.0/8"},
+	}}
+	verdict, judged := set.JudgeConnect("allowed.test:443")
+	if !judged || verdict.Action != ActionRecord || verdict.RuleID != "host-row" || verdict.DefaultMissed {
+		t.Fatalf("hostname row: verdict=%+v judged=%v", verdict, judged)
+	}
+	verdict, judged = set.JudgeConnect("10.1.2.3:443")
+	if !judged || verdict.Action != ActionRecord || verdict.RuleID != "cidr-row" {
+		t.Fatalf("literal IP against a CIDR row: verdict=%+v judged=%v", verdict, judged)
+	}
+	verdict, judged = set.JudgeConnect("unknown.test:443")
+	if !judged || verdict.Action != ActionReview || !verdict.DefaultMissed {
+		t.Fatalf("unmatched tunnel: verdict=%+v judged=%v", verdict, judged)
+	}
+}
+
 func TestJudgeDisabledAndShadow(t *testing.T) {
 	disabled := &Set{Enabled: false, DefaultAction: ActionBlock}
 	if _, judged := disabled.Judge("GET", "https://a.com/"); judged {

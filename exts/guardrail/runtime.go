@@ -14,6 +14,7 @@ import (
 	"github.com/c1ayooo/cyber/aop"
 	operationpb "github.com/c1ayooo/cyber/aop/operation"
 	"github.com/c1ayooo/cyber/core/events"
+	"github.com/c1ayooo/cyber/core/globalfence"
 	"github.com/c1ayooo/cyber/core/operation"
 	toolhooks "github.com/c1ayooo/cyber/core/tool/hooks"
 	"google.golang.org/protobuf/proto"
@@ -242,6 +243,27 @@ func (r *Runtime) Admit(ctx context.Context, ev toolhooks.CallEvent) (toolhooks.
 	// only records — the call continues through the normal flow below.
 	if reason := BuiltinCommandReason(ev.Call); reason != "" {
 		r.emitBuiltinAudit(ctx, ev, reason)
+	}
+	// The instance fence (spec #1 工单3) judges after the guaranteed audit and
+	// before every policy concern: a red line denies even when no provider is
+	// configured, and a review red line holds the call on the ordinary
+	// approval lifecycle — the operator decides this exact invocation, not a
+	// model judge. The reason carries the global.<id> prefix the control
+	// plane badges.
+	if rule, hit := globalfence.JudgeCommand(operation.InvocationFromContext(ctx).SessionID, toolCommandText(ev.Call)); hit {
+		reason := "global." + rule.ID
+		if rule.Desc != "" {
+			reason += "（" + rule.Desc + "）"
+		}
+		decision := &Decision{Action: Action_ACTION_BLOCK, Reason: reason}
+		if rule.Action == globalfence.ActionDeny {
+			r.emit(ctx, decision, ev)
+			return denied(reason), nil
+		}
+		if admission := r.review(ctx, ev, decision); admission.Deny == nil {
+			return admission, nil
+		}
+		return denied(reason), nil
 	}
 	if policy == nil {
 		return toolhooks.Admission{}, nil

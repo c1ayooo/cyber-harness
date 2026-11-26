@@ -26,24 +26,53 @@ func (stubScopeJudge) JudgeScopeRequest(req ScopeRequest) ScopeDecision {
 	if req.Invocation.SessionID == "" || req.Call == nil {
 		return ScopeDecision{}
 	}
-	var arguments struct {
-		Method string `json:"method"`
-		URL    string `json:"url"`
-		FlowID string `json:"flow_id"`
-	}
-	if json.Unmarshal(req.Call.GetArguments().GetData(), &arguments) != nil {
+	arguments, flowID, ok := scopeCallArguments(req)
+	if !ok {
 		return ScopeDecision{}
 	}
 	verdict, judged := scoperules.JudgeSession(req.Invocation.SessionID, arguments.Method, arguments.URL)
 	if !judged {
 		return ScopeDecision{}
 	}
-	scoperules.RecordVerdict(arguments.FlowID, verdict)
+	scoperules.RecordVerdict(flowID, verdict)
 	if verdict.Action == scoperules.ActionRecord {
 		return ScopeDecision{Judged: true, Action: verdict.Action, RuleID: verdict.RuleID, Reason: verdict.Reason}
 	}
 	return ScopeDecision{Judged: true, Action: verdict.Action, RuleID: verdict.RuleID, Reason: verdict.Reason,
 		Hold: func(context.Context) bool { return false }}
+}
+
+// JudgeConnect mirrors the real judge's tunnel path: host-form project rules
+// via JudgeSessionConnect, with the same quiet-refusal for a default miss.
+func (stubScopeJudge) JudgeConnect(req ScopeRequest) ScopeDecision {
+	if req.Invocation.SessionID == "" || req.Call == nil {
+		return ScopeDecision{}
+	}
+	arguments, flowID, ok := scopeCallArguments(req)
+	if !ok {
+		return ScopeDecision{}
+	}
+	verdict, judged := scoperules.JudgeSessionConnect(req.Invocation.SessionID, arguments.URL)
+	if !judged {
+		return ScopeDecision{}
+	}
+	scoperules.RecordVerdict(flowID, verdict)
+	if verdict.Action == scoperules.ActionRecord {
+		return ScopeDecision{Judged: true, Action: verdict.Action, RuleID: verdict.RuleID, Reason: verdict.Reason}
+	}
+	return ScopeDecision{Judged: true, Action: verdict.Action, RuleID: verdict.RuleID, Reason: verdict.Reason,
+		Hold: func(context.Context) bool { return false }}
+}
+
+func scopeCallArguments(req ScopeRequest) (arguments struct {
+	Method string `json:"method"`
+	URL    string `json:"url"`
+	FlowID string `json:"flow_id"`
+}, flowID string, ok bool) {
+	if json.Unmarshal(req.Call.GetArguments().GetData(), &arguments) != nil {
+		return arguments, "", false
+	}
+	return arguments, arguments.FlowID, true
 }
 
 // attributedClient builds a client whose requests carry an egress correlation

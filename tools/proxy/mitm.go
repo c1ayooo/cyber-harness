@@ -295,21 +295,24 @@ func (a *captureAddon) judgeRequest(f *mitmproxy.Flow) (scoperules.Verdict, bool
 	if a.hub == nil || a.hub.scopeJudge == nil || f == nil || f.Request == nil || f.Request.URL == nil {
 		return scoperules.Verdict{}, false
 	}
-	// The inner request is judged, not the outer CONNECT: in relay mode only
-	// the CONNECT host is visible, and a method/path rule cannot judge it
-	// honestly. HTTPS coverage therefore follows decrypt capture.
-	if strings.EqualFold(f.Request.Method, http.MethodConnect) {
-		return scoperules.Verdict{}, false
-	}
 	correlation := a.hub.resolveCorrelation(correlationTokenOf(f))
 	defer correlation.finish()
 	if correlation.invocation.SessionID == "" {
 		return scoperules.Verdict{}, false
 	}
 	call := &aop.ToolCall{Name: httpRequestToolName, Arguments: &aop.EncodedValue{Data: scopeRequestArguments(f)}}
-	decision := a.hub.scopeJudge.JudgeScopeRequest(ScopeRequest{
-		Invocation: correlation.invocation, Call: call, Operation: correlation.operation,
-	})
+	req := ScopeRequest{Invocation: correlation.invocation, Call: call, Operation: correlation.operation}
+	// A CONNECT tunnel is judged on the fence's host form (fork patch 31):
+	// the instance fence judges fully, the project fence cannot see a method
+	// or path at tunnel setup, and in relay mode this pass/fail IS the fence —
+	// an unmatched tunnel refuses instead of passing unjudged. Decrypted
+	// inner requests carry the full judgment on their own.
+	var decision ScopeDecision
+	if strings.EqualFold(f.Request.Method, http.MethodConnect) {
+		decision = a.hub.scopeJudge.JudgeConnect(req)
+	} else {
+		decision = a.hub.scopeJudge.JudgeScopeRequest(req)
+	}
 	if !decision.Judged {
 		return scoperules.Verdict{}, false
 	}

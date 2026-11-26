@@ -135,6 +135,78 @@ func (s *Set) Judge(method, rawURL string) (Verdict, bool) {
 	}, true
 }
 
+// JudgeConnect judges a CONNECT tunnel against the fence's host form only
+// (fork patch 31): at tunnel setup there is no method beyond CONNECT itself
+// and no path, so rows match on host alone (a method/path row refines the
+// decrypted inner requests, not the tunnel). A CONNECT URL is authority form
+// ("host:port"), which url.Parse reads as scheme:opaque — RequestHost retries
+// with a scheme prepended so the host survives. CIDR rows match literal IPs
+// directly and hostnames through the cached resolver, so the full host
+// vocabulary judges here too; an unmatched tunnel refuses under the allowlist
+// default rather than passing unjudged. In relay mode this host-form
+// pass/fail IS the fence. Shadow still records and passes.
+func (s *Set) JudgeConnect(rawURL string) (Verdict, bool) {
+	if s == nil || !s.Enabled {
+		return Verdict{}, false
+	}
+	host := RequestHost(rawURL)
+	for _, rule := range s.Rules {
+		prefix := rule.PathPrefix
+		if prefix == "" {
+			prefix = "/"
+		}
+		if prefix == "/" && hostMatches(rule.Host, host) {
+			return Verdict{Action: rule.Action, RuleID: rule.ID,
+				Reason: fmt.Sprintf("命中测试范围规则 %s（%s）", rule.ID, rule.Host),
+				Shadow: s.Shadow}, true
+		}
+	}
+	return Verdict{Action: s.DefaultAction,
+		Reason:        "CONNECT 未命中测试范围规则的 host 形态，按默认动作 " + s.DefaultAction,
+		Shadow:        s.Shadow,
+		DefaultMissed: true,
+	}, true
+}
+
+// JudgeSessionConnect judges one CONNECT tunnel attributed to a session.
+func JudgeSessionConnect(sessionID, rawURL string) (Verdict, bool) {
+	storeMu.RLock()
+	set := storeSets[sessionID]
+	storeMu.RUnlock()
+	return set.JudgeConnect(rawURL)
+}
+
+// HostMatches applies one host pattern to a request host with the fence's
+// matching semantics — exact bare domain plus its whole subdomain tree, or a
+// CIDR block against the resolved address (cached, bounded). Exported for the
+// instance-wide global fence, whose domain rows must mean exactly what a
+// scope-rule host column means.
+func HostMatches(pattern, host string) bool {
+	return hostMatches(pattern, host)
+}
+
+// RequestHost extracts the authority a raw URL names. A CONNECT URL is
+// authority form ("host:port"), which url.Parse reads as scheme:opaque or
+// rejects outright (a port after a digit-leading host) — retried with a
+// scheme prepended so the host survives. Exported beside HostMatches for the
+// same consumer.
+func RequestHost(rawURL string) string {
+	parsed, err := url.Parse(rawURL)
+	if err == nil {
+		if host := parsed.Hostname(); host != "" {
+			return host
+		}
+		if parsed.Host != "" || strings.Contains(rawURL, "//") {
+			return ""
+		}
+	}
+	parsed, err = url.Parse("http://" + rawURL)
+	if err != nil {
+		return ""
+	}
+	return parsed.Hostname()
+}
+
 func ruleMatches(rule Rule, method, host, path string) bool {
 	if !methodMatches(rule.Method, method) {
 		return false
