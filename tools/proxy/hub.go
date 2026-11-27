@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-	"net/netip"
 	"os"
 	"path/filepath"
 	"strings"
@@ -113,66 +112,6 @@ type Hub struct {
 	// keeps the pre-patch behavior.
 	controlPlaneMu sync.Mutex
 	controlPlane   string
-}
-
-// SetControlPlaneHost installs the control-plane host the proxy exempts from
-// judging and capture. Safe before Start; read per request.
-func (h *Hub) SetControlPlaneHost(host string) {
-	if h == nil {
-		return
-	}
-	h.controlPlaneMu.Lock()
-	defer h.controlPlaneMu.Unlock()
-	h.controlPlane = strings.ToLower(strings.TrimSpace(host))
-}
-
-// controlPlaneExempt reports whether the request host names the control
-// plane. The fence is a statement about the target range; the executor's
-// calls to its own control plane must always work, and capturing them would
-// leak their Authorization headers into the traffic view. When the configured
-// control plane itself lives on loopback, the whole loopback family counts as
-// the platform — 127.0.0.1, localhost and ::1 are one machine's management
-// plane spelled three ways.
-func (h *Hub) controlPlaneExempt(host string) bool {
-	if h == nil || host == "" {
-		return false
-	}
-	h.controlPlaneMu.Lock()
-	defer h.controlPlaneMu.Unlock()
-	cp := h.controlPlane
-	if cp == "" {
-		return false
-	}
-	host = strings.ToLower(strings.Trim(strings.TrimSpace(host), "[]"))
-	if strings.EqualFold(host, cp) {
-		return true
-	}
-	if loopbackHost(cp) && loopbackHost(host) {
-		return true
-	}
-	return false
-}
-
-// loopbackHost reports whether one host names the node's own loopback: the
-// literal localhost, an address in 127.0.0.0/8, or ::1.
-func loopbackHost(host string) bool {
-	if host == "" {
-		return false
-	}
-	if strings.EqualFold(host, "localhost") {
-		return true
-	}
-	addr, err := netip.ParseAddr(host)
-	return err == nil && addr.IsLoopback()
-}
-
-// SetScopeJudge installs the test-range judge. Safe before Start; judging
-// reads it per request.
-func (h *Hub) SetScopeJudge(judge ScopeJudge) {
-	if h == nil {
-		return
-	}
-	h.scopeJudge = judge
 }
 
 // State returns the live egress selection capability. Lifecycle remains owned
