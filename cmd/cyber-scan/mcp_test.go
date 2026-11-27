@@ -5,6 +5,7 @@ import (
 
 	"github.com/chainreactors/cyber/agent"
 	agentsession "github.com/chainreactors/cyber/agent/session"
+	fenceconfig "github.com/chainreactors/cyber/exts/4zfence/config"
 	guardrailext "github.com/chainreactors/cyber/exts/guardrail"
 	mcpext "github.com/chainreactors/cyber/exts/mcp"
 	mcptools "github.com/chainreactors/cyber/tools/mcp"
@@ -31,7 +32,7 @@ func TestExtensionsInstallMCPOnlyWhenServersAreConfigured(t *testing.T) {
 			application := minimalConfig(&agentsession.Config{}).Base
 			application.DataDir = t.TempDir()
 			application.MCP = mcpext.Config{MCPServers: test.servers}
-			values, err := extensions(application, agent.NoLoop(), t.TempDir(), nil, guardrailext.Config{})
+			values, err := extensions(application, agent.NoLoop(), t.TempDir(), nil, guardrailext.Config{}, fenceconfig.Config{})
 			if err != nil {
 				t.Fatal(err)
 			}
