@@ -25,7 +25,8 @@ import (
 	"time"
 )
 
-// Actions are the three verdicts a rule row or the default action can carry.
+// Actions are the three verdicts a rule row or the default action can carry;
+// the seam (tools/proxy, aliased in judge.go) spells the same values.
 const (
 	ActionRecord = "record"
 	ActionReview = "review"
@@ -38,7 +39,6 @@ const (
 // extension; both are hot-path bounded caches, not ledgers.
 const (
 	maxSessions = 64
-	maxVerdicts = 4096
 )
 
 // Rule is one manifest row. Method is "*" or verbs joined by "|"; Host is "*",
@@ -518,35 +518,6 @@ var (
 	verdictOrder  []string
 	verdictByFlow = map[string]Verdict{}
 )
-
-// RecordVerdict stores the verdict of one judged request for the observe
-// extension to attach as the flow's TrafficVerdict sidecar.
-func RecordVerdict(flowID string, verdict Verdict) {
-	if flowID == "" {
-		return
-	}
-	verdictMu.Lock()
-	defer verdictMu.Unlock()
-	if _, exists := verdictByFlow[flowID]; !exists {
-		verdictOrder = append(verdictOrder, flowID)
-		if len(verdictOrder) > maxVerdicts {
-			delete(verdictByFlow, verdictOrder[0])
-			verdictOrder = verdictOrder[1:]
-		}
-	}
-	verdictByFlow[flowID] = verdict
-}
-
-// TakeVerdict consumes the verdict stored for one flow id.
-func TakeVerdict(flowID string) (Verdict, bool) {
-	verdictMu.Lock()
-	defer verdictMu.Unlock()
-	verdict, ok := verdictByFlow[flowID]
-	if ok {
-		delete(verdictByFlow, flowID)
-	}
-	return verdict, ok
-}
 
 // SetForTest installs one parsed set directly (tests share this package and
 // its package-global store). Production code uses SetRules.

@@ -7,7 +7,6 @@ import (
 	"github.com/chainreactors/cyber/core/extension"
 	"github.com/chainreactors/cyber/core/hooks"
 	coretool "github.com/chainreactors/cyber/core/tool"
-	fenceext "github.com/chainreactors/cyber/exts/4zfence"
 	cfg "github.com/chainreactors/cyber/pkg/config"
 	proxytool "github.com/chainreactors/cyber/tools/proxy"
 )
@@ -19,10 +18,15 @@ type Config struct {
 	// Proxy is the upstream the host was started with. It is also the fallback
 	// the proxy commands report when no hub route applies.
 	Proxy string
-	// ControlPlaneHost is the control plane's host (the agent server URL's
-	// host). Requests naming it — the executor's own bookkeeping — forward
-	// unjudged and uncaptured (fork patch 36). Empty exempts nothing.
-	ControlPlaneHost string
+	// ScopeJudge is the request judge the composition installs (seam G2). The
+	// composition decides: a capture node passes the fence's judge; a host
+	// that wants an unjudged relay passes nil — the NoEgress precedent, where
+	// absence is an explicit composition value, not a silent lookup failure.
+	ScopeJudge proxytool.ScopeJudge
+	// RequestExemption names the hosts the proxy forwards unjudged and
+	// uncaptured — in the fork's composition, the fence's control-plane
+	// exemption. Nil exempts nothing.
+	RequestExemption func(host string) bool
 	Capture          bool
 	Storage          cfg.TrafficOptions
 }
@@ -50,16 +54,13 @@ func (e *Extension) Load(scope *extension.Scope) error {
 	if err != nil {
 		return err
 	}
-	resource.Hub.SetControlPlaneHost(e.config.ControlPlaneHost)
 	e.resource = resource
 	hub := resource.Hub
-	// The scope judge is the fence's (it loads in the base composition,
-	// ahead of this extension, and owns request judging; docs/19 P1-4). An
-	// embedder without the fence keeps a judgeless hub: the proxy stays a
-	// pure capture/routing relay.
-	if fence, judgeErr := extension.Use[*fenceext.Extension](scope); judgeErr == nil {
-		hub.SetScopeJudge(fenceext.NewScopeJudge(fence))
-	}
+	// Both are composition decisions carried on the config, not lookups this
+	// extension second-guesses: a missing judge here means the composition
+	// chose a judgeless relay, and loads as one.
+	hub.SetScopeJudge(e.config.ScopeJudge)
+	hub.SetRequestExemption(e.config.RequestExemption)
 
 	binding, err := proxytool.TrafficNamespace(hub)
 	if err != nil {

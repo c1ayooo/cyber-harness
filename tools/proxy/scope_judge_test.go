@@ -13,67 +13,65 @@ import (
 	"time"
 
 	"github.com/chainreactors/cyber/core/operation"
-	"github.com/chainreactors/cyber/exts/4zfence/scoperules"
+	mitmproxy "github.com/chainreactors/utils/mitmproxy/proxy"
 )
 
-// stubScopeJudge is the minimal judge the proxy integration tests use: it
-// mirrors the contract the guardrail runtime implements (judge by session set,
-// record the verdict for the sidecar, hold reviews until refused) without
-// importing that package — an in-package test of proxy cannot import a package
-// that imports proxy.
-type stubScopeJudge struct{}
+// The seam tests run against canned judges: the proxy's contract is to carry
+// the decision — verdict verbatim, hold, refusal — not to understand the
+// rule tables (those live in the fence and its own tests).
 
-func (stubScopeJudge) JudgeScopeRequest(req ScopeRequest) ScopeDecision {
+// cannedJudge answers from a static table: host → decision pieces.
+type cannedJudge struct {
+	// known hosts judge; anything else is "not my business".
+	byHost map[string]hostDecision
+}
+
+type hostDecision struct {
+	action  string
+	verdict *ScopeVerdict
+	refusal *mitmproxy.Response
+	holdOK  bool
+}
+
+func (j *cannedJudge) JudgeScopeRequest(req ScopeRequest) ScopeDecision {
+	return j.decide(req)
+}
+
+func (j *cannedJudge) JudgeScopeConnect(req ScopeRequest) ScopeDecision {
+	return j.decide(req)
+}
+
+func (j *cannedJudge) decide(req ScopeRequest) ScopeDecision {
 	if req.Invocation.SessionID == "" || req.Call == nil {
 		return ScopeDecision{}
 	}
-	arguments, flowID, ok := scopeCallArguments(req)
-	if !ok {
-		return ScopeDecision{}
+	var arguments struct {
+		URL string `json:"url"`
 	}
-	verdict, judged := scoperules.JudgeSession(req.Invocation.SessionID, arguments.Method, arguments.URL)
-	if !judged {
-		return ScopeDecision{}
-	}
-	scoperules.RecordVerdict(flowID, verdict)
-	if verdict.Action == scoperules.ActionRecord {
-		return ScopeDecision{Judged: true, Action: verdict.Action, RuleID: verdict.RuleID, Reason: verdict.Reason, Verdict: &verdict}
-	}
-	return ScopeDecision{Judged: true, Action: verdict.Action, RuleID: verdict.RuleID, Reason: verdict.Reason,
-		Verdict: &verdict, Hold: func(context.Context) bool { return false }}
-}
-
-// JudgeScopeConnect mirrors the real judge's tunnel path: host-form project rules
-// via JudgeSessionConnect, with the same quiet-refusal for a default miss.
-func (stubScopeJudge) JudgeScopeConnect(req ScopeRequest) ScopeDecision {
-	if req.Invocation.SessionID == "" || req.Call == nil {
-		return ScopeDecision{}
-	}
-	arguments, flowID, ok := scopeCallArguments(req)
-	if !ok {
-		return ScopeDecision{}
-	}
-	verdict, judged := scoperules.JudgeSessionConnect(req.Invocation.SessionID, arguments.URL)
-	if !judged {
-		return ScopeDecision{}
-	}
-	scoperules.RecordVerdict(flowID, verdict)
-	if verdict.Action == scoperules.ActionRecord {
-		return ScopeDecision{Judged: true, Action: verdict.Action, RuleID: verdict.RuleID, Reason: verdict.Reason, Verdict: &verdict}
-	}
-	return ScopeDecision{Judged: true, Action: verdict.Action, RuleID: verdict.RuleID, Reason: verdict.Reason,
-		Verdict: &verdict, Hold: func(context.Context) bool { return false }}
-}
-
-func scopeCallArguments(req ScopeRequest) (arguments struct {
-	Method string `json:"method"`
-	URL    string `json:"url"`
-	FlowID string `json:"flow_id"`
-}, flowID string, ok bool) {
 	if json.Unmarshal(req.Call.GetArguments().GetData(), &arguments) != nil {
-		return arguments, "", false
+		return ScopeDecision{}
 	}
-	return arguments, arguments.FlowID, true
+	parsed, err := url.Parse(arguments.URL)
+	if err != nil {
+		return ScopeDecision{}
+	}
+	host, ok := j.byHost[parsed.Hostname()]
+	if !ok {
+		return ScopeDecision{}
+	}
+	decision := ScopeDecision{Judged: true, Action: host.action, Verdict: host.verdict, Refusal: host.refusal}
+	if host.action == ActionReview {
+		approved := host.holdOK
+		decision.Hold = func(context.Context) bool { return approved }
+	}
+	return decision
+}
+
+func refusalFor(host string) *mitmproxy.Response {
+	body, _ := json.Marshal(map[string]any{"error": "scope_rules_refused", "host": host, "reason": "范围外"})
+	header := http.Header{}
+	header.Set("Content-Type", "application/json")
+	return &mitmproxy.Response{StatusCode: http.StatusForbidden, Header: header, Body: body}
 }
 
 // attributedClient builds a client whose requests carry an egress correlation
@@ -108,11 +106,10 @@ func plainClient(t *testing.T, hub *Hub) *http.Client {
 	}
 }
 
-const judgeRules = `{"enabled":true,"default_action":"record","rules":[{"id":"sr-1","action":"block","method":"*","host":"blocked.test"}]}`
-
-// TestScopeJudgeBlocksRequest verifies the full block path: the synthetic 403
-// is what the tool sees, the target never receives the request, the refusal is
-// captured as a flow, and the verdict lands in the sidecar registry.
+// TestScopeJudgeBlocksRequest verifies the full block path: the judge's
+// refusal is what the tool sees, the target never receives the request, the
+// refusal is captured as a flow, and the verdict lands in the sidecar
+// registry.
 func TestScopeJudgeBlocksRequest(t *testing.T) {
 	var hits atomic.Int32
 	target := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
@@ -122,10 +119,10 @@ func TestScopeJudgeBlocksRequest(t *testing.T) {
 	defer target.Close()
 
 	hub := startHub(t, true)
-	hub.SetScopeJudge(stubScopeJudge{})
-	if err := scoperules.SetRules("sess-x", []byte(judgeRules)); err != nil {
-		t.Fatal(err)
-	}
+	hub.SetScopeJudge(&cannedJudge{byHost: map[string]hostDecision{
+		"blocked.test": {action: ActionBlock, refusal: refusalFor("blocked.test"),
+			verdict: &ScopeVerdict{Action: ActionBlock, RuleID: "sr-1", Reason: "范围外"}},
+	}})
 
 	resp, err := attributedClient(t, hub, "sess-x", "tool-1").Get("http://blocked.test/steal")
 	if err != nil {
@@ -146,8 +143,8 @@ func TestScopeJudgeBlocksRequest(t *testing.T) {
 	if len(flows) == 0 || flows[0].GetResponse().GetStatusCode() != http.StatusForbidden {
 		t.Fatalf("captured flow = %+v", flows)
 	}
-	verdict, ok := scoperules.TakeVerdict(flows[0].GetId())
-	if !ok || verdict.Action != scoperules.ActionBlock || verdict.RuleID != "sr-1" {
+	verdict, ok := TakeVerdict(flows[0].GetId())
+	if !ok || verdict.Action != ActionBlock || verdict.RuleID != "sr-1" {
 		t.Fatalf("sidecar verdict = %+v ok=%v", verdict, ok)
 	}
 }
@@ -160,17 +157,16 @@ func TestScopeJudgeRecordForwardsAndCaptures(t *testing.T) {
 	defer target.Close()
 
 	hub := startHub(t, true)
-	hub.SetScopeJudge(stubScopeJudge{})
-	if err := scoperules.SetRules("sess-x", []byte(judgeRules)); err != nil {
-		t.Fatal(err)
-	}
+	hub.SetScopeJudge(&cannedJudge{byHost: map[string]hostDecision{
+		"127.0.0.1": {action: ActionRecord, verdict: &ScopeVerdict{Action: ActionRecord, RuleID: "sr-ok"}},
+	}})
 
 	getThrough(t, attributedClient(t, hub, "sess-x", "tool-1"), target.URL)
 	flows := waitForFlows(t, hub.store, 1)
 	if len(flows) == 0 || flows[0].GetResponse().GetStatusCode() != http.StatusOK {
 		t.Fatalf("recorded flow = %+v", flows)
 	}
-	if verdict, ok := scoperules.TakeVerdict(flows[0].GetId()); !ok || verdict.Action != scoperules.ActionRecord {
+	if verdict, ok := TakeVerdict(flows[0].GetId()); !ok || verdict.Action != ActionRecord {
 		t.Fatalf("sidecar verdict = %+v ok=%v", verdict, ok)
 	}
 
@@ -179,7 +175,7 @@ func TestScopeJudgeRecordForwardsAndCaptures(t *testing.T) {
 	getThrough(t, plainClient(t, hub), "http://blocked.test/")
 	time.Sleep(100 * time.Millisecond)
 	for _, flow := range hub.store.Query(Filter{}) {
-		if verdict, ok := scoperules.TakeVerdict(flow.GetId()); ok {
+		if verdict, ok := TakeVerdict(flow.GetId()); ok {
 			t.Fatalf("unattributed request judged: %+v", verdict)
 		}
 	}
@@ -212,11 +208,17 @@ func containsString(haystack, needle string) bool {
 // asset-pending flow on. The pre-patch behavior reconstructed the verdict
 // from the decision's action and dropped the flag.
 func TestScopeJudgeVerdictTravelsVerbatim(t *testing.T) {
+	target := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer target.Close()
+
 	hub := startHub(t, true)
-	hub.SetScopeJudge(stubScopeJudge{})
-	if err := scoperules.SetRules("sess-miss", []byte(`{"enabled":true,"default_action":"review","rules":[]}`)); err != nil {
-		t.Fatal(err)
-	}
+	hub.SetScopeJudge(&cannedJudge{byHost: map[string]hostDecision{
+		"outside.test": {action: ActionReview, holdOK: false,
+			verdict: &ScopeVerdict{Action: ActionReview, Reason: "范围外", DefaultMissed: true},
+			refusal: refusalFor("outside.test")},
+	}})
 	resp, err := attributedClient(t, hub, "sess-miss", "tool-1").Get("http://outside.test/app.js")
 	if err != nil {
 		t.Fatalf("request through hub: %v", err)
@@ -224,22 +226,15 @@ func TestScopeJudgeVerdictTravelsVerbatim(t *testing.T) {
 	body, _ := io.ReadAll(resp.Body)
 	resp.Body.Close()
 	if resp.StatusCode != http.StatusForbidden {
-		t.Fatalf("status = %d, want the quiet 403 refusal", resp.StatusCode)
+		t.Fatalf("status = %d, want the refused review", resp.StatusCode)
 	}
 	flows := waitForFlows(t, hub.store, 1)
-	verdict, ok := scoperules.TakeVerdict(flows[0].GetId())
-	if !ok || verdict.Action != scoperules.ActionReview || !verdict.DefaultMissed {
+	verdict, ok := TakeVerdict(flows[0].GetId())
+	if !ok || verdict.Action != ActionReview || !verdict.DefaultMissed {
 		t.Fatalf("sidecar verdict = %+v ok=%v (default_missed lost)", verdict, ok)
 	}
-	// The refusal body explains itself: the model reading its tool output can
-	// stop retrying without a round trip (fork patch 34).
-	var said struct {
-		Error   string `json:"error"`
-		Host    string `json:"host"`
-		Reason  string `json:"reason"`
-		Pending bool   `json:"pending"`
-	}
-	if json.Unmarshal(body, &said) != nil || said.Error != "scope_rules_refused" || said.Host != "outside.test" || !said.Pending || said.Reason == "" {
+	// The refusal reached the requester verbatim.
+	if !containsString(string(body), "scope_rules_refused") {
 		t.Fatalf("refusal body = %s", body)
 	}
 }
@@ -251,61 +246,61 @@ func TestScopeJudgeVerdictWithoutVerdictReconstructs(t *testing.T) {
 	target := startTestTarget(64)
 	defer target.Close()
 	hub := startHub(t, true)
-	hub.SetScopeJudge(bareScopeJudge{})
-	if err := scoperules.SetRules("sess-bare", []byte(judgeRules)); err != nil {
-		t.Fatal(err)
-	}
+	hub.SetScopeJudge(&bareJudge{host: "127.0.0.1", action: ActionRecord, ruleID: "", reason: "record"})
 	getThrough(t, attributedClient(t, hub, "sess-bare", "tool-1"), target.URL)
 	flows := waitForFlows(t, hub.store, 1)
-	verdict, ok := scoperules.TakeVerdict(flows[0].GetId())
-	// The request misses every row and lands on the record default; the
-	// reconstruction keeps action/reason but invents no flags.
-	if !ok || verdict.Action != scoperules.ActionRecord || verdict.RuleID != "" || verdict.DefaultMissed || verdict.Passive {
+	verdict, ok := TakeVerdict(flows[0].GetId())
+	// The reconstruction keeps action/reason but invents no flags.
+	if !ok || verdict.Action != ActionRecord || verdict.RuleID != "" || verdict.DefaultMissed || verdict.Passive {
 		t.Fatalf("reconstructed verdict = %+v ok=%v", verdict, ok)
 	}
 }
 
-// bareScopeJudge answers from the action alone, like a judge predating the
+// bareJudge answers from the action alone, like a judge predating the
 // verbatim verdict field.
-type bareScopeJudge struct{}
+type bareJudge struct {
+	host, action, ruleID, reason string
+}
 
-func (bareScopeJudge) JudgeScopeRequest(req ScopeRequest) ScopeDecision {
+func (j *bareJudge) decision(req ScopeRequest) ScopeDecision {
 	if req.Invocation.SessionID == "" || req.Call == nil {
 		return ScopeDecision{}
 	}
-	arguments, _, ok := scopeCallArguments(req)
-	if !ok {
+	var arguments struct {
+		URL string `json:"url"`
+	}
+	if json.Unmarshal(req.Call.GetArguments().GetData(), &arguments) != nil {
 		return ScopeDecision{}
 	}
-	verdict, judged := scoperules.JudgeSession(req.Invocation.SessionID, arguments.Method, arguments.URL)
-	if !judged {
+	parsed, err := url.Parse(arguments.URL)
+	if err != nil || parsed.Hostname() != j.host {
 		return ScopeDecision{}
 	}
-	return ScopeDecision{Judged: true, Action: verdict.Action, RuleID: verdict.RuleID, Reason: verdict.Reason}
+	return ScopeDecision{Judged: true, Action: j.action, RuleID: j.ruleID, Reason: j.reason}
 }
 
-func (bareScopeJudge) JudgeScopeConnect(req ScopeRequest) ScopeDecision {
-	return ScopeDecision{}
-}
+func (j *bareJudge) JudgeScopeRequest(req ScopeRequest) ScopeDecision { return j.decision(req) }
+func (j *bareJudge) JudgeScopeConnect(req ScopeRequest) ScopeDecision { return ScopeDecision{} }
 
-// The control plane is the executor's own management plane (fork patch 36):
-// a bookkeeping call to it is forwarded unjudged and uncaptured, even when
-// the allowlist fence does not name the host. Before the skip, every such
-// call was held for review — the operator approved one call per step.
-func TestScopeJudgeControlPlaneIsPlatformPlumbing(t *testing.T) {
+// The exemption hook names the requester's own plumbing (fork patch 36): a
+// bookkeeping call to an exempt host is forwarded unjudged and uncaptured,
+// even when the judge would hold it. Before the skip, every such call was
+// held for review — the operator approved one call per step.
+func TestScopeJudgeExemptionIsPlatformPlumbing(t *testing.T) {
 	target := startTestTarget(64)
 	defer target.Close()
 
 	hub := startHub(t, true)
-	hub.SetScopeJudge(stubScopeJudge{})
-	// The test target lives on 127.0.0.1; naming that host as the control
-	// plane exempts it — exactly the deployment shape this patch serves (the
-	// executor's API base and the scan share the node).
-	hub.SetControlPlaneHost("127.0.0.1")
-	// The allowlist names one host; the target is deliberately NOT on it.
-	if err := scoperules.SetRules("sess-loop", []byte(`{"enabled":true,"default_action":"review","rules":[{"id":"sr-ok","action":"record","method":"*","host":"in-range.test","path_prefix":"/"}]}`)); err != nil {
-		t.Fatal(err)
-	}
+	hub.SetScopeJudge(&cannedJudge{byHost: map[string]hostDecision{
+		"127.0.0.1": {action: ActionReview, holdOK: false,
+			verdict: &ScopeVerdict{Action: ActionReview, DefaultMissed: true},
+			refusal: refusalFor("127.0.0.1")},
+	}})
+	// The judge would refuse everything; the exemption forwards the control
+	// plane anyway.
+	hub.SetRequestExemption(func(host string) bool {
+		return host == "127.0.0.1" || host == "localhost" || host == "[::1]" // the loopback family, as the fence's policy spells it
+	})
 	client := attributedClient(t, hub, "sess-loop", "tool-1")
 	if tr, ok := client.Transport.(*http.Transport); ok {
 		tr.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
@@ -323,13 +318,13 @@ func TestScopeJudgeControlPlaneIsPlatformPlumbing(t *testing.T) {
 	for _, flow := range hub.store.Query(Filter{}) {
 		t.Fatalf("control-plane call captured: %+v", flow)
 	}
-	// A different session whose control plane is elsewhere still judges this
-	// host: the exemption is the node's own plumbing, not the address.
+	// Without the hook nothing is exempt: the same judge refuses.
 	other := startHub(t, true)
-	other.SetScopeJudge(stubScopeJudge{})
-	if err := scoperules.SetRules("sess-strict", []byte(`{"enabled":true,"default_action":"review","rules":[]}`)); err != nil {
-		t.Fatal(err)
-	}
+	other.SetScopeJudge(&cannedJudge{byHost: map[string]hostDecision{
+		"localhost": {action: ActionReview, holdOK: false,
+			verdict: &ScopeVerdict{Action: ActionReview, Reason: "范围外", DefaultMissed: true},
+			refusal: refusalFor("localhost")},
+	}})
 	resp3, err := attributedClient(t, other, "sess-strict", "tool-3").Get(localhost(target.URL) + "/x")
 	if err != nil {
 		t.Fatalf("out-of-range call: %v", err)

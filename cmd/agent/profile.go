@@ -10,12 +10,15 @@ import (
 	"github.com/chainreactors/cyber/core/extension"
 	"github.com/chainreactors/cyber/core/telemetry"
 	fenceext "github.com/chainreactors/cyber/exts/4zfence"
+	fenceconfig "github.com/chainreactors/cyber/exts/4zfence/config"
 	zsession "github.com/chainreactors/cyber/exts/4zsession"
 	loopext "github.com/chainreactors/cyber/exts/agent"
+	guardrailext "github.com/chainreactors/cyber/exts/guardrail"
 	sessionext "github.com/chainreactors/cyber/exts/session"
 	subagentext "github.com/chainreactors/cyber/exts/subagent"
 	terminalext "github.com/chainreactors/cyber/exts/terminal"
 	tuiext "github.com/chainreactors/cyber/exts/tui"
+	"github.com/chainreactors/cyber/pkg/assembly"
 	cfg "github.com/chainreactors/cyber/pkg/config"
 	consoleapi "github.com/chainreactors/cyber/pkg/console/api"
 	harness "github.com/chainreactors/cyber/pkg/harness"
@@ -38,7 +41,12 @@ func newAgentProfile(option cfg.Option, logger telemetry.Logger, workDir string,
 
 	// This build routes nothing, so it publishes the disabled endpoint and
 	// links no proxy at all.
+	// The judge block is the product's own composition decision (docs/19
+	// E3-2): this profile judges with zero-config guardrail + fence, the
+	// same shape the base composition used to install implicitly.
+	policy, _ := assembly.Policy(guardrailext.Config{}, fenceconfig.Config{})
 	values, err := harness.BaseExtensions(harness.BaseConfig{
+		Policy:     policy,
 		Directory:  workDir,
 		SkillPaths: cfg.LocalSkillPaths(option.Skills),
 		Terminal:   terminalext.Config{Timeout: bashTimeout},

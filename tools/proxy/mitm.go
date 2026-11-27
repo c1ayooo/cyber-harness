@@ -17,7 +17,6 @@ import (
 	"github.com/chainreactors/cyber/core/operation"
 	"github.com/chainreactors/cyber/core/telemetry"
 	coretool "github.com/chainreactors/cyber/core/tool"
-	"github.com/chainreactors/cyber/exts/4zfence/scoperules"
 	cfg "github.com/chainreactors/cyber/pkg/config"
 	mitmproxy "github.com/chainreactors/utils/mitmproxy/proxy"
 	goflags "github.com/jessevdk/go-flags"
@@ -182,15 +181,12 @@ func correlationTokenOf(f *mitmproxy.Flow) string {
 }
 
 func (a *captureAddon) Requestheaders(f *mitmproxy.Flow) {
-	// The control plane is the executor's own management plane (fork patch
-	// 36): its calls forward unjudged and uncaptured, before any judge or
-	// capture state exists.
-	if f != nil && f.Request != nil && f.Request.URL != nil && a.hub.controlPlaneExempt(f.Request.URL.Hostname()) {
+	// The exemption hook and the scope judge (seam G2, scope_judge.go) run
+	// before capture: a refused request still produces a capture record, and
+	// a held request blocks the forwarding goroutine here.
+	if f != nil && f.Request != nil && f.Request.URL != nil && a.hub.exempted(f.Request.URL.Hostname()) {
 		return
 	}
-	// The scope judge runs before capture so a refused request also produces a
-	// capture record of the synthetic 403, and so a held request blocks the
-	// forwarding goroutine — the library short-circuits any Response set here.
 	verdict, judged := a.judgeRequest(f)
 	if a.hub == nil || a.hub.stopping.Load() || !a.hub.recording.Load() || f == nil || f.Request == nil {
 		return
@@ -208,18 +204,7 @@ func (a *captureAddon) Requestheaders(f *mitmproxy.Flow) {
 	}
 	state := newCaptureState(a.hub, f)
 	if judged {
-		state.setVerdict(verdict)
-	}
-	if f.Response != nil {
-		// A judge-refused exchange never reaches the engine's response stage,
-		// so the synthetic refusal is hydrated here to stay visible in the
-		// traffic view.
-		state.flow.Response = &traffic.HttpResponse{
-			StatusCode: int32(f.Response.StatusCode),
-			Headers:    traffic.HeadersFromHTTP(f.Response.Header),
-			Body:       f.Response.Body,
-		}
-		state.flow.ContentType = f.Response.Header.Get("Content-Type")
+		state.judged(verdict, f)
 	}
 	f.Stream = true // Capture observes native streams; no buffered-body branch.
 	a.pending.Store(f.Id.String(), state)
@@ -278,16 +263,7 @@ type captureState struct {
 	bodies     [2]*bodyStream
 	files      [2]*bodyFile
 	captureErr error
-	// verdict is the scope judge's answer for this request, recorded into the
-	// sidecar registry under the canonical flow id once the capture completes.
-	verdict *scoperules.Verdict
-}
-
-// setVerdict attaches the judge's verdict (request goroutine, before finish).
-func (s *captureState) setVerdict(verdict scoperules.Verdict) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	s.verdict = &verdict
+	verdict    *ScopeVerdict // the scope judge's answer, carried to the sidecar registry
 }
 
 func newCaptureState(hub *Hub, f *mitmproxy.Flow) *captureState {

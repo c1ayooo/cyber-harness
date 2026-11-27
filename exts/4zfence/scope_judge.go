@@ -3,6 +3,8 @@ package fence
 import (
 	"context"
 	"encoding/json"
+	"net/http"
+	"strings"
 
 	aop "github.com/chainreactors/cyber/aop"
 	"github.com/chainreactors/cyber/core/operation"
@@ -10,6 +12,7 @@ import (
 	"github.com/chainreactors/cyber/exts/4zfence/globalfence"
 	"github.com/chainreactors/cyber/exts/4zfence/scoperules"
 	guardrailext "github.com/chainreactors/cyber/exts/guardrail"
+	mitmproxy "github.com/chainreactors/utils/mitmproxy/proxy"
 	protobuf "google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 )
@@ -106,17 +109,18 @@ func (j *ScopeJudge) JudgeScopeRequest(req scoperules.ScopeRequest) scoperules.S
 			Verdict: &verdict}
 	}
 	decision := &guardrailext.Decision{Action: scopeActionEnum(verdict.Action), Reason: verdict.Reason}
+	refusal := scopeRefusal(rawURL, verdict)
 	if verdict.Action == scoperules.ActionBlock {
 		j.emitScope(ctx, decision, req)
 		return scoperules.ScopeDecision{Judged: true, Action: verdict.Action, RuleID: verdict.RuleID, Reason: verdict.Reason,
-			Verdict: &verdict}
+			Verdict: &verdict, Refusal: refusal}
 	}
 	// Review: hold the request on the pending-review lifecycle. The operator
 	// answers through the ordinary guardrail Pending/Resolve RPC; expiry uses
 	// the runtime's own review timeout.
 	approved := j.holdScopeRequest(ctx, req, decision)
 	return scoperules.ScopeDecision{Judged: true, Action: verdict.Action, RuleID: verdict.RuleID, Reason: verdict.Reason,
-		Verdict: &verdict, Hold: func(context.Context) bool { return approved }}
+		Verdict: &verdict, Refusal: refusal, Hold: func(context.Context) bool { return approved }}
 }
 
 // allowGlobal records an instance-fence allowance: infrastructure the
@@ -177,14 +181,15 @@ func (j *ScopeJudge) JudgeScopeConnect(req scoperules.ScopeRequest) scoperules.S
 			Verdict: &verdict}
 	}
 	decision := &guardrailext.Decision{Action: scopeActionEnum(verdict.Action), Reason: verdict.Reason}
+	refusal := scopeRefusal(rawURL, verdict)
 	if verdict.Action == scoperules.ActionBlock {
 		j.emitScope(ctx, decision, req)
 		return scoperules.ScopeDecision{Judged: true, Action: verdict.Action, RuleID: verdict.RuleID, Reason: verdict.Reason,
-			Verdict: &verdict}
+			Verdict: &verdict, Refusal: refusal}
 	}
 	approved := j.holdScopeRequest(ctx, req, decision)
 	return scoperules.ScopeDecision{Judged: true, Action: verdict.Action, RuleID: verdict.RuleID, Reason: verdict.Reason,
-		Verdict: &verdict, Hold: func(context.Context) bool { return approved }}
+		Verdict: &verdict, Refusal: refusal, Hold: func(context.Context) bool { return approved }}
 }
 
 // requestHost extracts the authority a synthetic call's URL names — the
@@ -246,17 +251,60 @@ func scopeRequestMethod(call *aop.ToolCall) string {
 	return ""
 }
 
-// scopeRequestPassive reads the passive hint the proxy attaches to the
-// synthetic call (Sec-Fetch-Dest naming a static subresource). A call without
-// the field — an old proxy, or a hand-built judge request — is not passive.
+// scopeRequestPassive reports whether one Sec-Fetch-Dest value names a
+// passive subresource a page pulls by itself (scripts, stylesheets, images,
+// fonts). Navigations (document) and API calls (empty) are deliberate
+// requests and stay judgeable; anything unrecognized is not passive. The
+// policy lives here since E3: the proxy carries the raw hint, the fence
+// decides what it means. A call without the field — an old proxy, or a
+// hand-built judge request — is not passive.
 func scopeRequestPassive(call *aop.ToolCall) bool {
 	var value struct {
-		Passive bool `json:"passive"`
+		Dest    string `json:"dest"`
+		Passive bool   `json:"passive"`
 	}
 	if json.Unmarshal(call.GetArguments().GetData(), &value) != nil {
 		return false
 	}
+	if value.Dest != "" {
+		return passiveDest(value.Dest)
+	}
+	// A call without the raw hint — an old proxy, or a hand-built judge
+	// request like the acceptance corpus — carries the explicit verdict of
+	// the old wire format instead.
 	return value.Passive
+}
+
+// passiveDest reports whether one Sec-Fetch-Dest value names a passive
+// subresource a page pulls by itself (scripts, stylesheets, images, fonts).
+// Navigations (document) and API calls (empty) are deliberate requests and
+// stay judgeable; anything unrecognized is not passive.
+func passiveDest(dest string) bool {
+	switch strings.ToLower(strings.TrimSpace(dest)) {
+	case "script", "style", "image", "font":
+		return true
+	}
+	return false
+}
+
+// scopeRefusal is the synthetic reply a block (or refused review) produces.
+// 403 with a small JSON body: the tool that issued the request sees an HTTP
+// failure, not a transport error. The body states WHY, so a model reading its
+// tool output can stop retrying on its own: pending marks the allowlist
+// fallback (the host is out of range and queued for the operator's approval —
+// repeating the request cannot admit it), and reason carries the judge's
+// verdict prose.
+func scopeRefusal(rawURL string, verdict scoperules.Verdict) *mitmproxy.Response {
+	pending := verdict.DefaultMissed && verdict.Action == scoperules.ActionReview
+	body, _ := json.Marshal(map[string]any{
+		"error":   "scope_rules_refused",
+		"host":    scoperules.RequestHost(rawURL),
+		"reason":  verdict.Reason,
+		"pending": pending,
+	})
+	header := http.Header{}
+	header.Set("Content-Type", "application/json")
+	return &mitmproxy.Response{StatusCode: http.StatusForbidden, Header: header, Body: body}
 }
 
 func scopeRequestURL(call *aop.ToolCall) string {
