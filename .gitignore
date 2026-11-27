@@ -66,7 +66,6 @@ web/static-stale/
 /tools/katana/katana_response/
 /monitor/
 /scripts/
-!/scripts/check-fork.sh
 /scan_report.md
 cyber.yaml
 .runlogs/harness/
