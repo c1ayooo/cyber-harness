@@ -1062,15 +1062,19 @@ docs/19 E3-1/E3-2/E3-5/E3-6/E5, revising the fifteenth version's shape:
   `tools/proxy/hub.go` +6 relative to upstream; `tools/proxy/config.go`,
   `tools/proxy/hub_traffic.go`, `tools/proxy/scope_judge_test.go` (canned
   judges, no rule tables) round out the proxy side.
-- **Composition owns the judge block** (E3-2): `pkg/harness/base.go` composes
-  no product block — `BaseConfig.Policy` is the product's decision, nil
-  composes none — and `pkg/assembly/fence.go`'s `Policy` builds fence →
-  guardrail → bind for the scan composition. `cmd/cyber-scan/extensions.go`,
+- **The product owns the judge block** (E3-2): `pkg/harness/base.go` still
+  installs the guardrail exactly as upstream does, fed by
+  `BaseConfig.Guardrail`; `BaseConfig.Policy` holds only the judge block a
+  product root adds ahead of it, and nil composes none.
+  `pkg/assembly/fence.go`'s `Policy` returns that block as
+  `Judge{Ahead, Behind, Fence}` — the fence before the base's guardrail, the
+  bind after it — and `cmd/cyber-scan/extensions.go`,
   `cmd/cyber-scan/profile.go` and `cmd/cyber-scan/mcp_test.go` wire it. The
-  minimal agent and audit, upstream products the 4zrcin shell does not ship,
-  compose the guardrail alone, zero-config: given the fence, `cmd/agent`
-  linked `exts/scanner` and `tools/proxy` and audit linked `tools/resources`,
-  failing both builds' dependency boundaries.
+  minimal agent and audit are upstream products and compose no 4z block:
+  given the fence, `cmd/agent` linked `exts/scanner` and `tools/proxy` and
+  audit linked `tools/resources`, failing both builds' dependency
+  boundaries, and a profile loaded through `harness.New` without a guardrail
+  runtime could no longer update its mode (`pkg/node`).
   `pkg/harness/harness.go` no longer auto-appends the fence/session
   decorators, so an embedder using `harness.New` without Policy fences
   nothing.
