@@ -19,7 +19,7 @@ import (
 	"github.com/chainreactors/cyber/core/artifactsync"
 	coreevents "github.com/chainreactors/cyber/core/events"
 	toolhooks "github.com/chainreactors/cyber/core/tool/hooks"
-	observeext "github.com/chainreactors/cyber/exts/observe"
+
 	"path/filepath"
 )
 
@@ -33,7 +33,7 @@ func TestArtifactsSidecarsOnProcessCompleted(t *testing.T) {
 	e := &Extension{
 		events:    stream,
 		file:      defaultFileOptions(),
-		snapshots: map[string]observeext.Snapshot{},
+		snapshots: map[string]Snapshot{},
 	}
 	ctx := context.Background()
 	ref := &operationpb.Ref{OperationId: "op-1"}
@@ -161,7 +161,7 @@ func TestArtifactsOnlyKindShipsChangedFiles(t *testing.T) {
 	e := &Extension{
 		events:    stream,
 		file:      defaultFileOptions(),
-		snapshots: map[string]observeext.Snapshot{},
+		snapshots: map[string]Snapshot{},
 	}
 	ctx := context.Background()
 	ref := &operationpb.Ref{OperationId: "op-only"}

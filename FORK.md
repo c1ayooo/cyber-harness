@@ -1001,6 +1001,34 @@ Consequence worth recording: `exts/guardrail` no longer imports
 `tools/proxy` at all, and the minimal agent dependency closure
 (`TestAgentDependencyClosureExcludesFullApplicationFeatures`) is green again.
 
+## E5: 4zevidence owns its snapshot machinery; the judge docs move to the fence section (2026-11-27)
+
+- `exts/4zevidence` no longer imports `exts/observe` (docs/19 E5). The
+  snapshot/diff machinery it used (`TakeSnapshot`/`DiffSnapshots`/
+  `FileOptions`) was observe's upstream code reused via import, which left
+  evidence depending on an extension it does not compose. The pure functions
+  now live in `exts/4zevidence/snapshot.go` with identical semantics
+  (best-effort snapshots, unreadable entries omitted, 20000-entry cap,
+  identical default ignore list); observe keeps its own upstream copy and its
+  `extension.go` fork delta stays the registered `verdictSidecar` hook
+  (+3/−1). Composition is unchanged — `cmd/cyber-scan` still builds the
+  extension the same way.
+- `docs/configuration.md` described the llm/hybrid judge keys under the
+  legacy `guardrail` section (`extensions.guardrail.provider: llm`,
+  `allow_prefixes`, …). Since 已决 15 those knobs live in the top-level
+  `fence` section (`exts/4zfence/config`); the doc now documents them there,
+  restores the guardrail table to its upstream form, and states the real
+  boundary: approval mode and `review_timeout` stay in `guardrail`,
+  `fence.provider` overrides `guardrail.provider` when set, legacy
+  `guardrail`-section spellings are migrated on read (已决 19).
+
+Tests: `go build ./... && go vet ./...`,
+`go test ./exts/4zevidence/... ./exts/observe/... -count=1` (the Any-in-Any
+sidecar regressions included), `./scripts/check-fork.sh` (no new
+UNREGISTERED code files, `exts/observe/extension.go` within budget).
+Rollback: revert — the import-based reuse was working, and the doc described
+a still-recognized (migrated) spelling.
+
 ## Superseded patches
 
 These commits were on `tianwu/fixes` and are intentionally **not** carried after

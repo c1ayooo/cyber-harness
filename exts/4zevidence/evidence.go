@@ -5,10 +5,10 @@
 // node without a shared filesystem still delivers its evidence.
 //
 // It was extracted from exts/observe so observe could return to its upstream
-// form. Upstream observe's snapshot machinery (TakeSnapshot/DiffSnapshots/
-// FileOptions) is reused as pure functions via import — deliberate and
-// recorded in FORK.md: they are upstream's, stable, and moving them would
-// have modified an upstream file.
+// form. The snapshot machinery (TakeSnapshot/DiffSnapshots/FileOptions) is
+// owned here (snapshot.go, docs/19 E5): reusing observe's copy via import
+// left evidence depending on an extension it does not compose, so the pure
+// functions moved into this package and observe keeps its own upstream copy.
 //
 // The emission rule that keeps capture nodes honest: a carrier event is only
 // published when it actually carries sidecars (a completion that changed
@@ -35,7 +35,6 @@ import (
 	procbus "github.com/chainreactors/cyber/core/proc"
 	"github.com/chainreactors/cyber/core/telemetry"
 	toolhooks "github.com/chainreactors/cyber/core/tool/hooks"
-	observeext "github.com/chainreactors/cyber/exts/observe"
 	protobuf "google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -45,10 +44,10 @@ import (
 type Extension struct {
 	hooks     *hooks.Registry
 	events    *events.Stream
-	file      observeext.FileOptions
+	file      FileOptions
 	mu        sync.RWMutex
 	subs      []*hooks.Subscription
-	snapshots map[string]observeext.Snapshot
+	snapshots map[string]Snapshot
 	closing   bool
 	closed    bool
 	logger    telemetry.Logger
@@ -61,7 +60,7 @@ var _ extension.Extension = (*Extension)(nil)
 // boundary).
 type Options struct {
 	Enabled bool
-	File    observeext.FileOptions
+	File    FileOptions
 }
 
 // New builds the extension without loading it.
@@ -70,7 +69,7 @@ func New(options Options) *Extension {
 	if file.MaxEntries == 0 && file.Ignore == nil && !file.Enabled {
 		file = defaultFileOptions()
 	}
-	return &Extension{file: file, snapshots: make(map[string]observeext.Snapshot)}
+	return &Extension{file: file, snapshots: make(map[string]Snapshot)}
 }
 
 // Load subscribes the evidence hooks. Every subscription is owned here —
@@ -135,7 +134,7 @@ func (e *Extension) processStarting(ctx context.Context, event toolhooks.Process
 		return struct{}{}, nil
 	}
 	id := event.Operation.GetOperationId()
-	before, err := observeext.TakeSnapshot(event.Directory, e.file)
+	before, err := TakeSnapshot(event.Directory, e.file)
 	e.mu.Lock()
 	if err == nil && !e.closed {
 		e.snapshots[id] = before
@@ -158,13 +157,13 @@ func (e *Extension) processCompleted(ctx context.Context, event toolhooks.Proces
 	if !ok {
 		return struct{}{}, nil
 	}
-	after, err := observeext.TakeSnapshot(event.Process.Directory, e.file)
+	after, err := TakeSnapshot(event.Process.Directory, e.file)
 	if err != nil {
 		e.snapshotError(ctx, event.Operation, event.Process.Directory, err)
 		return struct{}{}, nil
 	}
 	var sidecars []protobuf.Message
-	for _, change := range observeext.DiffSnapshots(before, after) {
+	for _, change := range DiffSnapshots(before, after) {
 		if change.Op == filepb.AccessOp_ACCESS_OP_DELETE {
 			continue
 		}
@@ -289,6 +288,6 @@ func failure(err error) *operationpb.Failure {
 	return &operationpb.Failure{Kind: kind, Message: err.Error()}
 }
 
-func defaultFileOptions() observeext.FileOptions {
-	return observeext.FileOptions{Enabled: true}
+func defaultFileOptions() FileOptions {
+	return FileOptions{Enabled: true}
 }
