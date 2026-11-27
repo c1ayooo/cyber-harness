@@ -3,6 +3,17 @@
 # upstream-preexisting file must be registered in FORK.md, and every
 # registered hook stays within the per-file added-line budget.
 #
+# Registration is read from every section between "## Local patches" and
+# "## Superseded patches" (exclusive): the dated sections below Local patches
+# carry tonight's registrations too.
+#
+# Files are judged in three classes (已决 24):
+#   hook      upstream *.go that is not a test  — registered, and the added
+#             lines stay within BUDGET
+#   test/doc  *_test.go, or .md/.golden/.yaml/.yml — registered, no budget
+#   manifest  go.mod / go.sum / Makefile / .gitignore / .goreleaser.yml /
+#             editions.env (any directory) — registered per entry, no budget
+#
 # Default mode is report: it prints the verdict table and always exits 0, so
 # the current overages surface without breaking the gate while E3/E4 are
 # pending. --strict fails on unregistered files or over-budget hooks.
@@ -20,29 +31,59 @@ if ! git rev-parse --verify --quiet "$UPSTREAM" >/dev/null; then
   exit 2
 fi
 
-# Registered upstream files: every backticked path under FORK.md's Local
-# patches heading. Additions (A status) are new files and never need
-# registration; go.mod / Makefile changes are accounted separately (§1).
-registered=$(sed -n '/^## Local patches/,/^## [^L]/p' FORK.md |
+# Registered upstream files: every backticked path in any registration section
+# from "## Local patches" up to (not including) "## Superseded patches".
+# Additions (A status) are new files and never need registration.
+registered=$(sed -n '/^## Local patches/,/^## Superseded patches/p' FORK.md |
   grep -oE '`[a-zA-Z0-9_/.-]+`' | tr -d '`' | sort -u)
 
+is_manifest() {
+  case "$(basename "$1")" in
+    go.mod|go.sum|Makefile|.gitignore|.goreleaser.yml|editions.env) return 0 ;;
+  esac
+  return 1
+}
+
 fail=0
+hook_ok=0 hook_over=0 test_unreg=0 manifest_unreg=0
 printf '%-8s %-8s %-6s %s\n' added deleted status path
 while IFS=$'\t' read -r added deleted path; do
   [[ "$path" == *.pb.go ]] && continue
-  [[ "$path" == "go.mod" || "$path" == "Makefile" ]] && continue
-  if grep -qxFe "$path" <<<"$registered"; then
-    state=ok
-    if (( added > BUDGET )); then
-      state="OVER BUDGET (${added} > ${BUDGET})"
+  if is_manifest "$path"; then
+    if grep -qxFe "$path" <<<"$registered"; then
+      state="manifest ok"
+    else
+      state="manifest UNREGISTERED"
+      (( manifest_unreg++ ))
+      (( STRICT )) && fail=1
+    fi
+  elif [[ "$path" == *_test.go || "$path" == *.md || "$path" == *.golden || "$path" == *.yaml || "$path" == *.yml ]]; then
+    if grep -qxFe "$path" <<<"$registered"; then
+      state="test ok"
+    else
+      state="test UNREGISTERED"
+      (( test_unreg++ ))
       (( STRICT )) && fail=1
     fi
   else
-    state="UNREGISTERED"
-    (( STRICT )) && fail=1
+    if grep -qxFe "$path" <<<"$registered"; then
+      state="hook ok"
+      (( hook_ok++ ))
+      if (( added > BUDGET )); then
+        state="hook OVER BUDGET (${added} > ${BUDGET})"
+        (( hook_over++ ))
+        (( STRICT )) && fail=1
+      fi
+    else
+      state="hook UNREGISTERED"
+      (( STRICT )) && fail=1
+    fi
   fi
   printf '%-8s %-8s %-6s %s\n' "$added" "$deleted" M "$path  [$state]"
 done < <(git diff --numstat "$UPSTREAM...HEAD" --diff-filter=M | sort -rn)
+
+printf 'hooks ok: %d | hooks over budget: %d | tests/docs unregistered: %d | manifests unregistered: %d\n' \
+  "$hook_ok" "$hook_over" "$test_unreg" "$manifest_unreg"
 
 if (( STRICT )); then
   exit "$fail"
