@@ -10,8 +10,8 @@ import (
 	traffic "github.com/chainreactors/cyber/aop/traffic"
 	corehooks "github.com/chainreactors/cyber/core/hooks"
 	"github.com/chainreactors/cyber/core/operation"
-	"github.com/chainreactors/cyber/exts/4zfence/scoperules"
 	toolhooks "github.com/chainreactors/cyber/core/tool/hooks"
+	"github.com/chainreactors/cyber/exts/4zfence/scoperules"
 	"google.golang.org/protobuf/proto"
 )
 
