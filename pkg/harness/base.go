@@ -12,10 +12,7 @@ import (
 	"github.com/chainreactors/cyber/core/hooks"
 	"github.com/chainreactors/cyber/core/telemetry"
 	coretool "github.com/chainreactors/cyber/core/tool"
-	fenceext "github.com/chainreactors/cyber/exts/4zfence"
-	fenceconfig "github.com/chainreactors/cyber/exts/4zfence/config"
 	fileext "github.com/chainreactors/cyber/exts/files"
-	guardrailext "github.com/chainreactors/cyber/exts/guardrail"
 	promptext "github.com/chainreactors/cyber/exts/prompt"
 	providerext "github.com/chainreactors/cyber/exts/provider"
 	skillsext "github.com/chainreactors/cyber/exts/skills"
@@ -34,8 +31,11 @@ type BaseConfig struct {
 	Terminal     terminalext.Config
 	Provider     provider.StartupConfig
 	Logger       telemetry.Logger
-	Guardrail    guardrailext.Config
-	Fence        fenceconfig.Config
+	// Policy is the judge block the product root composes explicitly (docs/19
+	// E3-2): the fence ahead of the guardrail, bound at load. Nil composes no
+	// judge at all — an embedding host that skips it gets no fence, the
+	// Egress precedent of absence-as-value.
+	Policy []extension.Extension
 	// Egress publishes the routing endpoint the terminal borrows. A host that
 	// installs a proxy passes that extension; one that routes nothing passes
 	// NoEgress.
@@ -65,30 +65,19 @@ func BaseExtensions(c BaseConfig) ([]extension.Extension, error) {
 	// Each entry borrows only from the ones ahead of it: the registries publish
 	// the executors, the egress provider publishes the routing endpoint the
 	// terminal needs. Session and product consumers are installed after this base.
-	return []extension.Extension{
+	entries := []extension.Extension{
 		extension.Provided[*hooks.Registry](hooks.New()),
 		extension.Provided[*events.Stream](events.New()),
 		extension.Provided[*eventbus.Bus[*toolpb.Progress]](eventbus.New[*toolpb.Progress]()),
 		extension.Provided[telemetry.Logger](c.Logger),
 		coretool.NewCommandRegistry(),
 		coretool.NewToolRegistry(),
-		// The fence loads ahead of the guardrail so its tool.before admission
-		// (audit + red lines) is consulted first; the bind hook afterwards
-		// hands it the guardrail runtime for the approval lifecycle.
-		fenceext.New(),
-		guardrailext.New(c.Guardrail, c.Fence),
-		extension.Func{LoadFunc: func(scope *extension.Scope) error {
-			runtime, err := extension.Use[*guardrailext.Runtime](scope)
-			if err != nil {
-				return err
-			}
-			fence, err := extension.Use[*fenceext.Extension](scope)
-			if err != nil {
-				return err
-			}
-			fence.Bind(runtime)
-			return nil
-		}},
+	}
+	// The judge block is appended when the product composed one (docs/19
+	// E3-2): the fence ahead of the guardrail, bound at load. A nil Policy
+	// composes no judge at all.
+	entries = append(entries, c.Policy...)
+	return append(entries,
 		library,
 		promptext.New(),
 		egressProvider,
@@ -98,7 +87,7 @@ func BaseExtensions(c BaseConfig) ([]extension.Extension, error) {
 		terminalext.New(terminal),
 		tmuxext.New(),
 		providerext.New(c.Provider),
-	}, nil
+	), nil
 }
 
 // NoEgress publishes the routing endpoint of a host that routes nothing.

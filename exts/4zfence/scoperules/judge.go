@@ -1,48 +1,39 @@
 package scoperules
 
-// The request-admission seam types (4zrcin docs/19 P1-4, seam G2). They live
-// beside the rule tables they name, so every party — the proxy (tools/proxy
-// aliases them), the fence judge (exts/4zfence), and the composition — can
-// reference the contract without importing each other.
+// The request-admission seam (4zrcin docs/19 seam G2) is owned by the proxy
+// since the E3 revision: ScopeJudge/ScopeRequest/ScopeDecision and the
+// take-once verdict registry live in tools/proxy as pure additions to the
+// upstream package. This package keeps the historical spellings as aliases so
+// the fence's judge, its tests, and the acceptance corpus read unchanged —
+// the alias also makes the fence's judge satisfy the proxy interface with no
+// adapter, and the proxy depends on no product package.
+//
+// Import direction note: the E3 revision weighed owning the types here
+// (neutral ground, docs/19 P1-4c) against owning them in the seam. Ownership
+// moved to the seam; this import is the fence block depending on an upstream
+// seam, the direction red line 3 permits.
 
 import (
-	"context"
-
-	aop "github.com/chainreactors/cyber/aop"
-	operationpb "github.com/chainreactors/cyber/aop/operation"
-	"github.com/chainreactors/cyber/core/operation"
+	"github.com/chainreactors/cyber/tools/proxy"
 )
 
 // ScopeJudge decides whether the proxy may forward one attributed request.
-// JudgeScopeConnect judges a CONNECT tunnel (host-form only). The fence's
-// judge implements both; it reuses the guardrail runtime's pending-review
-// lifecycle for held requests without importing it here.
-type ScopeJudge interface {
-	JudgeScopeRequest(req ScopeRequest) ScopeDecision
-	JudgeScopeConnect(req ScopeRequest) ScopeDecision
-}
+type ScopeJudge = proxy.ScopeJudge
 
 // ScopeRequest is one proxied request with its attribution.
-type ScopeRequest struct {
-	Invocation operation.Invocation
-	Call       *aop.ToolCall
-	Operation  *operationpb.Ref
-}
+type ScopeRequest = proxy.ScopeRequest
 
-// ScopeDecision is the judge's answer. Judged=false means "not my business":
-// forward untouched. Hold is set only for a review verdict; it blocks until
-// the review resolves (true = approved, forward) or expires/is refused
-// (false = refuse).
-//
-// Verdict is the judge's own Verdict, carried verbatim so the capture sidecar
-// keeps every field the judge set (default_missed, passive, shadow). When it
-// is nil — a stub judge, or a path that answered from the action alone — the
-// proxy reconstructs {action, rule_id, reason} as before.
-type ScopeDecision struct {
-	Judged  bool
-	Action  string // record | review | block
-	RuleID  string
-	Reason  string
-	Hold    func(ctx context.Context) bool
-	Verdict *Verdict
-}
+// ScopeDecision is the judge's answer, including the hold and refusal the
+// proxy applies.
+type ScopeDecision = proxy.ScopeDecision
+
+// ScopeVerdict is the judge's verdict as the wire sees it.
+type ScopeVerdict = proxy.ScopeVerdict
+
+// RecordVerdict / TakeVerdict are the seam's take-once verdict registry: the
+// judge's answers key by flow id, the sidecar consumer takes each exactly
+// once.
+var (
+	RecordVerdict = proxy.RecordVerdict
+	TakeVerdict   = proxy.TakeVerdict
+)

@@ -856,6 +856,17 @@ the 4zrcin checkout at `425e6175`.
     global-allow sidecar before the project fence).
     Rollback: revert — infrastructure names queue pending assets again.
 
+E3 revision (2026-11-27, entry at the bottom of this file) additionally
+touches `pkg/harness/base.go`, `pkg/harness/harness.go`,
+`tools/proxy/config.go`, `tools/proxy/mitm_test.go`,
+`exts/4zfence/scope_judge.go`, `exts/4zfence/exemption.go`,
+`exts/4zfence/scope_policy_internal_test.go`, `exts/4zfence/scoperules/judge.go`,
+`exts/4zfence/scoperules/scoperules.go`, `exts/4zfence/scoperules/scoperules_test.go`,
+`exts/observe/sidecar.go`, `pkg/assembly/fence.go`, `pkg/config/options.go`,
+`cmd/cyber-scan/extensions.go`, `cmd/cyber-scan/profile.go`,
+`cmd/cyber-scan/mcp_test.go`, `cmd/agent/profile.go`, and
+`cmd/audit/internal/app/profile.go`.
+
 ## P1-2c fence inheritance rides SessionStart (2026-11-27)
 
 Fork patch 33 registered child sessions' inherited fences inside the
@@ -1028,6 +1039,63 @@ sidecar regressions included), `./scripts/check-fork.sh` (no new
 UNREGISTERED code files, `exts/observe/extension.go` within budget).
 Rollback: revert — the import-based reuse was working, and the doc described
 a still-recognized (migrated) spelling.
+## E3: the request seam moves home, and the composition owns the judge (2026-11-27)
+
+docs/19 E3-1/E3-2/E3-5/E3-6/E5, revising the fifteenth version's shape:
+
+- **Seam ownership** (E3-1): `tools/proxy/scope_judge.go` now *defines*
+  `ScopeJudge`/`ScopeRequest`/`ScopeDecision`/`ScopeVerdict` and the take-once
+  verdict registry as pure additions; `exts/4zfence/scoperules/judge.go`
+  keeps the historical spellings as aliases. Correction worth recording: the
+  fifteenth version claimed the fence could implement the seam "without
+  importing the proxy" because Go interfaces are structural — that is wrong
+  for by-value struct parameters (identical types are required), so
+  ownership-without-alias means a conversion adapter somewhere. The aliases
+  are the adapter-free route; the direction (fence block → upstream seam) is
+  the one red line 3 permits. The fence's judge, its tests, and the
+  acceptance corpus read unchanged.
+- **Policy out of the proxy** (E3-5): the control-plane exemption
+  (`exts/4zfence/exemption.go`, wired as the seam's generic exemption hook),
+  the Sec-Fetch-Dest passivity reading, and the 403 refusal body live in
+  `exts/4zfence/scope_judge.go`; the proxy carries the raw hint and applies
+  the judge's refusal verbatim. `tools/proxy/mitm.go` is +15 lines and
+  `tools/proxy/hub.go` +6 relative to upstream; `tools/proxy/config.go`,
+  `tools/proxy/hub_traffic.go`, `tools/proxy/scope_judge_test.go` (canned
+  judges, no rule tables) round out the proxy side.
+- **Composition owns the judge block** (E3-2): `pkg/harness/base.go` composes
+  no product block — `BaseConfig.Policy` is the product's decision, nil
+  composes none — and `pkg/assembly/fence.go`'s `Policy` builds fence →
+  guardrail → bind for the scan composition. `cmd/cyber-scan/extensions.go`,
+  `cmd/cyber-scan/profile.go`, `cmd/cyber-scan/mcp_test.go`, and
+  `cmd/agent/profile.go` wire it; `cmd/audit/internal/app/profile.go` builds
+  the trio inline because audit is its own module and must not link the scan
+  engines `pkg/assembly` carries. `pkg/harness/harness.go` no longer
+  auto-appends the fence/session decorators, so an embedder using
+  `harness.New` without Policy fences nothing.
+- **Explicit judge wiring** (E3-6): `exts/proxy/extension.go` takes
+  `ScopeJudge` and `RequestExemption` on its config instead of looking the
+  fence up and swallowing the miss. Absence is an explicit judgeless relay —
+  the `NoEgress` precedent; chosen over a load failure because a judgeless
+  relay is a legitimate composition for capture-only embedders, and because
+  the control plane must see the decision in the composition, not infer it
+  from a load error.
+- **Evidence switch** (E5): `pkg/config/options.go` gains `--evidence`;
+  `--observe` no longer carries the `artifacts` kind, which was never
+  upstream observe's.
+
+Pre-existing, not this revision: `exts/observe/extension_test.go` (+70,
+unregistered — E4 ledger) and `TestAuditDependencyBoundary` already failing
+at the base commit (P1-4b moved `builtin.go` into `exts/4zfence`, which audit
+imports for its decorators; the audit module still links
+`tools/resources`).
+
+Tests: `go build ./... && go vet ./...`; `go test ./tools/proxy/...
+./exts/proxy/... ./pkg/harness/... ./exts/4zfence/... ./cmd/cyber-scan/...
+-count=1`; `go test -tags fenceparity ./exts/4zfence/... -count=1`;
+`scripts/acceptance/fence-parity.sh` (ENGINE=<worktree>): 16 verdicts
+identical; `go test ./pkg/internal/architecture/...` green.
+Rollback: revert — the fifteenth-version shape (types in scoperules, judge
+logic split across proxy and fence) is the immediately previous commit.
 
 ## Superseded patches
 

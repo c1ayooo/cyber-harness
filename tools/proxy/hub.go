@@ -16,19 +16,8 @@ import (
 
 	traffic "github.com/chainreactors/cyber/aop/traffic"
 	"github.com/chainreactors/cyber/core/hooks"
-	"github.com/chainreactors/cyber/exts/4zfence/scoperules"
 	cfg "github.com/chainreactors/cyber/pkg/config"
 	mitmproxy "github.com/chainreactors/utils/mitmproxy/proxy"
-)
-
-// The request-admission seam types are the fence scoperules package's; the
-// aliases keep this package's API (and every importer of it) unchanged while
-// the judge — exts/4zfence — implements the contract without importing the
-// proxy.
-type (
-	ScopeJudge    = scoperules.ScopeJudge
-	ScopeRequest  = scoperules.ScopeRequest
-	ScopeDecision = scoperules.ScopeDecision
 )
 
 // Hub is the runner-level MITM proxy capability that every tool routes
@@ -77,14 +66,11 @@ type Hub struct {
 	correlations  map[string]*correlationLease
 
 	// scopeJudge is the optional test-range judge; nil keeps the proxy a pure
-	// capture/routing relay with byte-identical behavior.
+	// capture/routing relay with byte-identical behavior. The exemption hook
+	// names the requester's own plumbing: forwarded unjudged and uncaptured.
 	scopeJudge ScopeJudge
-	// controlPlaneHost is the host of the control plane this scan serves (the
-	// agent server URL's host). Requests naming it are the executor's own
-	// bookkeeping — forwarded unjudged and uncaptured (fork patch 36). Empty
-	// keeps the pre-patch behavior.
-	controlPlaneMu sync.Mutex
-	controlPlane   string
+	exemptMu   sync.Mutex
+	exempt     func(host string) bool
 }
 
 // State returns the live egress selection capability. Lifecycle remains owned

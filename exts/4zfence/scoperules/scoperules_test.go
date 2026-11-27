@@ -217,26 +217,6 @@ func TestSessionStoreReplacesPerTurn(t *testing.T) {
 	}
 }
 
-func TestVerdictRegistryTakeAndBound(t *testing.T) {
-	RecordVerdict("flow-1", Verdict{Action: ActionBlock, RuleID: "sr-2"})
-	verdict, ok := TakeVerdict("flow-1")
-	if !ok || verdict.Action != ActionBlock {
-		t.Fatalf("verdict = %+v ok=%v", verdict, ok)
-	}
-	if _, ok := TakeVerdict("flow-1"); ok {
-		t.Fatal("verdict not consumed")
-	}
-	// The registry stays bounded: overwriting it with maxVerdicts+1 entries
-	// must never grow past the cap.
-	for i := 0; i < maxVerdicts+10; i++ {
-		RecordVerdict("flow-many", Verdict{Action: ActionRecord})
-		RecordVerdict(string(rune('a'+i%26))+string(rune(i)), Verdict{})
-	}
-	if len(verdictByFlow) > maxVerdicts {
-		t.Fatalf("registry grew to %d", len(verdictByFlow))
-	}
-}
-
 // The CIDR branch (fork patch 23a): "10.0.0.0/8" rows match the target's
 // resolved address; every failure mode is a miss, never an invented verdict.
 func TestJudgeCIDRHosts(t *testing.T) {

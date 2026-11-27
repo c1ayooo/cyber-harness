@@ -1,31 +1,158 @@
 // The scope-judge seam (G2, 4zrcin docs/19 appendix A): the proxy exposes a
 // judge interface and delegates each request's verdict to whoever implements
-// it — in the fork's composition, the guardrail runtime's LLM judge. This
-// file carries the seam wiring plus the 4z-specific support the proxy holds
-// (control-plane exemption, argument extraction, refusal shaping), so the
-// upstream files hub.go and mitm.go keep only the call lines.
+// it — in the fork's composition, the fence's request judge. This file is a
+// pure addition relative to upstream: the seam types, the take-once verdict
+// registry the sidecar consumer reads, the optional exemption hook, and the
+// request-side orchestration (attribution, synthetic call, verdict carry).
+// The 4z-specific policy — control-plane exemption, passive subresources, the
+// refusal body — lives in exts/4zfence, which implements the interface
+// without this package importing it.
 package proxy
 
 import (
 	"context"
 	"encoding/json"
 	"net/http"
-	"net/netip"
 	"strings"
+	"sync"
 
 	aop "github.com/chainreactors/cyber/aop"
+	operationpb "github.com/chainreactors/cyber/aop/operation"
+	"github.com/chainreactors/cyber/aop/payloads"
+	traffic "github.com/chainreactors/cyber/aop/traffic"
 	"github.com/chainreactors/cyber/core/operation"
-	"github.com/chainreactors/cyber/exts/4zfence/scoperules"
 	mitmproxy "github.com/chainreactors/utils/mitmproxy/proxy"
 )
 
-// httpRequestToolName is the synthetic tool name the scope judge's calls
-// carry. It mirrors the value documented in exts/guardrail (the judge cannot
-// be imported here without a cycle through agent/session).
-const httpRequestToolName = "http.request"
+// The decision actions a verdict can name. The fence's rule tables spell the
+// same values; the seam keeps the literals local so the proxy depends on no
+// product package.
+const (
+	ActionRecord = "record"
+	ActionReview = "review"
+	ActionBlock  = "block"
+)
+
+// ScopeJudge decides whether the proxy may forward one attributed request.
+// JudgeScopeConnect judges a CONNECT tunnel (host-form only). Nil keeps the
+// proxy a pure capture/routing relay with byte-identical behavior.
+type ScopeJudge interface {
+	JudgeScopeRequest(req ScopeRequest) ScopeDecision
+	JudgeScopeConnect(req ScopeRequest) ScopeDecision
+}
+
+// ScopeRequest is one proxied request with its attribution.
+type ScopeRequest struct {
+	Invocation operation.Invocation
+	Call       *aop.ToolCall
+	Operation  *operationpb.Ref
+}
+
+// ScopeDecision is the judge's answer. Judged=false means "not my business":
+// forward untouched. Hold is set only for a review verdict; it blocks until
+// the review resolves (true = approved, forward) or expires/is refused
+// (false = refuse). Refusal is the synthetic reply the judge wants the
+// requester to see when the decision refuses or a hold fails; the proxy
+// applies it verbatim.
+//
+// Verdict is the judge's own verdict, carried verbatim so the capture sidecar
+// keeps every field the judge set (default_missed, passive, shadow). When it
+// is nil — a stub judge, or a path that answered from the action alone — the
+// proxy reconstructs {action, rule_id, reason} as before.
+type ScopeDecision struct {
+	Judged  bool
+	Action  string // record | review | block
+	RuleID  string
+	Reason  string
+	Hold    func(ctx context.Context) bool
+	Verdict *ScopeVerdict
+	Refusal *mitmproxy.Response
+}
+
+// ScopeVerdict is the judge's verdict as the wire sees it. The contract
+// payload is the neutral ground every party already shares.
+type ScopeVerdict = payloads.TrafficVerdict
+
+// The verdict registry is the take-once handoff between the judge's answers
+// and the capture sidecar consumer, bounded like the rule tables: a flow id
+// whose verdict is never taken is dropped once 4096 newer answers arrived.
+var (
+	verdictMu     sync.Mutex
+	verdictOrder  []string
+	verdictByFlow = map[string]ScopeVerdict{}
+)
+
+const maxVerdicts = 4096
+
+// RecordVerdict stores the verdict of one judged request for the sidecar
+// consumer to attach as the flow's TrafficVerdict.
+func RecordVerdict(flowID string, verdict ScopeVerdict) {
+	if flowID == "" {
+		return
+	}
+	verdictMu.Lock()
+	defer verdictMu.Unlock()
+	if _, exists := verdictByFlow[flowID]; !exists {
+		verdictOrder = append(verdictOrder, flowID)
+		if len(verdictOrder) > maxVerdicts {
+			delete(verdictByFlow, verdictOrder[0])
+			verdictOrder = verdictOrder[1:]
+		}
+	}
+	verdictByFlow[flowID] = verdict
+}
+
+// TakeVerdict consumes the verdict stored for one flow id.
+func TakeVerdict(flowID string) (ScopeVerdict, bool) {
+	verdictMu.Lock()
+	defer verdictMu.Unlock()
+	verdict, ok := verdictByFlow[flowID]
+	if ok {
+		delete(verdictByFlow, flowID)
+	}
+	return verdict, ok
+}
+
+// SetRequestExemption installs the exemption predicate the proxy consults
+// before judging or capturing a request: a host it names is the requester's
+// own plumbing — forwarded unjudged and uncaptured. Safe before Start; read
+// per request. The composition decides the policy (in the fork, the fence's
+// control-plane exemption); an unset hook exempts nothing, which is the
+// upstream behavior.
+func (h *Hub) SetRequestExemption(exempt func(host string) bool) {
+	if h == nil {
+		return
+	}
+	h.exemptMu.Lock()
+	defer h.exemptMu.Unlock()
+	h.exempt = exempt
+}
+
+// exempted reports whether the request host is exempt from judging and capture.
+func (h *Hub) exempted(host string) bool {
+	if h == nil || host == "" {
+		return false
+	}
+	h.exemptMu.Lock()
+	hook := h.exempt
+	h.exemptMu.Unlock()
+	if hook == nil {
+		return false
+	}
+	return hook(host)
+}
+
+// SetScopeJudge installs the test-range judge. Safe before Start; judging
+// reads it per request.
+func (h *Hub) SetScopeJudge(judge ScopeJudge) {
+	if h == nil {
+		return
+	}
+	h.scopeJudge = judge
+}
 
 // ---------------------------------------------------------------------------
-// MitmCommand — top-level "mitm" command
+// Request-side orchestration
 // ---------------------------------------------------------------------------
 
 type MitmCommand struct {
@@ -39,30 +166,25 @@ type MitmCommand struct {
 // Only requests with a session attribution (a per-execution egress lease) are
 // judged: unattributed traffic is the host's own plumbing, not the model's.
 // The judge can hold the forwarding goroutine (review) or short-circuit the
-// exchange with a synthetic 403 (block) by setting Flow.Response, which the
+// exchange with its synthetic refusal by setting Flow.Response, which the
 // mitmproxy engine treats as the final reply. The returned verdict travels on
 // the capture state and is keyed by the store's canonical flow id once the
 // flow completes, so the observe extension can attach it as the flow's
 // TrafficVerdict sidecar.
-func (a *captureAddon) judgeRequest(f *mitmproxy.Flow) (scoperules.Verdict, bool) {
+func (a *captureAddon) judgeRequest(f *mitmproxy.Flow) (ScopeVerdict, bool) {
 	if a.hub == nil || a.hub.scopeJudge == nil || f == nil || f.Request == nil || f.Request.URL == nil {
-		return scoperules.Verdict{}, false
-	}
-	if a.hub.controlPlaneExempt(f.Request.URL.Hostname()) {
-		return scoperules.Verdict{}, false
+		return ScopeVerdict{}, false
 	}
 	correlation := a.hub.resolveCorrelation(correlationTokenOf(f))
 	defer correlation.finish()
 	if correlation.invocation.SessionID == "" {
-		return scoperules.Verdict{}, false
+		return ScopeVerdict{}, false
 	}
-	call := &aop.ToolCall{Name: httpRequestToolName, Arguments: &aop.EncodedValue{Data: scopeRequestArguments(f)}}
+	call := &aop.ToolCall{Name: scopeCallToolName, Arguments: &aop.EncodedValue{Data: scopeRequestArguments(f)}}
 	req := ScopeRequest{Invocation: correlation.invocation, Call: call, Operation: correlation.operation}
-	// A CONNECT tunnel is judged on the fence's host form (fork patch 31):
-	// the instance fence judges fully, the project fence cannot see a method
-	// or path at tunnel setup, and in relay mode this pass/fail IS the fence —
-	// an unmatched tunnel refuses instead of passing unjudged. Decrypted
-	// inner requests carry the full judgment on their own.
+	// A CONNECT tunnel is judged host-form only: the tunnel setup carries no
+	// method or path, and the decrypted inner requests carry the full judgment
+	// on their own.
 	var decision ScopeDecision
 	if strings.EqualFold(f.Request.Method, http.MethodConnect) {
 		decision = a.hub.scopeJudge.JudgeScopeConnect(req)
@@ -70,7 +192,7 @@ func (a *captureAddon) judgeRequest(f *mitmproxy.Flow) (scoperules.Verdict, bool
 		decision = a.hub.scopeJudge.JudgeScopeRequest(req)
 	}
 	if !decision.Judged {
-		return scoperules.Verdict{}, false
+		return ScopeVerdict{}, false
 	}
 	ctx := operation.ContextWithInvocation(context.Background(), correlation.invocation)
 	// verdictOf keeps the judge's answer verbatim: the sidecar must carry every
@@ -79,42 +201,34 @@ func (a *captureAddon) judgeRequest(f *mitmproxy.Flow) (scoperules.Verdict, bool
 	// three fields.
 	verdict := verdictOf(decision)
 	switch decision.Action {
-	case scoperules.ActionReview:
+	case ActionReview:
 		if decision.Hold != nil && decision.Hold(ctx) {
 			return verdict, true // approved: forward untouched
 		}
-		f.Response = scopeRefusal(f.Request, decision)
-	case scoperules.ActionBlock:
-		f.Response = scopeRefusal(f.Request, decision)
+		f.Response = decision.Refusal
+	case ActionBlock:
+		f.Response = decision.Refusal
 	}
 	return verdict, true
 }
 
+// scopeCallToolName is the synthetic tool name the scope judge's calls carry.
+// The judge's journal rows read like any other interception of this tool.
+const scopeCallToolName = "http.request"
+
 // verdictOf returns the decision's own verdict, or the historical three-field
 // reconstruction when the judge did not carry one.
-func verdictOf(decision ScopeDecision) scoperules.Verdict {
+func verdictOf(decision ScopeDecision) ScopeVerdict {
 	if decision.Verdict != nil {
 		return *decision.Verdict
 	}
-	return scoperules.Verdict{Action: decision.Action, RuleID: decision.RuleID, Reason: decision.Reason}
-}
-
-// passiveDest reports whether one Sec-Fetch-Dest value names a passive
-// subresource a page pulls by itself (scripts, stylesheets, images, fonts).
-// Navigations (document) and API calls (empty) are deliberate requests and
-// stay judgeable; anything unrecognized is not passive.
-func passiveDest(dest string) bool {
-	switch strings.ToLower(strings.TrimSpace(dest)) {
-	case "script", "style", "image", "font":
-		return true
-	}
-	return false
+	return ScopeVerdict{Action: decision.Action, RuleID: decision.RuleID, Reason: decision.Reason}
 }
 
 // scopeRequestArguments builds the synthetic call's arguments: the request
-// identity the control plane renders, the flow id the verdict sidecar keys on,
-// and the passive hint (Sec-Fetch-Dest) the judge uses to let a page's own
-// static subresources pass the allowlist fallback.
+// identity the judge reads — method, URL, the flow id the sidecar keys on,
+// and the raw Sec-Fetch-Dest hint. Interpreting the hint is the judge's
+// policy, not the proxy's.
 func scopeRequestArguments(f *mitmproxy.Flow) []byte {
 	dest := ""
 	if f.Request.Header != nil {
@@ -125,90 +239,24 @@ func scopeRequestArguments(f *mitmproxy.Flow) []byte {
 		"url":     f.Request.URL.String(),
 		"flow_id": f.Id.String(),
 		"dest":    dest,
-		"passive": passiveDest(dest),
 	})
 	return payload
 }
 
-// scopeRefusal is the synthetic reply a block (or refused review) produces.
-// 403 with a small JSON body: the tool that issued the request sees an HTTP
-// failure, not a transport error. The body states WHY, so a model reading its
-// tool output can stop retrying on its own: pending marks the allowlist
-// fallback (the host is out of range and queued for the operator's approval —
-// repeating the request cannot admit it), and reason carries the judge's
-// verdict prose.
-func scopeRefusal(req *mitmproxy.Request, decision ScopeDecision) *mitmproxy.Response {
-	pending := false
-	if decision.Verdict != nil && decision.Verdict.DefaultMissed && decision.Action == scoperules.ActionReview {
-		pending = true
+// judged attaches the judge's outcome to a fresh capture state (request
+// goroutine): the verdict for the sidecar registry, and the synthetic refusal
+// hydrated into the flow — a refused exchange never reaches the engine's
+// response stage, so without this it would be invisible in the traffic view.
+func (s *captureState) judged(verdict ScopeVerdict, f *mitmproxy.Flow) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.verdict = &verdict
+	if f.Response != nil {
+		s.flow.Response = &traffic.HttpResponse{
+			StatusCode: int32(f.Response.StatusCode),
+			Headers:    traffic.HeadersFromHTTP(f.Response.Header),
+			Body:       f.Response.Body,
+		}
+		s.flow.ContentType = f.Response.Header.Get("Content-Type")
 	}
-	body, _ := json.Marshal(map[string]any{
-		"error":   "scope_rules_refused",
-		"host":    req.URL.Host,
-		"reason":  decision.Reason,
-		"pending": pending,
-	})
-	header := http.Header{}
-	header.Set("Content-Type", "application/json")
-	return &mitmproxy.Response{StatusCode: http.StatusForbidden, Header: header, Body: body}
-}
-
-// SetControlPlaneHost installs the control-plane host the proxy exempts from
-// judging and capture. Safe before Start; read per request.
-func (h *Hub) SetControlPlaneHost(host string) {
-	if h == nil {
-		return
-	}
-	h.controlPlaneMu.Lock()
-	defer h.controlPlaneMu.Unlock()
-	h.controlPlane = strings.ToLower(strings.TrimSpace(host))
-}
-
-// controlPlaneExempt reports whether the request host names the control
-// plane. The fence is a statement about the target range; the executor's
-// calls to its own control plane must always work, and capturing them would
-// leak their Authorization headers into the traffic view. When the configured
-// control plane itself lives on loopback, the whole loopback family counts as
-// the platform — 127.0.0.1, localhost and ::1 are one machine's management
-// plane spelled three ways.
-func (h *Hub) controlPlaneExempt(host string) bool {
-	if h == nil || host == "" {
-		return false
-	}
-	h.controlPlaneMu.Lock()
-	defer h.controlPlaneMu.Unlock()
-	cp := h.controlPlane
-	if cp == "" {
-		return false
-	}
-	host = strings.ToLower(strings.Trim(strings.TrimSpace(host), "[]"))
-	if strings.EqualFold(host, cp) {
-		return true
-	}
-	if loopbackHost(cp) && loopbackHost(host) {
-		return true
-	}
-	return false
-}
-
-// loopbackHost reports whether one host names the node's own loopback: the
-// literal localhost, an address in 127.0.0.0/8, or ::1.
-func loopbackHost(host string) bool {
-	if host == "" {
-		return false
-	}
-	if strings.EqualFold(host, "localhost") {
-		return true
-	}
-	addr, err := netip.ParseAddr(host)
-	return err == nil && addr.IsLoopback()
-}
-
-// SetScopeJudge installs the test-range judge. Safe before Start; judging
-// reads it per request.
-func (h *Hub) SetScopeJudge(judge ScopeJudge) {
-	if h == nil {
-		return
-	}
-	h.scopeJudge = judge
 }

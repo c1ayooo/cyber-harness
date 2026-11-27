@@ -163,7 +163,8 @@ type MiscOptions struct {
 	OutputFile   string `short:"f" long:"file" description:"Output destination (default: stdout)"`
 	OutputFormat string `short:"o" long:"output-format" description:"Output format: text, json, jsonl, markdown, csv (stream-json aliases jsonl)" default:"text"`
 	JSON         bool   `long:"json" description:"Alias for one-shot agent --output-format=json"`
-	Observe      string `long:"observe" description:"Comma-separated observations: tools,commands,processes,files,http,artifacts"`
+	Observe      string `long:"observe" description:"Comma-separated observations: tools,commands,processes,files,http"`
+	Evidence     bool   `long:"evidence" config:"evidence" description:"Ship changed case-directory files and in-band writes to the control plane as artifact sidecars (4zevidence)"`
 	Debug        bool   `long:"debug" config:"debug" description:"Enable debug logging"`
 	Verbose      []bool `short:"v" long:"verbose" description:"Increase verbosity (-v thinking and tool previews, -vv full tool results)"`
 	Quiet        bool   `short:"q" long:"quiet" config:"quiet" description:"Quiet mode — only show final result"`

@@ -20,9 +20,11 @@ import (
 	"github.com/chainreactors/cyber/core/namespaces"
 	"github.com/chainreactors/cyber/core/proc"
 	fenceext "github.com/chainreactors/cyber/exts/4zfence"
+	fenceconfig "github.com/chainreactors/cyber/exts/4zfence/config"
 	zsession "github.com/chainreactors/cyber/exts/4zsession"
 	loopext "github.com/chainreactors/cyber/exts/agent"
 	arsenalext "github.com/chainreactors/cyber/exts/arsenal"
+	guardrailext "github.com/chainreactors/cyber/exts/guardrail"
 	nodeext "github.com/chainreactors/cyber/exts/node"
 	okfext "github.com/chainreactors/cyber/exts/okf"
 	protonext "github.com/chainreactors/cyber/exts/proton"
@@ -87,9 +89,28 @@ func newAuditProfile(request profile.Request, workDir string, bashTimeout int, r
 		environment["RIPGREP_CONFIG_PATH"] = rgConfig
 	}
 
+	// The judge block is the product's own composition decision (docs/19
+	// E3-2): this profile judges with zero-config guardrail + fence, the
+	// same shape the base composition used to install implicitly. Built
+	// inline rather than through pkg/assembly: audit is its own module and
+	// must not link the scan engines that package also carries.
+	fenceBlock := fenceext.New()
+	policy := []extension.Extension{
+		fenceBlock,
+		guardrailext.New(guardrailext.Config{}, fenceconfig.Config{}),
+		extension.Func{LoadFunc: func(scope *extension.Scope) error {
+			runtime, err := extension.Use[*guardrailext.Runtime](scope)
+			if err != nil {
+				return err
+			}
+			fenceBlock.Bind(runtime)
+			return nil
+		}},
+	}
 	// This build routes nothing, so it publishes the disabled endpoint and
 	// links no proxy at all.
 	values, err := harness.BaseExtensions(harness.BaseConfig{
+		Policy:     policy,
 		Directory:  workDir,
 		SkillPaths: cfg.LocalSkillPaths(option.Skills),
 		Terminal:   terminalext.Config{Timeout: bashTimeout, Environment: environment},

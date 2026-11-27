@@ -20,8 +20,6 @@ import (
 	"github.com/chainreactors/cyber/core/extension"
 	"github.com/chainreactors/cyber/core/proc"
 	coretool "github.com/chainreactors/cyber/core/tool"
-	fenceext "github.com/chainreactors/cyber/exts/4zfence"
-	zsession "github.com/chainreactors/cyber/exts/4zsession"
 	loopext "github.com/chainreactors/cyber/exts/agent"
 	"github.com/chainreactors/cyber/exts/guardrail"
 	sessionext "github.com/chainreactors/cyber/exts/session"
@@ -74,12 +72,6 @@ func New(config Config) (*Harness, error) {
 		if session.Loop == nil {
 			session.Loop = agent.StandardLoop{}
 		}
-		// The fence and session blocks (docs/19 P1-4) ride every harness
-		// composition: the fence registers the control plane's policy
-		// payloads and keeps its tables to live sessions, the session block
-		// enriches the turn input.
-		session.TurnDecorators = append(session.TurnDecorators, fenceext.TurnDecorators()...)
-		session.TurnDecorators = append(session.TurnDecorators, zsession.TurnDecorators()...)
 		entries = append(entries, loopext.New(session.Loop), sessionext.New(session), subagentext.NewTools())
 	}
 	// The final consumer reads the capabilities assembled by the graph. This
@@ -90,9 +82,10 @@ func New(config Config) (*Harness, error) {
 		if h.providers, err = extension.Use[*provider.State](scope); err != nil {
 			return err
 		}
-		if h.guardrail, err = extension.Use[*guardrail.Runtime](scope); err != nil {
-			return err
-		}
+		// The judge block is optional since E3-2: a composition without
+		// Policy has no guardrail runtime, and SetMode reports that instead
+		// of failing the load.
+		h.guardrail, _ = extension.Use[*guardrail.Runtime](scope)
 		if h.events, err = extension.Use[*events.Stream](scope); err != nil {
 			return err
 		}

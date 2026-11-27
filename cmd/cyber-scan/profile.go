@@ -41,6 +41,7 @@ import (
 	sessionext "github.com/chainreactors/cyber/exts/session"
 	subagentext "github.com/chainreactors/cyber/exts/subagent"
 	tuiext "github.com/chainreactors/cyber/exts/tui"
+	"github.com/chainreactors/cyber/pkg/assembly"
 	cfg "github.com/chainreactors/cyber/pkg/config"
 	consoleapi "github.com/chainreactors/cyber/pkg/console/api"
 	nodepkg "github.com/chainreactors/cyber/pkg/node"
@@ -99,15 +100,6 @@ func buildCyberScanProfile(config config) (*cyberScanProfile, error) {
 		return nil, fmt.Errorf("resolve Cyber working directory: %w", err)
 	}
 	capture := config.Base.MitmCapture == nil || *config.Base.MitmCapture
-	proxyExtension := proxyext.New(proxyext.Config{
-		WorkDir: workDir, Proxy: config.Base.Scanner.Resources.Proxy,
-		// The control plane is whatever server URL this node serves (fork
-		// patch 36): its host is exempt from fence judging and capture, so a
-		// direction's bookkeeping calls always work. Empty for a profile
-		// without an agent server (the Web service profile).
-		ControlPlaneHost: controlPlaneHost(config.Option),
-		Capture:          capture, Storage: config.Base.TrafficStorage,
-	})
 	// One loop for the profile: the scanner and the session run against the
 	// same installation rather than each being handed its own. A profile that
 	// selects sessions without reasoning selects NoLoop, which declines every
@@ -146,7 +138,22 @@ func buildCyberScanProfile(config config) (*cyberScanProfile, error) {
 		}
 	}
 
-	graph, err := extensions(config.Base, loop, workDir, proxyExtension, guardrailValue, fenceConfig)
+	// The judge block is the product composition's own decision (docs/19 E3-2):
+	// the fence loads ahead of the guardrail so its tool.before admission is
+	// consulted first; the bind hook afterwards hands it the guardrail runtime
+	// for the approval lifecycle.
+	policy, fenceExtension := assembly.Policy(guardrailValue, fenceConfig)
+	proxyExtension := proxyext.New(proxyext.Config{
+		WorkDir: workDir, Proxy: config.Base.Scanner.Resources.Proxy,
+		// The judge is the fence's; the exemption names whatever server URL
+		// this node serves (fork patch 36) — its bookkeeping calls always
+		// work, unjudged and uncaptured. Empty for a profile without an agent
+		// server (the Web service profile).
+		ScopeJudge:       fenceext.NewScopeJudge(fenceExtension),
+		RequestExemption: fenceext.ControlPlaneExemption(controlPlaneHost(config.Option)),
+		Capture:          capture, Storage: config.Base.TrafficStorage,
+	})
+	graph, err := extensions(config.Base, loop, workDir, proxyExtension, policy)
 	if err != nil {
 		return nil, fmt.Errorf("construct Cyber application: %w", err)
 	}
@@ -194,15 +201,12 @@ func buildCyberScanProfile(config config) (*cyberScanProfile, error) {
 		values = append(values, observer)
 	}
 	var observeKinds []observeext.Kind
-	evidenceEnabled := false
+	// Evidence is 4zevidence's own switch (docs/19 E5): the artifacts kind
+	// does not exist in upstream observe, which reverted to its upstream form,
+	// so the flag no longer carries it.
+	evidenceEnabled := config.Option.Evidence
 	for item := range strings.SplitSeq(config.Option.Observe, ",") {
 		if item = strings.TrimSpace(item); item == "" {
-			continue
-		}
-		// The artifacts kind is 4zrcin's evidence return (4zevidence): it does
-		// not exist in upstream observe, which reverted to its upstream form.
-		if observeext.Kind(item) == "artifacts" {
-			evidenceEnabled = true
 			continue
 		}
 		observeKinds = append(observeKinds, observeext.Kind(item))

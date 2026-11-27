@@ -11,7 +11,6 @@ import (
 	corehooks "github.com/chainreactors/cyber/core/hooks"
 	"github.com/chainreactors/cyber/core/operation"
 	toolhooks "github.com/chainreactors/cyber/core/tool/hooks"
-	"github.com/chainreactors/cyber/exts/4zfence/scoperules"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -20,7 +19,7 @@ import (
 // canonical flow id before any hook consumer can observe the flow, so the
 // observe extension can attach it as the TrafficVerdict sidecar without a
 // race.
-func (h *Hub) ingestFiles(flow Flow, files [2]*os.File, verdict *scoperules.Verdict) {
+func (h *Hub) ingestFiles(flow Flow, files [2]*os.File, verdict *ScopeVerdict) {
 	if h.store == nil {
 		return
 	}
@@ -34,7 +33,7 @@ func (h *Hub) ingestFiles(flow Flow, files [2]*os.File, verdict *scoperules.Verd
 	}
 	stored := h.store.addFiles(flow, files)
 	if verdict != nil {
-		scoperules.RecordVerdict(stored.Id, *verdict)
+		RecordVerdict(stored.Id, *verdict)
 	}
 	message := h.store.flowToProto(&stored)
 	ctx := operation.ContextWithInvocation(context.Background(), correlation.Invocation)
