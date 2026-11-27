@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	cfg "github.com/c1ayooo/cyber/pkg/config"
+	cfg "github.com/chainreactors/cyber/pkg/config"
 )
 
 func guardrailLLMSection() map[string]any {

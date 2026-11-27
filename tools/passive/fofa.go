@@ -10,7 +10,7 @@ import (
 	"net/url"
 	"strconv"
 
-	"github.com/c1ayooo/cyber/core/telemetry"
+	"github.com/chainreactors/cyber/core/telemetry"
 	"github.com/projectdiscovery/uncover/sources"
 )
 

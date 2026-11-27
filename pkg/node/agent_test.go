@@ -1,9 +1,9 @@
 package node
 
 import (
-	"github.com/c1ayooo/cyber/core/telemetry"
-	cfg "github.com/c1ayooo/cyber/pkg/config"
-	profilepkg "github.com/c1ayooo/cyber/pkg/profile"
+	"github.com/chainreactors/cyber/core/telemetry"
+	cfg "github.com/chainreactors/cyber/pkg/config"
+	profilepkg "github.com/chainreactors/cyber/pkg/profile"
 	"testing"
 )
 

@@ -13,9 +13,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/c1ayooo/cyber/cmd/audit/internal/toolchain"
-	"github.com/c1ayooo/cyber/pkg/console"
-	"github.com/c1ayooo/cyber/tools/okf"
+	"github.com/chainreactors/cyber/cmd/audit/internal/toolchain"
+	"github.com/chainreactors/cyber/pkg/console"
+	"github.com/chainreactors/cyber/tools/okf"
 )
 
 type runReport struct {

@@ -9,12 +9,12 @@ import (
 	"testing"
 	"time"
 
-	agenthooks "github.com/c1ayooo/cyber/agent/hooks"
-	"github.com/c1ayooo/cyber/agent/provider"
-	aop "github.com/c1ayooo/cyber/aop"
-	types "github.com/c1ayooo/cyber/core/types"
-	cfg "github.com/c1ayooo/cyber/pkg/config"
-	"github.com/c1ayooo/cyber/pkg/output"
+	agenthooks "github.com/chainreactors/cyber/agent/hooks"
+	"github.com/chainreactors/cyber/agent/provider"
+	aop "github.com/chainreactors/cyber/aop"
+	types "github.com/chainreactors/cyber/core/types"
+	cfg "github.com/chainreactors/cyber/pkg/config"
+	"github.com/chainreactors/cyber/pkg/output"
 )
 
 type syncedBuffer struct {

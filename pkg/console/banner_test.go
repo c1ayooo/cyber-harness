@@ -4,8 +4,8 @@ import (
 	"strings"
 	"testing"
 
-	provider "github.com/c1ayooo/cyber/agent/provider"
-	outputpkg "github.com/c1ayooo/cyber/pkg/output"
+	provider "github.com/chainreactors/cyber/agent/provider"
+	outputpkg "github.com/chainreactors/cyber/pkg/output"
 )
 
 // assertUniformWidth checks every line of a rendered box has the same visible

@@ -7,10 +7,10 @@ import (
 	"runtime/debug"
 	"time"
 
-	aop "github.com/c1ayooo/cyber/aop"
-	operationpb "github.com/c1ayooo/cyber/aop/operation"
-	corehooks "github.com/c1ayooo/cyber/core/hooks"
-	"github.com/c1ayooo/cyber/core/operation"
+	aop "github.com/chainreactors/cyber/aop"
+	operationpb "github.com/chainreactors/cyber/aop/operation"
+	corehooks "github.com/chainreactors/cyber/core/hooks"
+	"github.com/chainreactors/cyber/core/operation"
 	"google.golang.org/protobuf/proto"
 )
 

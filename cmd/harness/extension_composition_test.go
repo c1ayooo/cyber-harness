@@ -5,12 +5,12 @@ import (
 	"errors"
 	"fmt"
 
-	aop "github.com/c1ayooo/cyber/aop"
-	"github.com/c1ayooo/cyber/core/extension"
-	"github.com/c1ayooo/cyber/core/hooks"
-	coretool "github.com/c1ayooo/cyber/core/tool"
-	"github.com/c1ayooo/cyber/pkg/cli"
-	cfg "github.com/c1ayooo/cyber/pkg/config"
+	aop "github.com/chainreactors/cyber/aop"
+	"github.com/chainreactors/cyber/core/extension"
+	"github.com/chainreactors/cyber/core/hooks"
+	coretool "github.com/chainreactors/cyber/core/tool"
+	"github.com/chainreactors/cyber/pkg/cli"
+	cfg "github.com/chainreactors/cyber/pkg/config"
 
 	"io"
 	"net/http"
@@ -19,7 +19,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/c1ayooo/cyber/pkg/web"
+	"github.com/chainreactors/cyber/pkg/web"
 	flags "github.com/jessevdk/go-flags"
 )
 

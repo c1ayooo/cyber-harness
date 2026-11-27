@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/c1ayooo/cyber/agent/prompt"
-	"github.com/c1ayooo/cyber/tools/scan"
+	"github.com/chainreactors/cyber/agent/prompt"
+	"github.com/chainreactors/cyber/tools/scan"
 )
 
 // goldenPromptContext is the fixed render input shared with the golden files

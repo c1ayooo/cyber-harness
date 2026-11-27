@@ -8,9 +8,9 @@ import (
 	"strings"
 	"time"
 
-	jevapi "github.com/c1ayooo/cyber/agent/provider/jev"
-	"github.com/c1ayooo/cyber/core/decision"
-	coretool "github.com/c1ayooo/cyber/core/tool"
+	jevapi "github.com/chainreactors/cyber/agent/provider/jev"
+	"github.com/chainreactors/cyber/core/decision"
+	coretool "github.com/chainreactors/cyber/core/tool"
 )
 
 type replayResult struct {

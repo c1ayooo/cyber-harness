@@ -10,8 +10,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/c1ayooo/cyber/aop"
-	coretool "github.com/c1ayooo/cyber/core/tool"
+	"github.com/chainreactors/cyber/aop"
+	coretool "github.com/chainreactors/cyber/core/tool"
 )
 
 func browserExecutedOperations(t *testing.T, receipts []string, wanted string) (entry, operation, resultEvidence bool) {

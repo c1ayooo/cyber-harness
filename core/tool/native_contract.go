@@ -9,7 +9,7 @@ import (
 	"sort"
 	"sync"
 
-	"github.com/c1ayooo/cyber/core/resource"
+	"github.com/chainreactors/cyber/core/resource"
 )
 
 // NativeCall is a normalized invocation. Argv is reconstructed by the host,

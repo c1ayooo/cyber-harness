@@ -4,8 +4,8 @@ import (
 	"sync"
 	"testing"
 
-	aop "github.com/c1ayooo/cyber/aop"
-	coreevents "github.com/c1ayooo/cyber/core/events"
+	aop "github.com/chainreactors/cyber/aop"
+	coreevents "github.com/chainreactors/cyber/core/events"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 

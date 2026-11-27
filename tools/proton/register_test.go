@@ -3,8 +3,8 @@ package proton_test
 import (
 	"testing"
 
-	"github.com/c1ayooo/cyber/pkg/testutil/hosttest"
-	protoncmd "github.com/c1ayooo/cyber/tools/proton"
+	"github.com/chainreactors/cyber/pkg/testutil/hosttest"
+	protoncmd "github.com/chainreactors/cyber/tools/proton"
 )
 
 func TestFactoryBuildsProtonCommand(t *testing.T) {

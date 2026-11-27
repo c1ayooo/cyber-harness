@@ -12,10 +12,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/c1ayooo/cyber/aop"
-	"github.com/c1ayooo/cyber/core/events"
-	toolhooks "github.com/c1ayooo/cyber/core/tool/hooks"
-	"github.com/c1ayooo/cyber/tools/resources"
+	"github.com/chainreactors/cyber/aop"
+	"github.com/chainreactors/cyber/core/events"
+	toolhooks "github.com/chainreactors/cyber/core/tool/hooks"
+	"github.com/chainreactors/cyber/tools/resources"
 )
 
 func newBuiltinRuntime(t *testing.T) *Runtime {

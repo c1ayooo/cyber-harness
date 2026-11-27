@@ -6,16 +6,16 @@ import (
 	"slices"
 	"strings"
 
-	provider "github.com/c1ayooo/cyber/agent/provider"
-	agentsession "github.com/c1ayooo/cyber/agent/session"
-	"github.com/c1ayooo/cyber/agent/skills"
-	aop "github.com/c1ayooo/cyber/aop"
-	"github.com/c1ayooo/cyber/core/telemetry"
-	scannerext "github.com/c1ayooo/cyber/exts/scanner"
-	taskcli "github.com/c1ayooo/cyber/pkg/cli/task"
-	cfg "github.com/c1ayooo/cyber/pkg/config"
-	"github.com/c1ayooo/cyber/tools/scan"
-	"github.com/c1ayooo/cyber/tools/toolargs"
+	provider "github.com/chainreactors/cyber/agent/provider"
+	agentsession "github.com/chainreactors/cyber/agent/session"
+	"github.com/chainreactors/cyber/agent/skills"
+	aop "github.com/chainreactors/cyber/aop"
+	"github.com/chainreactors/cyber/core/telemetry"
+	scannerext "github.com/chainreactors/cyber/exts/scanner"
+	taskcli "github.com/chainreactors/cyber/pkg/cli/task"
+	cfg "github.com/chainreactors/cyber/pkg/config"
+	"github.com/chainreactors/cyber/tools/scan"
+	"github.com/chainreactors/cyber/tools/toolargs"
 )
 
 type scannerMode struct {

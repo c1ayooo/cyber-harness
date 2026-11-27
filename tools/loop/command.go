@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/c1ayooo/cyber/agent"
-	coretool "github.com/c1ayooo/cyber/core/tool"
+	"github.com/chainreactors/cyber/agent"
+	coretool "github.com/chainreactors/cyber/core/tool"
 )
 
 // LoopCommand is a pseudo-command invoked via bash:

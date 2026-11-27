@@ -8,8 +8,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/c1ayooo/cyber/agent/inbox"
-	"github.com/c1ayooo/cyber/core/telemetry"
+	"github.com/chainreactors/cyber/agent/inbox"
+	"github.com/chainreactors/cyber/core/telemetry"
 )
 
 type LoopMode int

@@ -1,8 +1,8 @@
 package session
 
 import (
-	"github.com/c1ayooo/cyber/agent/session"
-	"github.com/c1ayooo/cyber/core/extension"
+	"github.com/chainreactors/cyber/agent/session"
+	"github.com/chainreactors/cyber/core/extension"
 )
 
 // ProtocolExtension contributes Session handlers to the installed namespace registry.

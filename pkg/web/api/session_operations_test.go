@@ -10,8 +10,8 @@ import (
 	"testing"
 	"time"
 
-	aop "github.com/c1ayooo/cyber/aop"
-	types "github.com/c1ayooo/cyber/core/types"
+	aop "github.com/chainreactors/cyber/aop"
+	types "github.com/chainreactors/cyber/core/types"
 	"google.golang.org/protobuf/proto"
 )
 

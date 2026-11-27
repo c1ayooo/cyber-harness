@@ -13,17 +13,17 @@ import (
 	"syscall"
 	"time"
 
-	passiveconfig "github.com/c1ayooo/cyber/exts/passive/config"
+	passiveconfig "github.com/chainreactors/cyber/exts/passive/config"
 
-	"github.com/c1ayooo/cyber/core/telemetry"
-	ioaclient "github.com/c1ayooo/cyber/exts/ioa/client"
-	scannerext "github.com/c1ayooo/cyber/exts/scanner"
-	sessionext "github.com/c1ayooo/cyber/exts/session"
-	hostcli "github.com/c1ayooo/cyber/pkg/cli"
-	"github.com/c1ayooo/cyber/pkg/cli/configuration"
-	taskcli "github.com/c1ayooo/cyber/pkg/cli/task"
-	cfg "github.com/c1ayooo/cyber/pkg/config"
-	"github.com/c1ayooo/cyber/pkg/output"
+	"github.com/chainreactors/cyber/core/telemetry"
+	ioaclient "github.com/chainreactors/cyber/exts/ioa/client"
+	scannerext "github.com/chainreactors/cyber/exts/scanner"
+	sessionext "github.com/chainreactors/cyber/exts/session"
+	hostcli "github.com/chainreactors/cyber/pkg/cli"
+	"github.com/chainreactors/cyber/pkg/cli/configuration"
+	taskcli "github.com/chainreactors/cyber/pkg/cli/task"
+	cfg "github.com/chainreactors/cyber/pkg/config"
+	"github.com/chainreactors/cyber/pkg/output"
 
 	goflags "github.com/jessevdk/go-flags"
 )

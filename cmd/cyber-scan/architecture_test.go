@@ -33,7 +33,7 @@ func TestCoreDoesNotImportApplicationPackages(t *testing.T) {
 				return err
 			}
 			for _, layer := range []string{"agent", "pkg", "tools", "cmd", "internal"} {
-				prefix := "github.com/c1ayooo/cyber/" + layer
+				prefix := "github.com/chainreactors/cyber/" + layer
 				if value == prefix || strings.HasPrefix(value, prefix+"/") {
 					t.Errorf("core file %s imports application package %s", path, value)
 				}
@@ -154,7 +154,7 @@ func TestOptionalCapabilitiesFollowCompositionImports(t *testing.T) {
 		t.Fatalf("%v: %s", err, output)
 	}
 	for _, capability := range []string{"/exts/browser", "/exts/passive", "/exts/katana"} {
-		if !strings.Contains(string(output), "github.com/c1ayooo/cyber"+capability+"\n") {
+		if !strings.Contains(string(output), "github.com/chainreactors/cyber"+capability+"\n") {
 			t.Errorf("capability %s membership does not match composition", capability)
 		}
 	}

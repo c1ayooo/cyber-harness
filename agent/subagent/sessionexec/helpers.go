@@ -5,9 +5,9 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/c1ayooo/cyber/agent"
-	"github.com/c1ayooo/cyber/agent/provider"
-	aop "github.com/c1ayooo/cyber/aop"
+	"github.com/chainreactors/cyber/agent"
+	"github.com/chainreactors/cyber/agent/provider"
+	aop "github.com/chainreactors/cyber/aop"
 	"google.golang.org/protobuf/proto"
 )
 

@@ -6,10 +6,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/c1ayooo/cyber/core/resource"
-	types "github.com/c1ayooo/cyber/core/types"
-	hostcli "github.com/c1ayooo/cyber/pkg/cli"
-	cfg "github.com/c1ayooo/cyber/pkg/config"
+	"github.com/chainreactors/cyber/core/resource"
+	types "github.com/chainreactors/cyber/core/types"
+	hostcli "github.com/chainreactors/cyber/pkg/cli"
+	cfg "github.com/chainreactors/cyber/pkg/config"
 	"github.com/chainreactors/sdk/pkg/cyberhub"
 )
 

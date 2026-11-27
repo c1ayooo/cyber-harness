@@ -5,8 +5,8 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/c1ayooo/cyber/aop"
-	"github.com/c1ayooo/cyber/core/types"
+	"github.com/chainreactors/cyber/aop"
+	"github.com/chainreactors/cyber/core/types"
 )
 
 func TestStandaloneResourceSharesImmutableCommands(t *testing.T) {

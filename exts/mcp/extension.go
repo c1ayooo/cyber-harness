@@ -8,9 +8,9 @@ import (
 	"sort"
 	"sync"
 
-	"github.com/c1ayooo/cyber/core/extension"
-	coretool "github.com/c1ayooo/cyber/core/tool"
-	mcptools "github.com/c1ayooo/cyber/tools/mcp"
+	"github.com/chainreactors/cyber/core/extension"
+	coretool "github.com/chainreactors/cyber/core/tool"
+	mcptools "github.com/chainreactors/cyber/tools/mcp"
 	"mvdan.cc/sh/v3/interp"
 	"mvdan.cc/sh/v3/syntax"
 )

@@ -8,11 +8,11 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/c1ayooo/cyber/agent/provider"
-	types "github.com/c1ayooo/cyber/core/types"
-	"github.com/c1ayooo/cyber/exts/gateway"
-	cfg "github.com/c1ayooo/cyber/pkg/config"
-	webservice "github.com/c1ayooo/cyber/pkg/web/service"
+	"github.com/chainreactors/cyber/agent/provider"
+	types "github.com/chainreactors/cyber/core/types"
+	"github.com/chainreactors/cyber/exts/gateway"
+	cfg "github.com/chainreactors/cyber/pkg/config"
+	webservice "github.com/chainreactors/cyber/pkg/web/service"
 	"google.golang.org/protobuf/proto"
 	"gopkg.in/yaml.v3"
 )

@@ -5,8 +5,8 @@ import (
 	"slices"
 	"strings"
 
-	aop "github.com/c1ayooo/cyber/aop"
-	coretool "github.com/c1ayooo/cyber/core/tool"
+	aop "github.com/chainreactors/cyber/aop"
+	coretool "github.com/chainreactors/cyber/core/tool"
 )
 
 // BuildHello builds the AOP core agent registration message.

@@ -6,9 +6,9 @@ import (
 	"maps"
 	"sort"
 
-	jevapi "github.com/c1ayooo/cyber/agent/provider/jev"
-	"github.com/c1ayooo/cyber/aop"
-	"github.com/c1ayooo/cyber/core/decision"
+	jevapi "github.com/chainreactors/cyber/agent/provider/jev"
+	"github.com/chainreactors/cyber/aop"
+	"github.com/chainreactors/cyber/core/decision"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/structpb"

@@ -15,7 +15,7 @@ import (
 	"testing"
 )
 
-const module = "github.com/c1ayooo/cyber/"
+const module = "github.com/chainreactors/cyber/"
 
 func root(t *testing.T) string {
 	t.Helper()
@@ -310,24 +310,24 @@ func TestInstallationBoundaryRules(t *testing.T) {
 		name, path, source string
 		reject             bool
 	}{
-		{"direct", "cmd/example/main.go", `package main; import ioa "github.com/c1ayooo/cyber/tools/ioa"; var x = ioa.New`, true},
-		{"alias", "examples/main.go", `package main; import original "github.com/c1ayooo/cyber/tools/ioa"; var construct = original.New`, true},
-		{"anonymous extension", "cmd/example/main.go", `package main; import ioa "github.com/c1ayooo/cyber/tools/ioa"; var load = func() { _ = ioa.New(ioa.Config{}, nil) }`, true},
-		{"another extension", "exts/search/extra.go", `package search; import ioa "github.com/c1ayooo/cyber/tools/ioa"; var x = ioa.New`, true},
-		{"declaration bypass", "exts/ioa/client/declare.go", `package client; import ioa "github.com/c1ayooo/cyber/tools/ioa"; var x = ioa.New`, true},
-		{"resource literal", "cmd/example/main.go", `package main; import ioa "github.com/c1ayooo/cyber/tools/ioa"; var x = ioa.Resource{}`, true},
+		{"direct", "cmd/example/main.go", `package main; import ioa "github.com/chainreactors/cyber/tools/ioa"; var x = ioa.New`, true},
+		{"alias", "examples/main.go", `package main; import original "github.com/chainreactors/cyber/tools/ioa"; var construct = original.New`, true},
+		{"anonymous extension", "cmd/example/main.go", `package main; import ioa "github.com/chainreactors/cyber/tools/ioa"; var load = func() { _ = ioa.New(ioa.Config{}, nil) }`, true},
+		{"another extension", "exts/search/extra.go", `package search; import ioa "github.com/chainreactors/cyber/tools/ioa"; var x = ioa.New`, true},
+		{"declaration bypass", "exts/ioa/client/declare.go", `package client; import ioa "github.com/chainreactors/cyber/tools/ioa"; var x = ioa.New`, true},
+		{"resource literal", "cmd/example/main.go", `package main; import ioa "github.com/chainreactors/cyber/tools/ioa"; var x = ioa.Resource{}`, true},
 		{"protocol alias", "cmd/example/main.go", `package main; func install(runtime R) { bindings := runtime.NamespaceBindings; _ = bindings }`, true},
-		{"owner", "exts/ioa/client/extension.go", `package client; import ioa "github.com/c1ayooo/cyber/tools/ioa"; var x = ioa.New`, false},
-		{"config", "cmd/example/main.go", `package main; import ioa "github.com/c1ayooo/cyber/tools/ioa"; var config ioa.Config`, false},
-		{"business", "cmd/example/main.go", `package main; import ioa "github.com/c1ayooo/cyber/tools/ioa"; func query(s *ioa.Service) { _ = s.ListSpaces }`, false},
-		{"custom extension", "examples/main.go", `package main; import ext "github.com/c1ayooo/cyber/core/extension"; var x = ext.Func{}`, false},
-		{"unit test", "pkg/web/service/example_test.go", `package service_test; import svc "github.com/c1ayooo/cyber/pkg/web/service"; var x = svc.NewService`, false},
-		{"integration test", "exts/web/example_test.go", `package web_test; import svc "github.com/c1ayooo/cyber/pkg/web/service"; var x = svc.NewService`, true},
-		{"host manager construction", "cmd/cyber-scan/extensions.go", `package main; import arsenal "github.com/c1ayooo/cyber/tools/arsenal"; var x = arsenal.NewManager`, true},
-		{"product store construction", "cmd/example/main_test.go", `package main; import svc "github.com/c1ayooo/cyber/pkg/web/service"; var x = svc.NewSQLiteStore`, true},
-		{"product schema installation", "cmd/example/main_test.go", `package main; import svc "github.com/c1ayooo/cyber/pkg/web/service"; var x = svc.ScanSchema`, true},
-		{"cross extension browser construction", "exts/jev/browser_integration_test.go", `package jev; import browser "github.com/c1ayooo/cyber/tools/playwright"; var x = browser.New`, true},
-		{"cross extension shell construction", "exts/jev/integration_test.go", `package jev; import shell "github.com/c1ayooo/cyber/tools/terminal"; var x = shell.NewBashTool`, true},
+		{"owner", "exts/ioa/client/extension.go", `package client; import ioa "github.com/chainreactors/cyber/tools/ioa"; var x = ioa.New`, false},
+		{"config", "cmd/example/main.go", `package main; import ioa "github.com/chainreactors/cyber/tools/ioa"; var config ioa.Config`, false},
+		{"business", "cmd/example/main.go", `package main; import ioa "github.com/chainreactors/cyber/tools/ioa"; func query(s *ioa.Service) { _ = s.ListSpaces }`, false},
+		{"custom extension", "examples/main.go", `package main; import ext "github.com/chainreactors/cyber/core/extension"; var x = ext.Func{}`, false},
+		{"unit test", "pkg/web/service/example_test.go", `package service_test; import svc "github.com/chainreactors/cyber/pkg/web/service"; var x = svc.NewService`, false},
+		{"integration test", "exts/web/example_test.go", `package web_test; import svc "github.com/chainreactors/cyber/pkg/web/service"; var x = svc.NewService`, true},
+		{"host manager construction", "cmd/cyber-scan/extensions.go", `package main; import arsenal "github.com/chainreactors/cyber/tools/arsenal"; var x = arsenal.NewManager`, true},
+		{"product store construction", "cmd/example/main_test.go", `package main; import svc "github.com/chainreactors/cyber/pkg/web/service"; var x = svc.NewSQLiteStore`, true},
+		{"product schema installation", "cmd/example/main_test.go", `package main; import svc "github.com/chainreactors/cyber/pkg/web/service"; var x = svc.ScanSchema`, true},
+		{"cross extension browser construction", "exts/jev/browser_integration_test.go", `package jev; import browser "github.com/chainreactors/cyber/tools/playwright"; var x = browser.New`, true},
+		{"cross extension shell construction", "exts/jev/integration_test.go", `package jev; import shell "github.com/chainreactors/cyber/tools/terminal"; var x = shell.NewBashTool`, true},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			file, err := parser.ParseFile(token.NewFileSet(), test.path, test.source, 0)

@@ -6,11 +6,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/c1ayooo/cyber/agent"
-	"github.com/c1ayooo/cyber/agent/prompt"
-	"github.com/c1ayooo/cyber/agent/provider"
-	aop "github.com/c1ayooo/cyber/aop"
-	coreevents "github.com/c1ayooo/cyber/core/events"
+	"github.com/chainreactors/cyber/agent"
+	"github.com/chainreactors/cyber/agent/prompt"
+	"github.com/chainreactors/cyber/agent/provider"
+	aop "github.com/chainreactors/cyber/aop"
+	coreevents "github.com/chainreactors/cyber/core/events"
 )
 
 type evaluatorTestPrompts struct{}

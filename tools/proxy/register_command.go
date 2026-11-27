@@ -3,7 +3,7 @@
 package proxy
 
 import (
-	coretool "github.com/c1ayooo/cyber/core/tool"
+	coretool "github.com/chainreactors/cyber/core/tool"
 
 	// Register extra proxy protocols so proxyclient.NewClient can handle them.
 	_ "github.com/chainreactors/proxyclient/extra/anytls"

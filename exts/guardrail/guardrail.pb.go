@@ -7,8 +7,8 @@
 package guardrail
 
 import (
-	aop "github.com/c1ayooo/cyber/aop"
-	operation "github.com/c1ayooo/cyber/aop/operation"
+	aop "github.com/chainreactors/cyber/aop"
+	operation "github.com/chainreactors/cyber/aop/operation"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
@@ -580,18 +580,50 @@ func (*ProtocolMessage_Resolved) isProtocolMessage_Message() {}
 var File_types_guardrail_proto protoreflect.FileDescriptor
 
 const file_types_guardrail_proto_rawDesc = "" +
-	"\n\x15types/guardrail.proto\x12\x0fcyber.guardrail\x1a\x11aop/content.proto\x1a\x1caop/operation/protocol.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"S\n\bDe" +
-	"cision\x12/\n\x06action\x18\x01 \x01(\x0e2\x17.cyber.guardrail.ActionR\x06action\x12\x16\n\x06reason\x18\x02 \x01(\tR\x06reason\"\xcf\x02\n\x06Review\x12!\n\x04call\x18\x01 \x01(\v2\r.aop.ToolCallR\x04call\x120\n" +
-	"\toperation\x18\x02 \x01(\v2\x12.aop.operation.RefR\toperation\x12\x1d\n\nsession_id\x18\x03 \x01(\tR\tsessionId\x125\n\bdecision\x18\x04 \x01(\v2\x19.cyber.guardrail.DecisionR\bdec" +
-	"ision\x122\n\x05state\x18\x05 \x01(\x0e2\x1c.cyber.guardrail.ReviewStateR\x05state\x129\n\nexpires_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\texpiresAt\x12+\n\x11resoluti" +
-	"on_source\x18\a \x01(\tR\x10resolutionSource\"/\n\x0ePendingRequest\x12\x1d\n\nsession_id\x18\x01 \x01(\tR\tsessionId\"D\n\x0fPendingResponse\x121\n\areviews\x18\x01 \x03(\v2\x17.cyber.g" +
-	"uardrail.ReviewR\areviews\"l\n\x0eResolveRequest\x12\x1d\n\nsession_id\x18\x01 \x01(\tR\tsessionId\x12!\n\foperation_id\x18\x02 \x01(\tR\voperationId\x12\x18\n\aapprove\x18\x03 \x01(\bR\aa" +
-	"pprove\"\x11\n\x0fResolveResponse\"\xa1\x02\n\x0fProtocolMessage\x12;\n\apending\x18\x01 \x01(\v2\x1f.cyber.guardrail.PendingRequestH\x00R\apending\x12I\n\x0epending_result\x18\x02 \x01" +
-	"(\v2 .cyber.guardrail.PendingResponseH\x00R\rpendingResult\x12;\n\aresolve\x18\x03 \x01(\v2\x1f.cyber.guardrail.ResolveRequestH\x00R\aresolve\x12>\n\bresolved\x18\x04" +
-	" \x01(\v2 .cyber.guardrail.ResolveResponseH\x00R\bresolvedB\t\n\amessage*X\n\x06Action\x12\x16\n\x12ACTION_UNSPECIFIED\x10\x00\x12\x11\n\rACTION_RECORD\x10\x01\x12\x11\n\rACTION_REV" +
-	"IEW\x10\x02\x12\x10\n\fACTION_BLOCK\x10\x03*\xb0\x01\n\vReviewState\x12\x1c\n\x18REVIEW_STATE_UNSPECIFIED\x10\x00\x12\x18\n\x14REVIEW_STATE_PENDING\x10\x01\x12\x19\n\x15REVIEW_STATE_APPROVED\x10\x02\x12\x19\n\x15RE" +
-	"VIEW_STATE_REJECTED\x10\x03\x12\x18\n\x14REVIEW_STATE_EXPIRED\x10\x04\x12\x19\n\x15REVIEW_STATE_CANCELED\x10\x05B3Z1github.com/c1ayooo/cyber/exts/guardrail;guardrailb" +
-	"\x06proto3"
+	"\n" +
+	"\x15types/guardrail.proto\x12\x0fcyber.guardrail\x1a\x11aop/content.proto\x1a\x1caop/operation/protocol.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"S\n" +
+	"\bDecision\x12/\n" +
+	"\x06action\x18\x01 \x01(\x0e2\x17.cyber.guardrail.ActionR\x06action\x12\x16\n" +
+	"\x06reason\x18\x02 \x01(\tR\x06reason\"\xcf\x02\n" +
+	"\x06Review\x12!\n" +
+	"\x04call\x18\x01 \x01(\v2\r.aop.ToolCallR\x04call\x120\n" +
+	"\toperation\x18\x02 \x01(\v2\x12.aop.operation.RefR\toperation\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x03 \x01(\tR\tsessionId\x125\n" +
+	"\bdecision\x18\x04 \x01(\v2\x19.cyber.guardrail.DecisionR\bdecision\x122\n" +
+	"\x05state\x18\x05 \x01(\x0e2\x1c.cyber.guardrail.ReviewStateR\x05state\x129\n" +
+	"\n" +
+	"expires_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\texpiresAt\x12+\n" +
+	"\x11resolution_source\x18\a \x01(\tR\x10resolutionSource\"/\n" +
+	"\x0ePendingRequest\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x01 \x01(\tR\tsessionId\"D\n" +
+	"\x0fPendingResponse\x121\n" +
+	"\areviews\x18\x01 \x03(\v2\x17.cyber.guardrail.ReviewR\areviews\"l\n" +
+	"\x0eResolveRequest\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x01 \x01(\tR\tsessionId\x12!\n" +
+	"\foperation_id\x18\x02 \x01(\tR\voperationId\x12\x18\n" +
+	"\aapprove\x18\x03 \x01(\bR\aapprove\"\x11\n" +
+	"\x0fResolveResponse\"\xa1\x02\n" +
+	"\x0fProtocolMessage\x12;\n" +
+	"\apending\x18\x01 \x01(\v2\x1f.cyber.guardrail.PendingRequestH\x00R\apending\x12I\n" +
+	"\x0epending_result\x18\x02 \x01(\v2 .cyber.guardrail.PendingResponseH\x00R\rpendingResult\x12;\n" +
+	"\aresolve\x18\x03 \x01(\v2\x1f.cyber.guardrail.ResolveRequestH\x00R\aresolve\x12>\n" +
+	"\bresolved\x18\x04 \x01(\v2 .cyber.guardrail.ResolveResponseH\x00R\bresolvedB\t\n" +
+	"\amessage*X\n" +
+	"\x06Action\x12\x16\n" +
+	"\x12ACTION_UNSPECIFIED\x10\x00\x12\x11\n" +
+	"\rACTION_RECORD\x10\x01\x12\x11\n" +
+	"\rACTION_REVIEW\x10\x02\x12\x10\n" +
+	"\fACTION_BLOCK\x10\x03*\xb0\x01\n" +
+	"\vReviewState\x12\x1c\n" +
+	"\x18REVIEW_STATE_UNSPECIFIED\x10\x00\x12\x18\n" +
+	"\x14REVIEW_STATE_PENDING\x10\x01\x12\x19\n" +
+	"\x15REVIEW_STATE_APPROVED\x10\x02\x12\x19\n" +
+	"\x15REVIEW_STATE_REJECTED\x10\x03\x12\x18\n" +
+	"\x14REVIEW_STATE_EXPIRED\x10\x04\x12\x19\n" +
+	"\x15REVIEW_STATE_CANCELED\x10\x05B9Z7github.com/chainreactors/cyber/exts/guardrail;guardrailb\x06proto3"
 
 var (
 	file_types_guardrail_proto_rawDescOnce sync.Once

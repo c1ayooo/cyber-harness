@@ -1465,35 +1465,139 @@ func (x *ExtensionView) GetConfiguredSecrets() []string {
 var File_types_config_proto protoreflect.FileDescriptor
 
 const file_types_config_proto_rawDesc = "" +
-	"\n\x12types/config.proto\x12\fcyber.config\x1a\x1cgoogle/protobuf/struct.proto\"\xa6\x03\n\x10DistributeConfig\x12)\n\x03llm\x18\x01 \x01(\v2\x17.cyber.config.LLMConfigR\x03llm" +
-	"\x12/\n\x05agent\x18\a \x01(\v2\x19.cyber.config.AgentConfigR\x05agent\x12N\n\nextensions\x18\b \x03(\v2..cyber.config.DistributeConfig.ExtensionsEntryR\nextension" +
-	"s\x12,\n\x04node\x18\t \x01(\v2\x18.cyber.config.NodeConfigR\x04node\x125\n\atraffic\x18\n \x01(\v2\x1b.cyber.config.TrafficConfigR\atraffic\x1aV\n\x0fExtensionsEntry\x12\x10\n\x03key" +
-	"\x18\x01 \x01(\tR\x03key\x12-\n\x05value\x18\x02 \x01(\v2\x17.google.protobuf.StructR\x05value:\x028\x01J\x04\b\x02\x10\x03J\x04\b\x03\x10\x04J\x04\b\x04\x10\x05J\x04\b\x05\x10\x06J\x04\b\x06\x10\aR\x03ioaR\x06search\"0\n\nNodeConfig\x12\x0e\n\x02id\x18\x01 " +
-	"\x01(\tR\x02id\x12\x12\n\x04name\x18\x02 \x01(\tR\x04name\"q\n\tLLMConfig\x12%\n\x0eactive_profile\x18\x01 \x01(\tR\ractiveProfile\x12=\n\tproviders\x18\x02 \x03(\v2\x1f.cyber.config.LLMProviderCon" +
-	"figR\tproviders\"\xbb\x02\n\x11LLMProviderConfig\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n\x04name\x18\x02 \x01(\tR\x04name\x12\x1a\n\bprovider\x18\x03 \x01(\tR\bprovider\x12\x19\n\bbase_url\x18\x04 \x01(\tR\abaseUrl\x12" +
-	"\x17\n\aapi_key\x18\x05 \x01(\tR\x06apiKey\x12\x14\n\x05model\x18\x06 \x01(\tR\x05model\x12\x14\n\x05proxy\x18\a \x01(\tR\x05proxy\x12\x1d\n\nmax_tokens\x18\b \x01(\x05R\tmaxTokens\x12%\n\x0econtext_window\x18\t \x01(\x05R\rcon" +
-	"textWindow\x12\x18\n\atimeout\x18\n \x01(\x05R\atimeout\x12\x1b\n\x06images\x18\v \x01(\bH\x00R\x06images\x88\x01\x01B\t\n\a_images\"\x8f\x02\n\vAgentConfig\x12\x14\n\x05tools\x18\x01 \x03(\tR\x05tools\x12\x1d\n\atimeout\x18\x02 " +
-	"\x01(\x05H\x00R\atimeout\x88\x01\x01\x12\x1c\n\theartbeat\x18\x04 \x01(\x05R\theartbeat\x12#\n\reval_criteria\x18\x05 \x01(\tR\fevalCriteria\x12\x1d\n\neval_model\x18\x06 \x01(\tR\tevalModel\x12\x1f\n\veval_roun" +
-	"ds\x18\a \x01(\tR\nevalRounds\x126\n\x17capture_provider_frames\x18\b \x01(\bR\x15captureProviderFramesB\n\n\b_timeoutJ\x04\b\x03\x10\x04\"\x8a\x01\n\rTrafficConfig\x12!\n\fbody_storage" +
-	"\x18\x01 \x01(\tR\vbodyStorage\x12$\n\x0ebody_max_bytes\x18\x02 \x01(\x03R\fbodyMaxBytes\x120\n\x14body_retention_bytes\x18\x03 \x01(\x03R\x12bodyRetentionBytes\"\xce\x02\n\x0fLLMProviderView\x12" +
-	"\x0e\n\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n\x04name\x18\x02 \x01(\tR\x04name\x12\x1a\n\bprovider\x18\x03 \x01(\tR\bprovider\x12\x19\n\bbase_url\x18\x04 \x01(\tR\abaseUrl\x12,\n\x12api_key_configured\x18\x05 \x01(\bR\x10apiKeyCo" +
-	"nfigured\x12\x14\n\x05model\x18\x06 \x01(\tR\x05model\x12\x14\n\x05proxy\x18\a \x01(\tR\x05proxy\x12\x1d\n\nmax_tokens\x18\b \x01(\x05R\tmaxTokens\x12%\n\x0econtext_window\x18\t \x01(\x05R\rcontextWindow\x12\x18\n\ati" +
-	"meout\x18\n \x01(\x05R\atimeout\x12\x1b\n\x06images\x18\v \x01(\bH\x00R\x06images\x88\x01\x01B\t\n\a_images\"\xa4\x01\n\aLLMView\x12%\n\x0eactive_profile\x18\x01 \x01(\tR\ractiveProfile\x125\n\x06active\x18\x02 \x01(\v2" +
-	"\x1d.cyber.config.LLMProviderViewR\x06active\x12;\n\tproviders\x18\x03 \x03(\v2\x1d.cyber.config.LLMProviderViewR\tproviders\"\x9a\x03\n\nConfigView\x12\x12\n\x04path\x18\x01 \x01(\t" +
-	"R\x04path\x12\x16\n\x06loaded\x18\x02 \x01(\bR\x06loaded\x12'\n\x03llm\x18\x03 \x01(\v2\x15.cyber.config.LLMViewR\x03llm\x12/\n\x05agent\x18\t \x01(\v2\x19.cyber.config.AgentConfigR\x05agent\x12H\n\nexte" +
-	"nsions\x18\n \x03(\v2(.cyber.config.ConfigView.ExtensionsEntryR\nextensions\x125\n\atraffic\x18\v \x01(\v2\x1b.cyber.config.TrafficConfigR\atraffic\x1aZ\n\x0fExt" +
-	"ensionsEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x121\n\x05value\x18\x02 \x01(\v2\x1b.cyber.config.ExtensionViewR\x05value:\x028\x01J\x04\b\x04\x10\x05J\x04\b\x05\x10\x06J\x04\b\x06\x10\aJ\x04\b\a\x10\bJ\x04\b\b\x10\tR\x03ioaR\x06search" +
-	"\"\x12\n\x10GetConfigRequest\"E\n\x11GetConfigResponse\x120\n\x06config\x18\x01 \x01(\v2\x18.cyber.config.ConfigViewR\x06config\"M\n\x13UpdateConfigRequest\x126\n\x06config\x18\x01 \x01" +
-	"(\v2\x1e.cyber.config.DistributeConfigR\x06config\"H\n\x14UpdateConfigResponse\x120\n\x06config\x18\x01 \x01(\v2\x18.cyber.config.ConfigViewR\x06config\"7\n\x16Activate" +
-	"ProfileRequest\x12\x1d\n\nprofile_id\x18\x01 \x01(\tR\tprofileId\"K\n\x17ActivateProfileResponse\x120\n\x06config\x18\x01 \x01(\v2\x18.cyber.config.ConfigViewR\x06config\"\xac\x01\n\x0fL" +
-	"LMProbeRequest\x12\x1d\n\nprofile_id\x18\x01 \x01(\tR\tprofileId\x12\x1a\n\bprovider\x18\x02 \x01(\tR\bprovider\x12\x19\n\bbase_url\x18\x03 \x01(\tR\abaseUrl\x12\x17\n\aapi_key\x18\x04 \x01(\tR\x06apiKey\x12\x14\n" +
-	"\x05model\x18\x05 \x01(\tR\x05model\x12\x14\n\x05proxy\x18\x06 \x01(\tR\x05proxy\"\x9d\x01\n\x0eLLMProbeResult\x12\x0e\n\x02ok\x18\x01 \x01(\bR\x02ok\x12\x1a\n\bprovider\x18\x02 \x01(\tR\bprovider\x12\x14\n\x05model\x18\x03 \x01(\tR\x05model\x12\x1d" +
-	"\n\nlatency_ms\x18\x04 \x01(\x03R\tlatencyMs\x12\x14\n\x05reply\x18\x05 \x01(\tR\x05reply\x12\x14\n\x05error\x18\x06 \x01(\tR\x05error\"n\n\x10ListModelsResult\x12\x0e\n\x02ok\x18\x01 \x01(\bR\x02ok\x12\x1c\n\tsupported\x18\x02 \x01(\b" +
-	"R\tsupported\x12\x16\n\x06models\x18\x03 \x03(\tR\x06models\x12\x14\n\x05error\x18\x04 \x01(\tR\x05error\"i\n\x15TestConnectionRequest\x12\x18\n\asection\x18\x01 \x01(\tR\asection\x126\n\x06config\x18\x02 \x01(\v2\x1e.c" +
-	"yber.config.DistributeConfigR\x06config\"\x82\x01\n\x0fConnectionCheck\x12\x12\n\x04name\x18\x01 \x01(\tR\x04name\x12\x0e\n\x02ok\x18\x02 \x01(\bR\x02ok\x12\x1d\n\nlatency_ms\x18\x03 \x01(\x03R\tlatencyMs\x12\x16\n\x06d" +
-	"etail\x18\x04 \x01(\tR\x06detail\x12\x14\n\x05error\x18\x05 \x01(\tR\x05error\"O\n\x16TestConnectionResponse\x125\n\x06checks\x18\x01 \x03(\v2\x1d.cyber.config.ConnectionCheckR\x06checks\"o\n\rEx" +
-	"tensionView\x12/\n\x06values\x18\x01 \x01(\v2\x17.google.protobuf.StructR\x06values\x12-\n\x12configured_secrets\x18\x02 \x03(\tR\x11configuredSecretsB+Z)github.com/c1ayoo" +
-	"o/cyber/core/types;typesb\x06proto3"
+	"\n" +
+	"\x12types/config.proto\x12\fcyber.config\x1a\x1cgoogle/protobuf/struct.proto\"\xa6\x03\n" +
+	"\x10DistributeConfig\x12)\n" +
+	"\x03llm\x18\x01 \x01(\v2\x17.cyber.config.LLMConfigR\x03llm\x12/\n" +
+	"\x05agent\x18\a \x01(\v2\x19.cyber.config.AgentConfigR\x05agent\x12N\n" +
+	"\n" +
+	"extensions\x18\b \x03(\v2..cyber.config.DistributeConfig.ExtensionsEntryR\n" +
+	"extensions\x12,\n" +
+	"\x04node\x18\t \x01(\v2\x18.cyber.config.NodeConfigR\x04node\x125\n" +
+	"\atraffic\x18\n" +
+	" \x01(\v2\x1b.cyber.config.TrafficConfigR\atraffic\x1aV\n" +
+	"\x0fExtensionsEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12-\n" +
+	"\x05value\x18\x02 \x01(\v2\x17.google.protobuf.StructR\x05value:\x028\x01J\x04\b\x02\x10\x03J\x04\b\x03\x10\x04J\x04\b\x04\x10\x05J\x04\b\x05\x10\x06J\x04\b\x06\x10\aR\x03ioaR\x06search\"0\n" +
+	"\n" +
+	"NodeConfig\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\"q\n" +
+	"\tLLMConfig\x12%\n" +
+	"\x0eactive_profile\x18\x01 \x01(\tR\ractiveProfile\x12=\n" +
+	"\tproviders\x18\x02 \x03(\v2\x1f.cyber.config.LLMProviderConfigR\tproviders\"\xbb\x02\n" +
+	"\x11LLMProviderConfig\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\x12\x1a\n" +
+	"\bprovider\x18\x03 \x01(\tR\bprovider\x12\x19\n" +
+	"\bbase_url\x18\x04 \x01(\tR\abaseUrl\x12\x17\n" +
+	"\aapi_key\x18\x05 \x01(\tR\x06apiKey\x12\x14\n" +
+	"\x05model\x18\x06 \x01(\tR\x05model\x12\x14\n" +
+	"\x05proxy\x18\a \x01(\tR\x05proxy\x12\x1d\n" +
+	"\n" +
+	"max_tokens\x18\b \x01(\x05R\tmaxTokens\x12%\n" +
+	"\x0econtext_window\x18\t \x01(\x05R\rcontextWindow\x12\x18\n" +
+	"\atimeout\x18\n" +
+	" \x01(\x05R\atimeout\x12\x1b\n" +
+	"\x06images\x18\v \x01(\bH\x00R\x06images\x88\x01\x01B\t\n" +
+	"\a_images\"\x8f\x02\n" +
+	"\vAgentConfig\x12\x14\n" +
+	"\x05tools\x18\x01 \x03(\tR\x05tools\x12\x1d\n" +
+	"\atimeout\x18\x02 \x01(\x05H\x00R\atimeout\x88\x01\x01\x12\x1c\n" +
+	"\theartbeat\x18\x04 \x01(\x05R\theartbeat\x12#\n" +
+	"\reval_criteria\x18\x05 \x01(\tR\fevalCriteria\x12\x1d\n" +
+	"\n" +
+	"eval_model\x18\x06 \x01(\tR\tevalModel\x12\x1f\n" +
+	"\veval_rounds\x18\a \x01(\tR\n" +
+	"evalRounds\x126\n" +
+	"\x17capture_provider_frames\x18\b \x01(\bR\x15captureProviderFramesB\n" +
+	"\n" +
+	"\b_timeoutJ\x04\b\x03\x10\x04\"\x8a\x01\n" +
+	"\rTrafficConfig\x12!\n" +
+	"\fbody_storage\x18\x01 \x01(\tR\vbodyStorage\x12$\n" +
+	"\x0ebody_max_bytes\x18\x02 \x01(\x03R\fbodyMaxBytes\x120\n" +
+	"\x14body_retention_bytes\x18\x03 \x01(\x03R\x12bodyRetentionBytes\"\xce\x02\n" +
+	"\x0fLLMProviderView\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\x12\x1a\n" +
+	"\bprovider\x18\x03 \x01(\tR\bprovider\x12\x19\n" +
+	"\bbase_url\x18\x04 \x01(\tR\abaseUrl\x12,\n" +
+	"\x12api_key_configured\x18\x05 \x01(\bR\x10apiKeyConfigured\x12\x14\n" +
+	"\x05model\x18\x06 \x01(\tR\x05model\x12\x14\n" +
+	"\x05proxy\x18\a \x01(\tR\x05proxy\x12\x1d\n" +
+	"\n" +
+	"max_tokens\x18\b \x01(\x05R\tmaxTokens\x12%\n" +
+	"\x0econtext_window\x18\t \x01(\x05R\rcontextWindow\x12\x18\n" +
+	"\atimeout\x18\n" +
+	" \x01(\x05R\atimeout\x12\x1b\n" +
+	"\x06images\x18\v \x01(\bH\x00R\x06images\x88\x01\x01B\t\n" +
+	"\a_images\"\xa4\x01\n" +
+	"\aLLMView\x12%\n" +
+	"\x0eactive_profile\x18\x01 \x01(\tR\ractiveProfile\x125\n" +
+	"\x06active\x18\x02 \x01(\v2\x1d.cyber.config.LLMProviderViewR\x06active\x12;\n" +
+	"\tproviders\x18\x03 \x03(\v2\x1d.cyber.config.LLMProviderViewR\tproviders\"\x9a\x03\n" +
+	"\n" +
+	"ConfigView\x12\x12\n" +
+	"\x04path\x18\x01 \x01(\tR\x04path\x12\x16\n" +
+	"\x06loaded\x18\x02 \x01(\bR\x06loaded\x12'\n" +
+	"\x03llm\x18\x03 \x01(\v2\x15.cyber.config.LLMViewR\x03llm\x12/\n" +
+	"\x05agent\x18\t \x01(\v2\x19.cyber.config.AgentConfigR\x05agent\x12H\n" +
+	"\n" +
+	"extensions\x18\n" +
+	" \x03(\v2(.cyber.config.ConfigView.ExtensionsEntryR\n" +
+	"extensions\x125\n" +
+	"\atraffic\x18\v \x01(\v2\x1b.cyber.config.TrafficConfigR\atraffic\x1aZ\n" +
+	"\x0fExtensionsEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x121\n" +
+	"\x05value\x18\x02 \x01(\v2\x1b.cyber.config.ExtensionViewR\x05value:\x028\x01J\x04\b\x04\x10\x05J\x04\b\x05\x10\x06J\x04\b\x06\x10\aJ\x04\b\a\x10\bJ\x04\b\b\x10\tR\x03ioaR\x06search\"\x12\n" +
+	"\x10GetConfigRequest\"E\n" +
+	"\x11GetConfigResponse\x120\n" +
+	"\x06config\x18\x01 \x01(\v2\x18.cyber.config.ConfigViewR\x06config\"M\n" +
+	"\x13UpdateConfigRequest\x126\n" +
+	"\x06config\x18\x01 \x01(\v2\x1e.cyber.config.DistributeConfigR\x06config\"H\n" +
+	"\x14UpdateConfigResponse\x120\n" +
+	"\x06config\x18\x01 \x01(\v2\x18.cyber.config.ConfigViewR\x06config\"7\n" +
+	"\x16ActivateProfileRequest\x12\x1d\n" +
+	"\n" +
+	"profile_id\x18\x01 \x01(\tR\tprofileId\"K\n" +
+	"\x17ActivateProfileResponse\x120\n" +
+	"\x06config\x18\x01 \x01(\v2\x18.cyber.config.ConfigViewR\x06config\"\xac\x01\n" +
+	"\x0fLLMProbeRequest\x12\x1d\n" +
+	"\n" +
+	"profile_id\x18\x01 \x01(\tR\tprofileId\x12\x1a\n" +
+	"\bprovider\x18\x02 \x01(\tR\bprovider\x12\x19\n" +
+	"\bbase_url\x18\x03 \x01(\tR\abaseUrl\x12\x17\n" +
+	"\aapi_key\x18\x04 \x01(\tR\x06apiKey\x12\x14\n" +
+	"\x05model\x18\x05 \x01(\tR\x05model\x12\x14\n" +
+	"\x05proxy\x18\x06 \x01(\tR\x05proxy\"\x9d\x01\n" +
+	"\x0eLLMProbeResult\x12\x0e\n" +
+	"\x02ok\x18\x01 \x01(\bR\x02ok\x12\x1a\n" +
+	"\bprovider\x18\x02 \x01(\tR\bprovider\x12\x14\n" +
+	"\x05model\x18\x03 \x01(\tR\x05model\x12\x1d\n" +
+	"\n" +
+	"latency_ms\x18\x04 \x01(\x03R\tlatencyMs\x12\x14\n" +
+	"\x05reply\x18\x05 \x01(\tR\x05reply\x12\x14\n" +
+	"\x05error\x18\x06 \x01(\tR\x05error\"n\n" +
+	"\x10ListModelsResult\x12\x0e\n" +
+	"\x02ok\x18\x01 \x01(\bR\x02ok\x12\x1c\n" +
+	"\tsupported\x18\x02 \x01(\bR\tsupported\x12\x16\n" +
+	"\x06models\x18\x03 \x03(\tR\x06models\x12\x14\n" +
+	"\x05error\x18\x04 \x01(\tR\x05error\"i\n" +
+	"\x15TestConnectionRequest\x12\x18\n" +
+	"\asection\x18\x01 \x01(\tR\asection\x126\n" +
+	"\x06config\x18\x02 \x01(\v2\x1e.cyber.config.DistributeConfigR\x06config\"\x82\x01\n" +
+	"\x0fConnectionCheck\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\x12\x0e\n" +
+	"\x02ok\x18\x02 \x01(\bR\x02ok\x12\x1d\n" +
+	"\n" +
+	"latency_ms\x18\x03 \x01(\x03R\tlatencyMs\x12\x16\n" +
+	"\x06detail\x18\x04 \x01(\tR\x06detail\x12\x14\n" +
+	"\x05error\x18\x05 \x01(\tR\x05error\"O\n" +
+	"\x16TestConnectionResponse\x125\n" +
+	"\x06checks\x18\x01 \x03(\v2\x1d.cyber.config.ConnectionCheckR\x06checks\"o\n" +
+	"\rExtensionView\x12/\n" +
+	"\x06values\x18\x01 \x01(\v2\x17.google.protobuf.StructR\x06values\x12-\n" +
+	"\x12configured_secrets\x18\x02 \x03(\tR\x11configuredSecretsB1Z/github.com/chainreactors/cyber/core/types;typesb\x06proto3"
 
 var (
 	file_types_config_proto_rawDescOnce sync.Once

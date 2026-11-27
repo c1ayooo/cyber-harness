@@ -6,15 +6,15 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/c1ayooo/cyber/agent"
-	agenthooks "github.com/c1ayooo/cyber/agent/hooks"
-	"github.com/c1ayooo/cyber/agent/provider"
-	agentsession "github.com/c1ayooo/cyber/agent/session"
-	"github.com/c1ayooo/cyber/core/extension"
-	loopext "github.com/c1ayooo/cyber/exts/agent"
-	promptext "github.com/c1ayooo/cyber/exts/prompt"
-	sessionext "github.com/c1ayooo/cyber/exts/session"
-	"github.com/c1ayooo/cyber/pkg/testutil/apptest"
+	"github.com/chainreactors/cyber/agent"
+	agenthooks "github.com/chainreactors/cyber/agent/hooks"
+	"github.com/chainreactors/cyber/agent/provider"
+	agentsession "github.com/chainreactors/cyber/agent/session"
+	"github.com/chainreactors/cyber/core/extension"
+	loopext "github.com/chainreactors/cyber/exts/agent"
+	promptext "github.com/chainreactors/cyber/exts/prompt"
+	sessionext "github.com/chainreactors/cyber/exts/session"
+	"github.com/chainreactors/cyber/pkg/testutil/apptest"
 )
 
 type loopFunc func(context.Context, agent.Config) (*agent.Result, error)

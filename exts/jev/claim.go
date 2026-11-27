@@ -4,7 +4,7 @@ import (
 	"slices"
 	"strings"
 
-	jevapi "github.com/c1ayooo/cyber/agent/provider/jev"
+	jevapi "github.com/chainreactors/cyber/agent/provider/jev"
 )
 
 // Catalog keys are stable choice values. Their meanings are ordinary context,

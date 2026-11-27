@@ -5,7 +5,7 @@ import (
 	"net/url"
 	"strings"
 
-	cfg "github.com/c1ayooo/cyber/pkg/config"
+	cfg "github.com/chainreactors/cyber/pkg/config"
 )
 
 type Fofa struct {

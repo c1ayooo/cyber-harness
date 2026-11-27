@@ -5,11 +5,11 @@ import (
 	"slices"
 	"testing"
 
-	provider "github.com/c1ayooo/cyber/agent/provider"
-	agentsession "github.com/c1ayooo/cyber/agent/session"
-	"github.com/c1ayooo/cyber/core/telemetry"
-	cfg "github.com/c1ayooo/cyber/pkg/config"
-	profilepkg "github.com/c1ayooo/cyber/pkg/profile"
+	provider "github.com/chainreactors/cyber/agent/provider"
+	agentsession "github.com/chainreactors/cyber/agent/session"
+	"github.com/chainreactors/cyber/core/telemetry"
+	cfg "github.com/chainreactors/cyber/pkg/config"
+	profilepkg "github.com/chainreactors/cyber/pkg/profile"
 )
 
 // The record section and the record extension must appear and disappear

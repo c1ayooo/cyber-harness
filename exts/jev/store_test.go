@@ -8,8 +8,8 @@ import (
 	"strings"
 	"testing"
 
-	jev "github.com/c1ayooo/cyber/agent/provider/jev"
-	aop "github.com/c1ayooo/cyber/aop"
+	jev "github.com/chainreactors/cyber/agent/provider/jev"
+	aop "github.com/chainreactors/cyber/aop"
 )
 
 func TestNativeArgumentsRemainOpaque(t *testing.T) {

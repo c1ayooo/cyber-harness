@@ -5,7 +5,7 @@ import (
 	"errors"
 	"sync"
 
-	"github.com/c1ayooo/cyber/core/resource"
+	"github.com/chainreactors/cyber/core/resource"
 )
 
 // Scope owns typed registration handles created by one Extension.

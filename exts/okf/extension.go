@@ -5,9 +5,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/c1ayooo/cyber/agent/prompt"
-	"github.com/c1ayooo/cyber/core/extension"
-	okftool "github.com/c1ayooo/cyber/tools/okf"
+	"github.com/chainreactors/cyber/agent/prompt"
+	"github.com/chainreactors/cyber/core/extension"
+	okftool "github.com/chainreactors/cyber/tools/okf"
 )
 
 // Extension contributes the OKF prompt policy, validation command, and

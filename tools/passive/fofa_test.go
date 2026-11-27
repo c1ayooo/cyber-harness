@@ -11,8 +11,8 @@ import (
 	"testing"
 	"time"
 
-	coretool "github.com/c1ayooo/cyber/core/tool"
-	"github.com/c1ayooo/cyber/tools/passive"
+	coretool "github.com/chainreactors/cyber/core/tool"
+	"github.com/chainreactors/cyber/tools/passive"
 )
 
 func TestFofaUsesGatewayBaseURL(t *testing.T) {

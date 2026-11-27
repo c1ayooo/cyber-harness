@@ -6,14 +6,14 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/c1ayooo/cyber/agent"
-	"github.com/c1ayooo/cyber/agent/provider"
-	"github.com/c1ayooo/cyber/agent/session"
-	"github.com/c1ayooo/cyber/aop"
-	"github.com/c1ayooo/cyber/core/extension"
-	"github.com/c1ayooo/cyber/core/proc"
-	"github.com/c1ayooo/cyber/core/telemetry"
-	"github.com/c1ayooo/cyber/pkg/harness"
+	"github.com/chainreactors/cyber/agent"
+	"github.com/chainreactors/cyber/agent/provider"
+	"github.com/chainreactors/cyber/agent/session"
+	"github.com/chainreactors/cyber/aop"
+	"github.com/chainreactors/cyber/core/extension"
+	"github.com/chainreactors/cyber/core/proc"
+	"github.com/chainreactors/cyber/core/telemetry"
+	"github.com/chainreactors/cyber/pkg/harness"
 )
 
 func TestInstallationSharesCapabilitiesAndRetargetableLogger(t *testing.T) {

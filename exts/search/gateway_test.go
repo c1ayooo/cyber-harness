@@ -10,13 +10,13 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"github.com/c1ayooo/cyber/core/egress"
-	"github.com/c1ayooo/cyber/core/extension"
-	"github.com/c1ayooo/cyber/core/hooks"
-	coretool "github.com/c1ayooo/cyber/core/tool"
-	"github.com/c1ayooo/cyber/core/types"
-	"github.com/c1ayooo/cyber/exts/gateway"
-	cfg "github.com/c1ayooo/cyber/pkg/config"
+	"github.com/chainreactors/cyber/core/egress"
+	"github.com/chainreactors/cyber/core/extension"
+	"github.com/chainreactors/cyber/core/hooks"
+	coretool "github.com/chainreactors/cyber/core/tool"
+	"github.com/chainreactors/cyber/core/types"
+	"github.com/chainreactors/cyber/exts/gateway"
+	cfg "github.com/chainreactors/cyber/pkg/config"
 )
 
 func TestGatewaySearchAndConnectionUseSameUpstream(t *testing.T) {

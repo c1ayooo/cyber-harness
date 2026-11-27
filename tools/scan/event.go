@@ -3,8 +3,8 @@ package scan
 import (
 	"encoding/json"
 	"fmt"
-	toolpb "github.com/c1ayooo/cyber/aop/tool"
-	"github.com/c1ayooo/cyber/tools/toolargs"
+	toolpb "github.com/chainreactors/cyber/aop/tool"
+	"github.com/chainreactors/cyber/tools/toolargs"
 	"strconv"
 	"strings"
 	"sync/atomic"

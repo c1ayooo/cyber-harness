@@ -6,16 +6,16 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	"github.com/c1ayooo/cyber/agent/hooks"
-	"github.com/c1ayooo/cyber/agent/inbox"
-	"github.com/c1ayooo/cyber/agent/prompt"
-	"github.com/c1ayooo/cyber/agent/provider"
-	aop "github.com/c1ayooo/cyber/aop"
-	coreevents "github.com/c1ayooo/cyber/core/events"
-	corehooks "github.com/c1ayooo/cyber/core/hooks"
-	"github.com/c1ayooo/cyber/core/telemetry"
-	coretool "github.com/c1ayooo/cyber/core/tool"
-	types "github.com/c1ayooo/cyber/core/types"
+	"github.com/chainreactors/cyber/agent/hooks"
+	"github.com/chainreactors/cyber/agent/inbox"
+	"github.com/chainreactors/cyber/agent/prompt"
+	"github.com/chainreactors/cyber/agent/provider"
+	aop "github.com/chainreactors/cyber/aop"
+	coreevents "github.com/chainreactors/cyber/core/events"
+	corehooks "github.com/chainreactors/cyber/core/hooks"
+	"github.com/chainreactors/cyber/core/telemetry"
+	coretool "github.com/chainreactors/cyber/core/tool"
+	types "github.com/chainreactors/cyber/core/types"
 )
 
 type TransformContextFunc func([]*aop.Message) []*aop.Message

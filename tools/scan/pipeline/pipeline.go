@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/c1ayooo/cyber/core/telemetry"
+	"github.com/chainreactors/cyber/core/telemetry"
 )
 
 type Event interface {

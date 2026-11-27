@@ -16,12 +16,12 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/c1ayooo/cyber/agent"
-	"github.com/c1ayooo/cyber/agent/provider"
-	agentsession "github.com/c1ayooo/cyber/agent/session"
-	"github.com/c1ayooo/cyber/aop"
-	jevext "github.com/c1ayooo/cyber/exts/jev"
-	cfg "github.com/c1ayooo/cyber/pkg/config"
+	"github.com/chainreactors/cyber/agent"
+	"github.com/chainreactors/cyber/agent/provider"
+	agentsession "github.com/chainreactors/cyber/agent/session"
+	"github.com/chainreactors/cyber/aop"
+	jevext "github.com/chainreactors/cyber/exts/jev"
+	cfg "github.com/chainreactors/cyber/pkg/config"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 )

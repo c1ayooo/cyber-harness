@@ -8,12 +8,12 @@ import (
 	"testing/synctest"
 	"time"
 
-	aop "github.com/c1ayooo/cyber/aop"
-	"github.com/c1ayooo/cyber/core/extension"
-	"github.com/c1ayooo/cyber/core/hooks"
-	"github.com/c1ayooo/cyber/core/operation"
-	coretool "github.com/c1ayooo/cyber/core/tool"
-	toolhooks "github.com/c1ayooo/cyber/core/tool/hooks"
+	aop "github.com/chainreactors/cyber/aop"
+	"github.com/chainreactors/cyber/core/extension"
+	"github.com/chainreactors/cyber/core/hooks"
+	"github.com/chainreactors/cyber/core/operation"
+	coretool "github.com/chainreactors/cyber/core/tool"
+	toolhooks "github.com/chainreactors/cyber/core/tool/hooks"
 )
 
 type registryTool struct {

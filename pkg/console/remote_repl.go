@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"io"
 
-	agentsession "github.com/c1ayooo/cyber/agent/session"
-	procbus "github.com/c1ayooo/cyber/core/proc"
-	cfg "github.com/c1ayooo/cyber/pkg/config"
-	consoleapi "github.com/c1ayooo/cyber/pkg/console/api"
+	agentsession "github.com/chainreactors/cyber/agent/session"
+	procbus "github.com/chainreactors/cyber/core/proc"
+	cfg "github.com/chainreactors/cyber/pkg/config"
+	consoleapi "github.com/chainreactors/cyber/pkg/console/api"
 	rlterm "github.com/chainreactors/tui/readline/terminal"
 	"github.com/chainreactors/utils/proc"
 )

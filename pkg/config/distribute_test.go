@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"testing"
 
-	types "github.com/c1ayooo/cyber/core/types"
+	types "github.com/chainreactors/cyber/core/types"
 )
 
 func TestDistributeConfigUsesFlatSections(t *testing.T) {

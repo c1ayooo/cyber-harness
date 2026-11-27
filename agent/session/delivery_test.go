@@ -6,8 +6,8 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/c1ayooo/cyber/agent"
-	"github.com/c1ayooo/cyber/agent/inbox"
+	"github.com/chainreactors/cyber/agent"
+	"github.com/chainreactors/cyber/agent/inbox"
 )
 
 func TestDeliveryGatesRoutingAndCapacity(t *testing.T) {

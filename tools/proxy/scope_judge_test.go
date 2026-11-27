@@ -12,8 +12,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/c1ayooo/cyber/core/operation"
-	"github.com/c1ayooo/cyber/core/scoperules"
+	"github.com/chainreactors/cyber/core/operation"
+	"github.com/chainreactors/cyber/core/scoperules"
 )
 
 // stubScopeJudge is the minimal judge the proxy integration tests use: it

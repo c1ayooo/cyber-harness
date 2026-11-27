@@ -9,15 +9,15 @@ import (
 	"time"
 	"unicode/utf8"
 
-	coretool "github.com/c1ayooo/cyber/core/tool"
+	coretool "github.com/chainreactors/cyber/core/tool"
 
-	aop "github.com/c1ayooo/cyber/aop"
-	toolpb "github.com/c1ayooo/cyber/aop/tool"
-	"github.com/c1ayooo/cyber/core/eventbus"
-	"github.com/c1ayooo/cyber/core/operation"
+	aop "github.com/chainreactors/cyber/aop"
+	toolpb "github.com/chainreactors/cyber/aop/tool"
+	"github.com/chainreactors/cyber/core/eventbus"
+	"github.com/chainreactors/cyber/core/operation"
 
-	toolhooks "github.com/c1ayooo/cyber/core/tool/hooks"
-	terminaltool "github.com/c1ayooo/cyber/tools/terminal"
+	toolhooks "github.com/chainreactors/cyber/core/tool/hooks"
+	terminaltool "github.com/chainreactors/cyber/tools/terminal"
 )
 
 type aopTestExecutor struct{}

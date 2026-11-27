@@ -12,11 +12,11 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/c1ayooo/cyber/core/extension"
-	"github.com/c1ayooo/cyber/core/hooks"
-	coretool "github.com/c1ayooo/cyber/core/tool"
-	mcpext "github.com/c1ayooo/cyber/exts/mcp"
-	mcptools "github.com/c1ayooo/cyber/tools/mcp"
+	"github.com/chainreactors/cyber/core/extension"
+	"github.com/chainreactors/cyber/core/hooks"
+	coretool "github.com/chainreactors/cyber/core/tool"
+	mcpext "github.com/chainreactors/cyber/exts/mcp"
+	mcptools "github.com/chainreactors/cyber/tools/mcp"
 )
 
 func main() {

@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/c1ayooo/cyber/core/resource"
-	types "github.com/c1ayooo/cyber/core/types"
+	"github.com/chainreactors/cyber/core/resource"
+	types "github.com/chainreactors/cyber/core/types"
 )
 
 // Connection is an optional connectivity check contributed by the extension

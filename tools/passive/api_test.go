@@ -11,8 +11,8 @@ import (
 	"testing"
 	"time"
 
-	passiveconfig "github.com/c1ayooo/cyber/exts/passive/config"
-	"github.com/c1ayooo/cyber/tools/passive"
+	passiveconfig "github.com/chainreactors/cyber/exts/passive/config"
+	"github.com/chainreactors/cyber/tools/passive"
 )
 
 func TestEveryPassiveAPIUsesConfiguredBaseURL(t *testing.T) {

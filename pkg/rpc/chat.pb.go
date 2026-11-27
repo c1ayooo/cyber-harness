@@ -7,8 +7,8 @@
 package rpc
 
 import (
-	aop "github.com/c1ayooo/cyber/aop"
-	types "github.com/c1ayooo/cyber/core/types"
+	aop "github.com/chainreactors/cyber/aop"
+	types "github.com/chainreactors/cyber/core/types"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -25,12 +25,18 @@ const (
 var File_rpc_chat_proto protoreflect.FileDescriptor
 
 const file_rpc_chat_proto_rawDesc = "" +
-	"\n\x0erpc/chat.proto\x12\x0ecyber.rpc.chat\x1a\x0eaop/chat.proto\x1a\x10types/chat.proto2\xc1\x04\n\x0eSessionService\x12T\n\rUpdateSession\x12 .cyber.chat.UpdateSessio" +
-	"nRequest\x1a!.cyber.chat.UpdateSessionResponse\x12Q\n\fListSessions\x12\x1f.cyber.chat.ListSessionsRequest\x1a .cyber.chat.ListSessionsResponse\x12K" +
-	"\n\nGetSession\x12\x1d.cyber.chat.GetSessionRequest\x1a\x1e.cyber.chat.GetSessionResponse\x12Q\n\fResetSession\x12\x1f.cyber.chat.ResetSessionRequest\x1a .c" +
-	"yber.chat.ResetSessionResponse\x12T\n\rDeleteSession\x12 .cyber.chat.DeleteSessionRequest\x1a!.cyber.chat.DeleteSessionResponse\x12Q\n\fListComm" +
-	"ands\x12\x1f.cyber.chat.ListCommandsRequest\x1a .cyber.chat.ListCommandsResponse\x12=\n\nListEvents\x12\x16.aop.ListEventsRequest\x1a\x17.aop.ListEventsRe" +
-	"sponseB&Z$github.com/c1ayooo/cyber/pkg/rpc;rpcb\x06proto3"
+	"\n" +
+	"\x0erpc/chat.proto\x12\x0ecyber.rpc.chat\x1a\x0eaop/chat.proto\x1a\x10types/chat.proto2\xc1\x04\n" +
+	"\x0eSessionService\x12T\n" +
+	"\rUpdateSession\x12 .cyber.chat.UpdateSessionRequest\x1a!.cyber.chat.UpdateSessionResponse\x12Q\n" +
+	"\fListSessions\x12\x1f.cyber.chat.ListSessionsRequest\x1a .cyber.chat.ListSessionsResponse\x12K\n" +
+	"\n" +
+	"GetSession\x12\x1d.cyber.chat.GetSessionRequest\x1a\x1e.cyber.chat.GetSessionResponse\x12Q\n" +
+	"\fResetSession\x12\x1f.cyber.chat.ResetSessionRequest\x1a .cyber.chat.ResetSessionResponse\x12T\n" +
+	"\rDeleteSession\x12 .cyber.chat.DeleteSessionRequest\x1a!.cyber.chat.DeleteSessionResponse\x12Q\n" +
+	"\fListCommands\x12\x1f.cyber.chat.ListCommandsRequest\x1a .cyber.chat.ListCommandsResponse\x12=\n" +
+	"\n" +
+	"ListEvents\x12\x16.aop.ListEventsRequest\x1a\x17.aop.ListEventsResponseB,Z*github.com/chainreactors/cyber/pkg/rpc;rpcb\x06proto3"
 
 var file_rpc_chat_proto_goTypes = []any{
 	(*types.UpdateSessionRequest)(nil),  // 0: cyber.chat.UpdateSessionRequest

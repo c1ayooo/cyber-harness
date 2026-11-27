@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/c1ayooo/cyber/agent/prompt"
-	"github.com/c1ayooo/cyber/tools/scan"
+	"github.com/chainreactors/cyber/agent/prompt"
+	"github.com/chainreactors/cyber/tools/scan"
 	"github.com/chainreactors/utils/parsers"
 )
 

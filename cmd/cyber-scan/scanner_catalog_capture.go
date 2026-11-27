@@ -6,7 +6,7 @@ package main
 // discovery product exists in this binary, so the CLI's scanner sections and
 // the passive-recon flag group are compiled out with the engines.
 
-import "github.com/c1ayooo/cyber/core/resource"
+import "github.com/chainreactors/cyber/core/resource"
 
 func productScannerNames() []string { return nil }
 

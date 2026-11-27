@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"sync/atomic"
 
-	aop "github.com/c1ayooo/cyber/aop"
-	traffic "github.com/c1ayooo/cyber/aop/traffic"
+	aop "github.com/chainreactors/cyber/aop"
+	traffic "github.com/chainreactors/cyber/aop/traffic"
 	protobuf "google.golang.org/protobuf/proto"
 )
 

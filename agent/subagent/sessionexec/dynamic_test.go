@@ -10,13 +10,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/c1ayooo/cyber/agent"
-	agenthooks "github.com/c1ayooo/cyber/agent/hooks"
-	"github.com/c1ayooo/cyber/agent/subagent"
-	"github.com/c1ayooo/cyber/core/hooks"
-	"github.com/c1ayooo/cyber/core/operation"
-	"github.com/c1ayooo/cyber/core/resource"
-	coretool "github.com/c1ayooo/cyber/core/tool"
+	"github.com/chainreactors/cyber/agent"
+	agenthooks "github.com/chainreactors/cyber/agent/hooks"
+	"github.com/chainreactors/cyber/agent/subagent"
+	"github.com/chainreactors/cyber/core/hooks"
+	"github.com/chainreactors/cyber/core/operation"
+	"github.com/chainreactors/cyber/core/resource"
+	coretool "github.com/chainreactors/cyber/core/tool"
 )
 
 func TestCatalogAndNamedDefaultsAreDynamic(t *testing.T) {

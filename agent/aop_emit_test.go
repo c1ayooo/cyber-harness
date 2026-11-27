@@ -10,10 +10,10 @@ import (
 	"sync/atomic"
 	"testing"
 
-	provider "github.com/c1ayooo/cyber/agent/provider"
-	aop "github.com/c1ayooo/cyber/aop"
-	coreevents "github.com/c1ayooo/cyber/core/events"
-	types "github.com/c1ayooo/cyber/core/types"
+	provider "github.com/chainreactors/cyber/agent/provider"
+	aop "github.com/chainreactors/cyber/aop"
+	coreevents "github.com/chainreactors/cyber/core/events"
+	types "github.com/chainreactors/cyber/core/types"
 )
 
 // streamEventCollector records message/message.delta events from the bus.

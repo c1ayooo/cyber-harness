@@ -11,8 +11,8 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/c1ayooo/cyber/core/resource"
-	types "github.com/c1ayooo/cyber/core/types"
+	"github.com/chainreactors/cyber/core/resource"
+	types "github.com/chainreactors/cyber/core/types"
 	"github.com/go-viper/mapstructure/v2"
 	"gopkg.in/yaml.v3"
 )

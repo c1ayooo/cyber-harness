@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strings"
 
-	coreregistry "github.com/c1ayooo/cyber/core/registry"
+	coreregistry "github.com/chainreactors/cyber/core/registry"
 )
 
 var (

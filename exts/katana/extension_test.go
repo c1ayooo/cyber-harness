@@ -4,12 +4,12 @@ import (
 	"context"
 	"testing"
 
-	"github.com/c1ayooo/cyber/agent/provider"
-	"github.com/c1ayooo/cyber/core/extension"
-	coretool "github.com/c1ayooo/cyber/core/tool"
-	"github.com/c1ayooo/cyber/pkg/harness"
-	"github.com/c1ayooo/cyber/pkg/testutil/hosttest"
-	"github.com/c1ayooo/cyber/tools/files"
+	"github.com/chainreactors/cyber/agent/provider"
+	"github.com/chainreactors/cyber/core/extension"
+	coretool "github.com/chainreactors/cyber/core/tool"
+	"github.com/chainreactors/cyber/pkg/harness"
+	"github.com/chainreactors/cyber/pkg/testutil/hosttest"
+	"github.com/chainreactors/cyber/tools/files"
 )
 
 func TestIndependentCommandAndDocsLifecycle(t *testing.T) {

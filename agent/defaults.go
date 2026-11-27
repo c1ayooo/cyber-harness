@@ -1,6 +1,6 @@
 package agent
 
-import "github.com/c1ayooo/cyber/core/truncate"
+import "github.com/chainreactors/cyber/core/truncate"
 
 const (
 	DefaultMaxResultSize         = truncate.DefaultMaxBytes

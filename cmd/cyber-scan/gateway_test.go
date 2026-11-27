@@ -3,9 +3,9 @@ package main
 import (
 	"testing"
 
-	"github.com/c1ayooo/cyber/agent/provider"
-	"github.com/c1ayooo/cyber/core/telemetry"
-	cfg "github.com/c1ayooo/cyber/pkg/config"
+	"github.com/chainreactors/cyber/agent/provider"
+	"github.com/chainreactors/cyber/core/telemetry"
+	cfg "github.com/chainreactors/cyber/pkg/config"
 )
 
 func TestGatewayConfigAndProxySelection(t *testing.T) {

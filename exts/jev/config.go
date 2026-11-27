@@ -5,9 +5,9 @@ import (
 	"strings"
 	"time"
 
-	jevapi "github.com/c1ayooo/cyber/agent/provider/jev"
-	"github.com/c1ayooo/cyber/core/resource"
-	cfg "github.com/c1ayooo/cyber/pkg/config"
+	jevapi "github.com/chainreactors/cyber/agent/provider/jev"
+	"github.com/chainreactors/cyber/core/resource"
+	cfg "github.com/chainreactors/cyber/pkg/config"
 )
 
 const ConfigKey = "jev"

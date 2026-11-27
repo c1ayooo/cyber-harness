@@ -7,12 +7,12 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/c1ayooo/cyber/agent/provider"
-	"github.com/c1ayooo/cyber/core/extension"
-	coretool "github.com/c1ayooo/cyber/core/tool"
-	passiveext "github.com/c1ayooo/cyber/exts/passive"
-	"github.com/c1ayooo/cyber/pkg/harness"
-	"github.com/c1ayooo/cyber/tools/passive"
+	"github.com/chainreactors/cyber/agent/provider"
+	"github.com/chainreactors/cyber/core/extension"
+	coretool "github.com/chainreactors/cyber/core/tool"
+	passiveext "github.com/chainreactors/cyber/exts/passive"
+	"github.com/chainreactors/cyber/pkg/harness"
+	"github.com/chainreactors/cyber/tools/passive"
 )
 
 func main() {

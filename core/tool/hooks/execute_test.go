@@ -8,9 +8,9 @@ import (
 	"strings"
 	"testing"
 
-	aop "github.com/c1ayooo/cyber/aop"
-	"github.com/c1ayooo/cyber/core/hooks"
-	"github.com/c1ayooo/cyber/core/operation"
+	aop "github.com/chainreactors/cyber/aop"
+	"github.com/chainreactors/cyber/core/hooks"
+	"github.com/chainreactors/cyber/core/operation"
 )
 
 func TestExecutionCompletion(t *testing.T) {

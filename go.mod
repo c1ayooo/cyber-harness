@@ -1,4 +1,4 @@
-module github.com/c1ayooo/cyber
+module github.com/chainreactors/cyber
 
 go 1.26.0
 
@@ -168,7 +168,7 @@ require (
 	github.com/bradfitz/gomemcache v0.0.0-20260422231931-4d751bb6e37c // indirect
 	github.com/buger/jsonparser v1.1.2 // indirect
 	github.com/c1ayooo/4zwebshell v0.0.0
-	github.com/c1ayooo/cyber/aop v0.0.0
+	github.com/chainreactors/cyber/aop v0.0.0
 	github.com/carapace-sh/carapace-shlex v1.1.1 // indirect
 	github.com/censys/censys-sdk-go v0.19.1 // indirect
 	github.com/chainreactors/files v0.0.0-20240716182835-7884ee1e77f0 // indirect
@@ -376,7 +376,7 @@ replace github.com/wasilibs/go-re2 => github.com/c1ayooo/native v1.11.1-native.1
 
 replace github.com/projectdiscovery/katana => github.com/c1ayooo/katana v1.6.2-0.20260914161750-0811dfe2d87c
 
-replace github.com/c1ayooo/cyber/aop => ./aop
+replace github.com/chainreactors/cyber/aop => ./aop
 
 replace (
 	github.com/chainreactors/crtm => github.com/c1ayooo/crtm v0.0.3-0.20260924103954-9432523918ae

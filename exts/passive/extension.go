@@ -6,11 +6,11 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/c1ayooo/cyber/agent/skills"
-	"github.com/c1ayooo/cyber/core/extension"
-	"github.com/c1ayooo/cyber/core/telemetry"
-	"github.com/c1ayooo/cyber/tools/files"
-	"github.com/c1ayooo/cyber/tools/passive"
+	"github.com/chainreactors/cyber/agent/skills"
+	"github.com/chainreactors/cyber/core/extension"
+	"github.com/chainreactors/cyber/core/telemetry"
+	"github.com/chainreactors/cyber/tools/files"
+	"github.com/chainreactors/cyber/tools/passive"
 )
 
 //go:embed passive.md

@@ -15,9 +15,9 @@ import (
 	"time"
 	"unicode"
 
-	"github.com/c1ayooo/cyber/core/telemetry"
-	coretool "github.com/c1ayooo/cyber/core/tool"
-	"github.com/c1ayooo/cyber/core/truncate"
+	"github.com/chainreactors/cyber/core/telemetry"
+	coretool "github.com/chainreactors/cyber/core/tool"
+	"github.com/chainreactors/cyber/core/truncate"
 )
 
 const (
@@ -25,7 +25,7 @@ const (
 	maxFetchBody   = truncate.MaxFetchBody
 	maxURLLength   = 2000
 	maxRedirects   = 10
-	fetchUserAgent = "Mozilla/5.0 (compatible; cyber/1.0; +https://github.com/c1ayooo/cyber-harness)"
+	fetchUserAgent = "Mozilla/5.0 (compatible; cyber/1.0; +https://github.com/chainreactors/cyber-harness)"
 
 	cacheTTL      = 15 * time.Minute
 	maxCacheBytes = 50 * 1024 * 1024

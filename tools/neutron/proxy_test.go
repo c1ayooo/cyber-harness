@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/c1ayooo/cyber/tools/neutron"
+	"github.com/chainreactors/cyber/tools/neutron"
 	neutronhttp "github.com/chainreactors/neutron/protocols/http"
 )
 

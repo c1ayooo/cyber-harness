@@ -12,12 +12,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/c1ayooo/cyber/agent"
-	agenthooks "github.com/c1ayooo/cyber/agent/hooks"
-	"github.com/c1ayooo/cyber/agent/provider"
-	"github.com/c1ayooo/cyber/agent/session"
-	aop "github.com/c1ayooo/cyber/aop"
-	cfg "github.com/c1ayooo/cyber/pkg/config"
+	"github.com/chainreactors/cyber/agent"
+	agenthooks "github.com/chainreactors/cyber/agent/hooks"
+	"github.com/chainreactors/cyber/agent/provider"
+	"github.com/chainreactors/cyber/agent/session"
+	aop "github.com/chainreactors/cyber/aop"
+	cfg "github.com/chainreactors/cyber/pkg/config"
 )
 
 func TestProfileProviderReloadPreservesActiveRunAndSession(t *testing.T) {

@@ -1,8 +1,8 @@
 package arsenal
 
 import (
-	coretool "github.com/c1ayooo/cyber/core/tool"
 	crtm "github.com/chainreactors/crtm/pkg"
+	coretool "github.com/chainreactors/cyber/core/tool"
 )
 
 func NewCommand(mgr *crtm.Manager) coretool.Command {

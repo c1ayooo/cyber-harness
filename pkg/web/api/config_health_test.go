@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/c1ayooo/cyber/agent/provider"
-	types "github.com/c1ayooo/cyber/core/types"
+	"github.com/chainreactors/cyber/agent/provider"
+	types "github.com/chainreactors/cyber/core/types"
 )
 
 func TestLLMHealthUsesEffectiveRuntime(t *testing.T) {

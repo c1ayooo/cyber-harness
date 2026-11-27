@@ -5,8 +5,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/c1ayooo/cyber/pkg/output"
-	"github.com/c1ayooo/cyber/tools/scan/pipeline"
+	"github.com/chainreactors/cyber/pkg/output"
+	"github.com/chainreactors/cyber/tools/scan/pipeline"
 	"github.com/chainreactors/utils/parsers"
 )
 

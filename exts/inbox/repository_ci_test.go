@@ -15,10 +15,10 @@ import (
 	"testing"
 	"time"
 
-	mailbox "github.com/c1ayooo/cyber/agent/inbox"
-	"github.com/c1ayooo/cyber/agent/provider"
-	coretool "github.com/c1ayooo/cyber/core/tool"
-	inboxext "github.com/c1ayooo/cyber/exts/inbox"
+	mailbox "github.com/chainreactors/cyber/agent/inbox"
+	"github.com/chainreactors/cyber/agent/provider"
+	coretool "github.com/chainreactors/cyber/core/tool"
+	inboxext "github.com/chainreactors/cyber/exts/inbox"
 )
 
 // Exercise a real repository CI continuation: the first Go test command has
@@ -85,8 +85,8 @@ func TestRepositoryCIContinuationAfterProviderFailure(t *testing.T) {
 						return nil, fmt.Errorf("actual repository command failed: %s", coretool.ResultText(result))
 					}
 					text := coretool.ResultText(result)
-					mailboxPassed = mailboxPassed || strings.Contains(text, `"Action":"pass","Package":"github.com/c1ayooo/cyber/agent/inbox","Test":"TestInterruptAdmissionAndDrain"`)
-					sessionPassed = sessionPassed || strings.Contains(text, `"Action":"pass","Package":"github.com/c1ayooo/cyber/agent/session","Test":"TestDeliveryGatesRoutingAndCapacity"`)
+					mailboxPassed = mailboxPassed || strings.Contains(text, `"Action":"pass","Package":"github.com/chainreactors/cyber/agent/inbox","Test":"TestInterruptAdmissionAndDrain"`)
+					sessionPassed = sessionPassed || strings.Contains(text, `"Action":"pass","Package":"github.com/chainreactors/cyber/agent/session","Test":"TestDeliveryGatesRoutingAndCapacity"`)
 				}
 			}
 		}

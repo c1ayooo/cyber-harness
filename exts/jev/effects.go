@@ -9,7 +9,7 @@ import (
 	"strings"
 	"sync"
 
-	coretool "github.com/c1ayooo/cyber/core/tool"
+	coretool "github.com/chainreactors/cyber/core/tool"
 	"github.com/santhosh-tekuri/jsonschema/v6"
 	"mvdan.cc/sh/v3/expand"
 	"mvdan.cc/sh/v3/syntax"

@@ -78,8 +78,12 @@ func (x *EncodedValue) GetMediaType() string {
 var File_aop_value_proto protoreflect.FileDescriptor
 
 const file_aop_value_proto_rawDesc = "" +
-	"\n\x0faop/value.proto\x12\x03aop\"A\n\fEncodedValue\x12\x12\n\x04data\x18\x01 \x01(\fR\x04data\x12\x1d\n\nmedia_type\x18\x02 \x01(\tR\tmediaTypeB\x1eZ\x1cgithub.com/c1ayooo/cyber/aopb\x06proto" +
-	"3"
+	"\n" +
+	"\x0faop/value.proto\x12\x03aop\"A\n" +
+	"\fEncodedValue\x12\x12\n" +
+	"\x04data\x18\x01 \x01(\fR\x04data\x12\x1d\n" +
+	"\n" +
+	"media_type\x18\x02 \x01(\tR\tmediaTypeB$Z\"github.com/chainreactors/cyber/aopb\x06proto3"
 
 var (
 	file_aop_value_proto_rawDescOnce sync.Once

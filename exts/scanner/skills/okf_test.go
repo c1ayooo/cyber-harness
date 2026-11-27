@@ -4,7 +4,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/c1ayooo/cyber/tools/okf"
+	"github.com/chainreactors/cyber/tools/okf"
 )
 
 func TestScannerOKFBundlePassesProductionChecks(t *testing.T) {

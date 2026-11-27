@@ -5,8 +5,8 @@ import (
 	"os"
 	"testing"
 
-	jevapi "github.com/c1ayooo/cyber/agent/provider/jev"
-	decision "github.com/c1ayooo/cyber/core/decision"
+	jevapi "github.com/chainreactors/cyber/agent/provider/jev"
+	decision "github.com/chainreactors/cyber/core/decision"
 )
 
 func TestLiveReflexGenerationBoundary(t *testing.T) {

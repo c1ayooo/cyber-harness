@@ -8,8 +8,8 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"github.com/c1ayooo/cyber/agent/provider"
-	"github.com/c1ayooo/cyber/aop"
+	"github.com/chainreactors/cyber/agent/provider"
+	"github.com/chainreactors/cyber/aop"
 )
 
 func TestNonMultimodalModelRecoversAndContinues(t *testing.T) {

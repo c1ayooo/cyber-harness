@@ -7,7 +7,7 @@
 package rpc
 
 import (
-	types "github.com/c1ayooo/cyber/core/types"
+	types "github.com/chainreactors/cyber/core/types"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -24,8 +24,11 @@ const (
 var File_rpc_agent_proto protoreflect.FileDescriptor
 
 const file_rpc_agent_proto_rawDesc = "" +
-	"\n\x0frpc/agent.proto\x12\x0fcyber.rpc.agent\x1a\x11types/agent.proto2]\n\fAgentService\x12M\n\nListAgents\x12\x1e.cyber.agent.ListAgentsRequest\x1a\x1f.cyber.agen" +
-	"t.ListAgentsResponseB&Z$github.com/c1ayooo/cyber/pkg/rpc;rpcb\x06proto3"
+	"\n" +
+	"\x0frpc/agent.proto\x12\x0fcyber.rpc.agent\x1a\x11types/agent.proto2]\n" +
+	"\fAgentService\x12M\n" +
+	"\n" +
+	"ListAgents\x12\x1e.cyber.agent.ListAgentsRequest\x1a\x1f.cyber.agent.ListAgentsResponseB,Z*github.com/chainreactors/cyber/pkg/rpc;rpcb\x06proto3"
 
 var file_rpc_agent_proto_goTypes = []any{
 	(*types.ListAgentsRequest)(nil),  // 0: cyber.agent.ListAgentsRequest

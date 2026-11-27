@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"strings"
 
-	aop "github.com/c1ayooo/cyber/aop"
-	scanpb "github.com/c1ayooo/cyber/pkg/web/scan"
+	aop "github.com/chainreactors/cyber/aop"
+	scanpb "github.com/chainreactors/cyber/pkg/web/scan"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 

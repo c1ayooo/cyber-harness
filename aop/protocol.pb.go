@@ -821,26 +821,75 @@ func (*ProtocolMessage_ProtocolError) isProtocolMessage_Message() {}
 var File_aop_protocol_proto protoreflect.FileDescriptor
 
 const file_aop_protocol_proto_rawDesc = "" +
-	"\n\x12aop/protocol.proto\x12\x03aop\x1a\x0eaop/chat.proto\x1a\x11aop/content.proto\x1a\x0faop/event.proto\x1a\x1cgoogle/protobuf/struct.proto\"\xd6\x01\n\x10AgentRuntimeInfo" +
-	"\x12\x1a\n\bhostname\x18\x01 \x01(\tR\bhostname\x12\x1a\n\busername\x18\x02 \x01(\tR\busername\x12\x1f\n\vworking_dir\x18\x03 \x01(\tR\nworkingDir\x12\x0e\n\x02os\x18\x04 \x01(\tR\x02os\x12\x12\n\x04arch\x18\x05 \x01(\tR\x04arch\x12\x10\n" +
-	"\x03pid\x18\x06 \x01(\x05R\x03pid\x123\n\bmetadata\x18\a \x01(\v2\x17.google.protobuf.StructR\bmetadata\"\xc5\x01\n\nAgentHello\x12\x17\n\anode_id\x18\x01 \x01(\tR\x06nodeId\x12\x12\n\x04name\x18\x02 \x01(\tR\x04name" +
-	"\x12\"\n\fcapabilities\x18\x04 \x03(\tR\fcapabilities\x12)\n\x05tools\x18\x06 \x03(\v2\x13.aop.ToolDefinitionR\x05tools\x12/\n\aruntime\x18\a \x01(\v2\x15.aop.AgentRuntimeInfoR\aruntime" +
-	"J\x04\b\x03\x10\x04J\x04\b\x05\x10\x06\"L\n\rAgentAccepted\x12\x17\n\anode_id\x18\x01 \x01(\tR\x06nodeId\x12\"\n\fcapabilities\x18\x02 \x03(\tR\fcapabilities\"\x94\x01\n\vAgentStatus\x12\x1a\n\bprovider\x18\x01 \x01(\tR\bpr" +
-	"ovider\x12\x14\n\x05model\x18\x02 \x01(\tR\x05model\x12\x14\n\x05space\x18\x03 \x01(\tR\x05space\x12\x14\n\x05bound\x18\x04 \x01(\bR\x05bound\x12!\n\fconfig_error\x18\x06 \x01(\tR\vconfigErrorJ\x04\b\x05\x10\x06\"\xd6\x02\n\nAgentStats" +
-	"\x12\x14\n\x05turns\x18\x01 \x01(\x04R\x05turns\x12\x1d\n\ntool_calls\x18\x02 \x01(\x04R\ttoolCalls\x12#\n\rrunning_tools\x18\x03 \x01(\x04R\frunningTools\x12!\n\finput_tokens\x18\x04 \x01(\x04R\vinputTokens\x12#\n" +
-	"\routput_tokens\x18\x05 \x01(\x04R\foutputTokens\x12!\n\ftotal_tokens\x18\x06 \x01(\x04R\vtotalTokens\x12*\n\x11cache_read_tokens\x18\a \x01(\x04R\x0fcacheReadTokens\x12,\n\x12cache_write" +
-	"_tokens\x18\b \x01(\x04R\x10cacheWriteTokens\x12\x1d\n\nlast_event\x18\v \x01(\tR\tlastEventJ\x04\b\t\x10\nJ\x04\b\n\x10\v\"F\n\x0fCancelOperation\x12\x1b\n\ttarget_id\x18\x01 \x01(\tR\btargetId\x12\x16\n\x06re" +
-	"ason\x18\x02 \x01(\tR\x06reason\"\xdc\t\n\x0fProtocolMessage\x122\n\vagent_hello\x18\n \x01(\v2\x0f.aop.AgentHelloH\x00R\nagentHello\x12;\n\x0eagent_accepted\x18\v \x01(\v2\x12.aop.AgentAc" +
-	"ceptedH\x00R\ragentAccepted\x125\n\fagent_status\x18\f \x01(\v2\x10.aop.AgentStatusH\x00R\vagentStatus\x122\n\vagent_stats\x18\r \x01(\v2\x0f.aop.AgentStatsH\x00R\nagentSta" +
-	"ts\x12K\n\x14open_session_request\x18\x14 \x01(\v2\x17.aop.OpenSessionRequestH\x00R\x12openSessionRequest\x12N\n\x15open_session_response\x18\x15 \x01(\v2\x18.aop.OpenSession" +
-	"ResponseH\x00R\x13openSessionResponse\x12?\n\x10run_turn_request\x18\x16 \x01(\v2\x13.aop.RunTurnRequestH\x00R\x0erunTurnRequest\x12B\n\x11run_turn_response\x18\x17 \x01(\v2\x14.ao" +
-	"p.RunTurnResponseH\x00R\x0frunTurnResponse\x12H\n\x13cancel_turn_request\x18\x18 \x01(\v2\x16.aop.CancelTurnRequestH\x00R\x11cancelTurnRequest\x12K\n\x14cancel_turn_re" +
-	"sponse\x18\x19 \x01(\v2\x17.aop.CancelTurnResponseH\x00R\x12cancelTurnResponse\x12N\n\x15close_session_request\x18\x1a \x01(\v2\x18.aop.CloseSessionRequestH\x00R\x13closeSes" +
-	"sionRequest\x12Q\n\x16close_session_response\x18\x1b \x01(\v2\x19.aop.CloseSessionResponseH\x00R\x14closeSessionResponse\x12K\n\x14watch_events_request\x18\x1c \x01(\v2\x17.a" +
-	"op.WatchEventsRequestH\x00R\x12watchEventsRequest\x12H\n\x13list_events_request\x18\x1d \x01(\v2\x16.aop.ListEventsRequestH\x00R\x11listEventsRequest\x12K\n\x14list_ev" +
-	"ents_response\x18\x1e \x01(\v2\x17.aop.ListEventsResponseH\x00R\x12listEventsResponse\x12\"\n\x05event\x18\x1f \x01(\v2\n.aop.EventH\x00R\x05event\x12A\n\x10cancel_operation\x18( \x01(\v" +
-	"2\x14.aop.CancelOperationH\x00R\x0fcancelOperation\x12;\n\x0eprotocol_error\x18) \x01(\v2\x12.aop.ProtocolErrorH\x00R\rprotocolErrorB\t\n\amessageB\x1eZ\x1cgithub.com/" +
-	"c1ayooo/cyber/aopb\x06proto3"
+	"\n" +
+	"\x12aop/protocol.proto\x12\x03aop\x1a\x0eaop/chat.proto\x1a\x11aop/content.proto\x1a\x0faop/event.proto\x1a\x1cgoogle/protobuf/struct.proto\"\xd6\x01\n" +
+	"\x10AgentRuntimeInfo\x12\x1a\n" +
+	"\bhostname\x18\x01 \x01(\tR\bhostname\x12\x1a\n" +
+	"\busername\x18\x02 \x01(\tR\busername\x12\x1f\n" +
+	"\vworking_dir\x18\x03 \x01(\tR\n" +
+	"workingDir\x12\x0e\n" +
+	"\x02os\x18\x04 \x01(\tR\x02os\x12\x12\n" +
+	"\x04arch\x18\x05 \x01(\tR\x04arch\x12\x10\n" +
+	"\x03pid\x18\x06 \x01(\x05R\x03pid\x123\n" +
+	"\bmetadata\x18\a \x01(\v2\x17.google.protobuf.StructR\bmetadata\"\xc5\x01\n" +
+	"\n" +
+	"AgentHello\x12\x17\n" +
+	"\anode_id\x18\x01 \x01(\tR\x06nodeId\x12\x12\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\x12\"\n" +
+	"\fcapabilities\x18\x04 \x03(\tR\fcapabilities\x12)\n" +
+	"\x05tools\x18\x06 \x03(\v2\x13.aop.ToolDefinitionR\x05tools\x12/\n" +
+	"\aruntime\x18\a \x01(\v2\x15.aop.AgentRuntimeInfoR\aruntimeJ\x04\b\x03\x10\x04J\x04\b\x05\x10\x06\"L\n" +
+	"\rAgentAccepted\x12\x17\n" +
+	"\anode_id\x18\x01 \x01(\tR\x06nodeId\x12\"\n" +
+	"\fcapabilities\x18\x02 \x03(\tR\fcapabilities\"\x94\x01\n" +
+	"\vAgentStatus\x12\x1a\n" +
+	"\bprovider\x18\x01 \x01(\tR\bprovider\x12\x14\n" +
+	"\x05model\x18\x02 \x01(\tR\x05model\x12\x14\n" +
+	"\x05space\x18\x03 \x01(\tR\x05space\x12\x14\n" +
+	"\x05bound\x18\x04 \x01(\bR\x05bound\x12!\n" +
+	"\fconfig_error\x18\x06 \x01(\tR\vconfigErrorJ\x04\b\x05\x10\x06\"\xd6\x02\n" +
+	"\n" +
+	"AgentStats\x12\x14\n" +
+	"\x05turns\x18\x01 \x01(\x04R\x05turns\x12\x1d\n" +
+	"\n" +
+	"tool_calls\x18\x02 \x01(\x04R\ttoolCalls\x12#\n" +
+	"\rrunning_tools\x18\x03 \x01(\x04R\frunningTools\x12!\n" +
+	"\finput_tokens\x18\x04 \x01(\x04R\vinputTokens\x12#\n" +
+	"\routput_tokens\x18\x05 \x01(\x04R\foutputTokens\x12!\n" +
+	"\ftotal_tokens\x18\x06 \x01(\x04R\vtotalTokens\x12*\n" +
+	"\x11cache_read_tokens\x18\a \x01(\x04R\x0fcacheReadTokens\x12,\n" +
+	"\x12cache_write_tokens\x18\b \x01(\x04R\x10cacheWriteTokens\x12\x1d\n" +
+	"\n" +
+	"last_event\x18\v \x01(\tR\tlastEventJ\x04\b\t\x10\n" +
+	"J\x04\b\n" +
+	"\x10\v\"F\n" +
+	"\x0fCancelOperation\x12\x1b\n" +
+	"\ttarget_id\x18\x01 \x01(\tR\btargetId\x12\x16\n" +
+	"\x06reason\x18\x02 \x01(\tR\x06reason\"\xdc\t\n" +
+	"\x0fProtocolMessage\x122\n" +
+	"\vagent_hello\x18\n" +
+	" \x01(\v2\x0f.aop.AgentHelloH\x00R\n" +
+	"agentHello\x12;\n" +
+	"\x0eagent_accepted\x18\v \x01(\v2\x12.aop.AgentAcceptedH\x00R\ragentAccepted\x125\n" +
+	"\fagent_status\x18\f \x01(\v2\x10.aop.AgentStatusH\x00R\vagentStatus\x122\n" +
+	"\vagent_stats\x18\r \x01(\v2\x0f.aop.AgentStatsH\x00R\n" +
+	"agentStats\x12K\n" +
+	"\x14open_session_request\x18\x14 \x01(\v2\x17.aop.OpenSessionRequestH\x00R\x12openSessionRequest\x12N\n" +
+	"\x15open_session_response\x18\x15 \x01(\v2\x18.aop.OpenSessionResponseH\x00R\x13openSessionResponse\x12?\n" +
+	"\x10run_turn_request\x18\x16 \x01(\v2\x13.aop.RunTurnRequestH\x00R\x0erunTurnRequest\x12B\n" +
+	"\x11run_turn_response\x18\x17 \x01(\v2\x14.aop.RunTurnResponseH\x00R\x0frunTurnResponse\x12H\n" +
+	"\x13cancel_turn_request\x18\x18 \x01(\v2\x16.aop.CancelTurnRequestH\x00R\x11cancelTurnRequest\x12K\n" +
+	"\x14cancel_turn_response\x18\x19 \x01(\v2\x17.aop.CancelTurnResponseH\x00R\x12cancelTurnResponse\x12N\n" +
+	"\x15close_session_request\x18\x1a \x01(\v2\x18.aop.CloseSessionRequestH\x00R\x13closeSessionRequest\x12Q\n" +
+	"\x16close_session_response\x18\x1b \x01(\v2\x19.aop.CloseSessionResponseH\x00R\x14closeSessionResponse\x12K\n" +
+	"\x14watch_events_request\x18\x1c \x01(\v2\x17.aop.WatchEventsRequestH\x00R\x12watchEventsRequest\x12H\n" +
+	"\x13list_events_request\x18\x1d \x01(\v2\x16.aop.ListEventsRequestH\x00R\x11listEventsRequest\x12K\n" +
+	"\x14list_events_response\x18\x1e \x01(\v2\x17.aop.ListEventsResponseH\x00R\x12listEventsResponse\x12\"\n" +
+	"\x05event\x18\x1f \x01(\v2\n" +
+	".aop.EventH\x00R\x05event\x12A\n" +
+	"\x10cancel_operation\x18( \x01(\v2\x14.aop.CancelOperationH\x00R\x0fcancelOperation\x12;\n" +
+	"\x0eprotocol_error\x18) \x01(\v2\x12.aop.ProtocolErrorH\x00R\rprotocolErrorB\t\n" +
+	"\amessageB$Z\"github.com/chainreactors/cyber/aopb\x06proto3"
 
 var (
 	file_aop_protocol_proto_rawDescOnce sync.Once

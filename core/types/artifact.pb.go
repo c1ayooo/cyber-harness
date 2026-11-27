@@ -7,7 +7,7 @@
 package types
 
 import (
-	aop "github.com/c1ayooo/cyber/aop"
+	aop "github.com/chainreactors/cyber/aop"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -124,9 +124,14 @@ func (x *SyncArtifactsResponse) GetArtifacts() []*aop.EventDelivery {
 var File_types_artifact_proto protoreflect.FileDescriptor
 
 const file_types_artifact_proto_rawDesc = "" +
-	"\n\x14types/artifact.proto\x12\x0ecyber.artifact\x1a\x0eaop/chat.proto\x1a\x0faop/event.proto\"c\n\x14SyncArtifactsRequest\x12!\n\fafter_cursor\x18\x01 \x01(\tR\vafterCurs" +
-	"or\x12(\n\tartifacts\x18\x02 \x03(\v2\n.aop.EventR\tartifacts\"I\n\x15SyncArtifactsResponse\x120\n\tartifacts\x18\x01 \x03(\v2\x12.aop.EventDeliveryR\tartifactsB+Z)githu" +
-	"b.com/c1ayooo/cyber/core/types;typesb\x06proto3"
+	"\n" +
+	"\x14types/artifact.proto\x12\x0ecyber.artifact\x1a\x0eaop/chat.proto\x1a\x0faop/event.proto\"c\n" +
+	"\x14SyncArtifactsRequest\x12!\n" +
+	"\fafter_cursor\x18\x01 \x01(\tR\vafterCursor\x12(\n" +
+	"\tartifacts\x18\x02 \x03(\v2\n" +
+	".aop.EventR\tartifacts\"I\n" +
+	"\x15SyncArtifactsResponse\x120\n" +
+	"\tartifacts\x18\x01 \x03(\v2\x12.aop.EventDeliveryR\tartifactsB1Z/github.com/chainreactors/cyber/core/types;typesb\x06proto3"
 
 var (
 	file_types_artifact_proto_rawDescOnce sync.Once

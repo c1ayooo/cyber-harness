@@ -2,7 +2,7 @@ package session
 
 import (
 	"bytes"
-	cfg "github.com/c1ayooo/cyber/pkg/config"
+	cfg "github.com/chainreactors/cyber/pkg/config"
 	flags "github.com/jessevdk/go-flags"
 	"strings"
 	"testing"

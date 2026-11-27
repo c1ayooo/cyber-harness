@@ -4,8 +4,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/c1ayooo/cyber/core/resource"
-	cfg "github.com/c1ayooo/cyber/pkg/config"
+	"github.com/chainreactors/cyber/core/resource"
+	cfg "github.com/chainreactors/cyber/pkg/config"
 )
 
 func TestConfigurationDeclaresAndReadsServers(t *testing.T) {

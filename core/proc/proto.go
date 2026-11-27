@@ -1,7 +1,7 @@
 package proc
 
 import (
-	ptypb "github.com/c1ayooo/cyber/aop/pty"
+	ptypb "github.com/chainreactors/cyber/aop/pty"
 	"github.com/chainreactors/utils/proc"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )

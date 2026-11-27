@@ -11,7 +11,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/c1ayooo/cyber/pkg/web/hubapp"
+	"github.com/chainreactors/cyber/pkg/web/hubapp"
 )
 
 func main() {

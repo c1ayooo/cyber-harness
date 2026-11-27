@@ -1,7 +1,7 @@
 package tool
 
 import (
-	aop "github.com/c1ayooo/cyber/aop"
+	aop "github.com/chainreactors/cyber/aop"
 	"strings"
 	"testing"
 	"unicode/utf8"

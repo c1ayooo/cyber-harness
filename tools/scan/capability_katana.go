@@ -6,7 +6,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/c1ayooo/cyber/tools/scan/pipeline"
+	"github.com/chainreactors/cyber/tools/scan/pipeline"
 )
 
 const (

@@ -5,8 +5,8 @@ import (
 	"errors"
 	"testing"
 
-	provider "github.com/c1ayooo/cyber/agent/provider"
-	aop "github.com/c1ayooo/cyber/aop"
+	provider "github.com/chainreactors/cyber/agent/provider"
+	aop "github.com/chainreactors/cyber/aop"
 )
 
 func TestRetryRetainsBilledUsageAndLastContextSize(t *testing.T) {

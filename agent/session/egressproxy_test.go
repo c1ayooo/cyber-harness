@@ -5,8 +5,8 @@ import (
 	"net"
 	"testing"
 
-	aop "github.com/c1ayooo/cyber/aop"
-	"github.com/c1ayooo/cyber/core/egress"
+	aop "github.com/chainreactors/cyber/aop"
+	"github.com/chainreactors/cyber/core/egress"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 

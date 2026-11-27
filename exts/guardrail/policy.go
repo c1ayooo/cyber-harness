@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	toolhooks "github.com/c1ayooo/cyber/core/tool/hooks"
+	toolhooks "github.com/chainreactors/cyber/core/tool/hooks"
 )
 
 // Policy is the pluggable admission judge behind the guardrail boundary.

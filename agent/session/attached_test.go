@@ -6,8 +6,8 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"github.com/c1ayooo/cyber/agent"
-	aop "github.com/c1ayooo/cyber/aop"
+	"github.com/chainreactors/cyber/agent"
+	aop "github.com/chainreactors/cyber/aop"
 )
 
 func TestAttachedSessionClosesBeforeParentInboxWithoutDelegation(t *testing.T) {

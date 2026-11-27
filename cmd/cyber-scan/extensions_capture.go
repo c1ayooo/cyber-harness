@@ -11,8 +11,8 @@ package main
 // SkipEngines switch loses its meaning here: there are no engines to skip.
 
 import (
-	"github.com/c1ayooo/cyber/core/extension"
-	"github.com/c1ayooo/cyber/exts/gateway"
+	"github.com/chainreactors/cyber/core/extension"
+	"github.com/chainreactors/cyber/exts/gateway"
 )
 
 func engineExtensions(appConfig, string) ([]extension.Extension, []gateway.Kind) {

@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"time"
 
-	aop "github.com/c1ayooo/cyber/aop"
-	"github.com/c1ayooo/cyber/pkg/aopws"
-	web "github.com/c1ayooo/cyber/pkg/web"
+	aop "github.com/chainreactors/cyber/aop"
+	"github.com/chainreactors/cyber/pkg/aopws"
+	web "github.com/chainreactors/cyber/pkg/web"
 	"github.com/gorilla/websocket"
 )
 

@@ -849,20 +849,74 @@ func (*ProtocolMessage_Result) isProtocolMessage_Message() {}
 var File_aop_file_protocol_proto protoreflect.FileDescriptor
 
 const file_aop_file_protocol_proto_rawDesc = "" +
-	"\n\x17aop/file/protocol.proto\x12\baop.file\x1a\x1fgoogle/protobuf/timestamp.proto\"O\n\vReadRequest\x12\x12\n\x04path\x18\x01 \x01(\tR\x04path\x12\x16\n\x06offset\x18\x02 \x01(\x03R\x06offset\x12" +
-	"\x14\n\x05limit\x18\x03 \x01(\x05R\x05limit\"6\n\fWriteRequest\x12\x12\n\x04path\x18\x01 \x01(\tR\x04path\x12\x12\n\x04data\x18\x02 \x01(\fR\x04data\"!\n\vListRequest\x12\x12\n\x04path\x18\x01 \x01(\tR\x04path\"\"\n\fMkdirRequest" +
-	"\x12\x12\n\x04path\x18\x01 \x01(\tR\x04path\"}\n\rUploadRequest\x12\x1d\n\nsession_id\x18\x01 \x01(\tR\tsessionId\x12\x1a\n\bfilename\x18\x02 \x01(\tR\bfilename\x12\x1d\n\nmedia_type\x18\x03 \x01(\tR\tmediaType\x12" +
-	"\x12\n\x04data\x18\x04 \x01(\fR\x04data\"R\n\x05Entry\x12\x12\n\x04name\x18\x01 \x01(\tR\x04name\x12!\n\fis_directory\x18\x02 \x01(\bR\visDirectory\x12\x12\n\x04size\x18\x03 \x01(\x03R\x04size\"\xd4\x01\n\x06Result\x12\x12\n\x04path\x18\x01 \x01(\t" +
-	"R\x04path\x12\x1a\n\bfilename\x18\x02 \x01(\tR\bfilename\x12\x12\n\x04size\x18\x03 \x01(\x03R\x04size\x12\x12\n\x04data\x18\x04 \x01(\fR\x04data\x12)\n\aentries\x18\x05 \x03(\v2\x0f.aop.file.EntryR\aentries\x12\x1d\n\nmedia_t" +
-	"ype\x18\x06 \x01(\tR\tmediaType\x12\x16\n\x06offset\x18\a \x01(\x03R\x06offset\x12\x10\n\x03eof\x18\b \x01(\bR\x03eof\"\xc9\x02\n\x06Access\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\x12\"\n\x02op\x18\x03 \x01(\x0e2\x12.aop.file.AccessOpR\x02op\x12.\n" +
-	"\x06source\x18\x04 \x01(\x0e2\x16.aop.file.AccessSourceR\x06source\x12\x12\n\x04path\x18\x05 \x01(\tR\x04path\x12\x19\n\bwork_dir\x18\x06 \x01(\tR\aworkDir\x12\x12\n\x04size\x18\a \x01(\x03R\x04size\x12\x14\n\x05bytes\x18\b \x01(\x03R" +
-	"\x05bytes\x12\x14\n\x05edits\x18\t \x01(\rR\x05edits\x12\x16\n\x06digest\x18\n \x01(\tR\x06digest\x12\x14\n\x05error\x18\v \x01(\tR\x05error\x128\n\ttimestamp\x18\f \x01(\v2\x1a.google.protobuf.TimestampR\ttimes" +
-	"tampJ\x04\b\x02\x10\x03\"\x86\x03\n\x0fProtocolMessage\x12:\n\fread_request\x18\n \x01(\v2\x15.aop.file.ReadRequestH\x00R\vreadRequest\x12=\n\rwrite_request\x18\v \x01(\v2\x16.aop.file.Wri" +
-	"teRequestH\x00R\fwriteRequest\x12:\n\flist_request\x18\f \x01(\v2\x15.aop.file.ListRequestH\x00R\vlistRequest\x12=\n\rmkdir_request\x18\r \x01(\v2\x16.aop.file.MkdirReq" +
-	"uestH\x00R\fmkdirRequest\x12@\n\x0eupload_request\x18\x0e \x01(\v2\x17.aop.file.UploadRequestH\x00R\ruploadRequest\x12*\n\x06result\x18\x14 \x01(\v2\x10.aop.file.ResultH\x00R\x06resu" +
-	"ltB\t\n\amessageJ\x04\b\x15\x10\x18*\x8e\x01\n\bAccessOp\x12\x19\n\x15ACCESS_OP_UNSPECIFIED\x10\x00\x12\x12\n\x0eACCESS_OP_READ\x10\x01\x12\x13\n\x0fACCESS_OP_WRITE\x10\x02\x12\x12\n\x0eACCESS_OP_EDIT\x10\x03\x12\x14\n\x10ACCE" +
-	"SS_OP_CREATE\x10\x04\x12\x14\n\x10ACCESS_OP_DELETE\x10\x05*|\n\fAccessSource\x12\x1d\n\x19ACCESS_SOURCE_UNSPECIFIED\x10\x00\x12\x16\n\x12ACCESS_SOURCE_TOOL\x10\x01\x12\x1a\n\x16ACCESS_SOURCE_SNA" +
-	"PSHOT\x10\x02\x12\x19\n\x15ACCESS_SOURCE_CONTROL\x10\x03B(Z&github.com/c1ayooo/cyber/aop/file;fileb\x06proto3"
+	"\n" +
+	"\x17aop/file/protocol.proto\x12\baop.file\x1a\x1fgoogle/protobuf/timestamp.proto\"O\n" +
+	"\vReadRequest\x12\x12\n" +
+	"\x04path\x18\x01 \x01(\tR\x04path\x12\x16\n" +
+	"\x06offset\x18\x02 \x01(\x03R\x06offset\x12\x14\n" +
+	"\x05limit\x18\x03 \x01(\x05R\x05limit\"6\n" +
+	"\fWriteRequest\x12\x12\n" +
+	"\x04path\x18\x01 \x01(\tR\x04path\x12\x12\n" +
+	"\x04data\x18\x02 \x01(\fR\x04data\"!\n" +
+	"\vListRequest\x12\x12\n" +
+	"\x04path\x18\x01 \x01(\tR\x04path\"\"\n" +
+	"\fMkdirRequest\x12\x12\n" +
+	"\x04path\x18\x01 \x01(\tR\x04path\"}\n" +
+	"\rUploadRequest\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x01 \x01(\tR\tsessionId\x12\x1a\n" +
+	"\bfilename\x18\x02 \x01(\tR\bfilename\x12\x1d\n" +
+	"\n" +
+	"media_type\x18\x03 \x01(\tR\tmediaType\x12\x12\n" +
+	"\x04data\x18\x04 \x01(\fR\x04data\"R\n" +
+	"\x05Entry\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\x12!\n" +
+	"\fis_directory\x18\x02 \x01(\bR\visDirectory\x12\x12\n" +
+	"\x04size\x18\x03 \x01(\x03R\x04size\"\xd4\x01\n" +
+	"\x06Result\x12\x12\n" +
+	"\x04path\x18\x01 \x01(\tR\x04path\x12\x1a\n" +
+	"\bfilename\x18\x02 \x01(\tR\bfilename\x12\x12\n" +
+	"\x04size\x18\x03 \x01(\x03R\x04size\x12\x12\n" +
+	"\x04data\x18\x04 \x01(\fR\x04data\x12)\n" +
+	"\aentries\x18\x05 \x03(\v2\x0f.aop.file.EntryR\aentries\x12\x1d\n" +
+	"\n" +
+	"media_type\x18\x06 \x01(\tR\tmediaType\x12\x16\n" +
+	"\x06offset\x18\a \x01(\x03R\x06offset\x12\x10\n" +
+	"\x03eof\x18\b \x01(\bR\x03eof\"\xc9\x02\n" +
+	"\x06Access\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\"\n" +
+	"\x02op\x18\x03 \x01(\x0e2\x12.aop.file.AccessOpR\x02op\x12.\n" +
+	"\x06source\x18\x04 \x01(\x0e2\x16.aop.file.AccessSourceR\x06source\x12\x12\n" +
+	"\x04path\x18\x05 \x01(\tR\x04path\x12\x19\n" +
+	"\bwork_dir\x18\x06 \x01(\tR\aworkDir\x12\x12\n" +
+	"\x04size\x18\a \x01(\x03R\x04size\x12\x14\n" +
+	"\x05bytes\x18\b \x01(\x03R\x05bytes\x12\x14\n" +
+	"\x05edits\x18\t \x01(\rR\x05edits\x12\x16\n" +
+	"\x06digest\x18\n" +
+	" \x01(\tR\x06digest\x12\x14\n" +
+	"\x05error\x18\v \x01(\tR\x05error\x128\n" +
+	"\ttimestamp\x18\f \x01(\v2\x1a.google.protobuf.TimestampR\ttimestampJ\x04\b\x02\x10\x03\"\x86\x03\n" +
+	"\x0fProtocolMessage\x12:\n" +
+	"\fread_request\x18\n" +
+	" \x01(\v2\x15.aop.file.ReadRequestH\x00R\vreadRequest\x12=\n" +
+	"\rwrite_request\x18\v \x01(\v2\x16.aop.file.WriteRequestH\x00R\fwriteRequest\x12:\n" +
+	"\flist_request\x18\f \x01(\v2\x15.aop.file.ListRequestH\x00R\vlistRequest\x12=\n" +
+	"\rmkdir_request\x18\r \x01(\v2\x16.aop.file.MkdirRequestH\x00R\fmkdirRequest\x12@\n" +
+	"\x0eupload_request\x18\x0e \x01(\v2\x17.aop.file.UploadRequestH\x00R\ruploadRequest\x12*\n" +
+	"\x06result\x18\x14 \x01(\v2\x10.aop.file.ResultH\x00R\x06resultB\t\n" +
+	"\amessageJ\x04\b\x15\x10\x18*\x8e\x01\n" +
+	"\bAccessOp\x12\x19\n" +
+	"\x15ACCESS_OP_UNSPECIFIED\x10\x00\x12\x12\n" +
+	"\x0eACCESS_OP_READ\x10\x01\x12\x13\n" +
+	"\x0fACCESS_OP_WRITE\x10\x02\x12\x12\n" +
+	"\x0eACCESS_OP_EDIT\x10\x03\x12\x14\n" +
+	"\x10ACCESS_OP_CREATE\x10\x04\x12\x14\n" +
+	"\x10ACCESS_OP_DELETE\x10\x05*|\n" +
+	"\fAccessSource\x12\x1d\n" +
+	"\x19ACCESS_SOURCE_UNSPECIFIED\x10\x00\x12\x16\n" +
+	"\x12ACCESS_SOURCE_TOOL\x10\x01\x12\x1a\n" +
+	"\x16ACCESS_SOURCE_SNAPSHOT\x10\x02\x12\x19\n" +
+	"\x15ACCESS_SOURCE_CONTROL\x10\x03B.Z,github.com/chainreactors/cyber/aop/file;fileb\x06proto3"
 
 var (
 	file_aop_file_protocol_proto_rawDescOnce sync.Once

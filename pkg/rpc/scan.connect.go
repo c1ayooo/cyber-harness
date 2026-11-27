@@ -8,7 +8,7 @@ import (
 	connect "connectrpc.com/connect"
 	context "context"
 	errors "errors"
-	scan "github.com/c1ayooo/cyber/pkg/web/scan"
+	scan "github.com/chainreactors/cyber/pkg/web/scan"
 	http "net/http"
 	strings "strings"
 )

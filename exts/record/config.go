@@ -2,8 +2,8 @@ package record
 
 import (
 	"fmt"
-	cfg "github.com/c1ayooo/cyber/pkg/config"
-	"github.com/c1ayooo/cyber/tools/record"
+	cfg "github.com/chainreactors/cyber/pkg/config"
+	"github.com/chainreactors/cyber/tools/record"
 	"strconv"
 	"strings"
 )

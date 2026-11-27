@@ -4,7 +4,7 @@ package cyber.rpc.scan;
 
 import "types/scan.proto";
 
-option go_package = "github.com/c1ayooo/cyber/pkg/rpc;rpc";
+option go_package = "github.com/chainreactors/cyber/pkg/rpc;rpc";
 
 service ScanService {
   rpc SubmitScan(cyber.scan.SubmitScanRequest) returns (cyber.scan.SubmitScanResponse);

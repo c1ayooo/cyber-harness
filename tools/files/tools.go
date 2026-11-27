@@ -6,8 +6,8 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	aop "github.com/c1ayooo/cyber/aop"
-	coretool "github.com/c1ayooo/cyber/core/tool"
+	aop "github.com/chainreactors/cyber/aop"
+	coretool "github.com/chainreactors/cyber/core/tool"
 )
 
 // toolsFor constructs the four basic tools owned by the files extension.

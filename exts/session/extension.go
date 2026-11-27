@@ -5,17 +5,17 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/c1ayooo/cyber/agent"
-	"github.com/c1ayooo/cyber/agent/prompt"
-	"github.com/c1ayooo/cyber/agent/provider"
-	"github.com/c1ayooo/cyber/agent/session"
-	"github.com/c1ayooo/cyber/agent/skills"
-	"github.com/c1ayooo/cyber/core/events"
-	"github.com/c1ayooo/cyber/core/extension"
-	"github.com/c1ayooo/cyber/core/hooks"
-	"github.com/c1ayooo/cyber/core/telemetry"
-	coretool "github.com/c1ayooo/cyber/core/tool"
-	terminaltool "github.com/c1ayooo/cyber/tools/terminal"
+	"github.com/chainreactors/cyber/agent"
+	"github.com/chainreactors/cyber/agent/prompt"
+	"github.com/chainreactors/cyber/agent/provider"
+	"github.com/chainreactors/cyber/agent/session"
+	"github.com/chainreactors/cyber/agent/skills"
+	"github.com/chainreactors/cyber/core/events"
+	"github.com/chainreactors/cyber/core/extension"
+	"github.com/chainreactors/cyber/core/hooks"
+	"github.com/chainreactors/cyber/core/telemetry"
+	coretool "github.com/chainreactors/cyber/core/tool"
+	terminaltool "github.com/chainreactors/cyber/tools/terminal"
 )
 
 type Extension struct {

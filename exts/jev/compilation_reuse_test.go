@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/c1ayooo/cyber/agent"
-	"github.com/c1ayooo/cyber/agent/provider"
+	"github.com/chainreactors/cyber/agent"
+	"github.com/chainreactors/cyber/agent/provider"
 )
 
 func TestIdleAutoPreservesOrdinaryModelPrompt(t *testing.T) {

@@ -10,11 +10,11 @@ import (
 	"testing"
 	"time"
 
-	agenthooks "github.com/c1ayooo/cyber/agent/hooks"
-	mailbox "github.com/c1ayooo/cyber/agent/inbox"
-	"github.com/c1ayooo/cyber/agent/provider"
-	coretool "github.com/c1ayooo/cyber/core/tool"
-	inboxext "github.com/c1ayooo/cyber/exts/inbox"
+	agenthooks "github.com/chainreactors/cyber/agent/hooks"
+	mailbox "github.com/chainreactors/cyber/agent/inbox"
+	"github.com/chainreactors/cyber/agent/provider"
+	coretool "github.com/chainreactors/cyber/core/tool"
+	inboxext "github.com/chainreactors/cyber/exts/inbox"
 )
 
 func TestActiveUnknownNameRejectedBeforeAdmission(t *testing.T) {

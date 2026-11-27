@@ -8,11 +8,11 @@ import (
 	"os"
 	"os/signal"
 
-	"github.com/c1ayooo/cyber/agent/provider"
-	agentsession "github.com/c1ayooo/cyber/agent/session"
-	"github.com/c1ayooo/cyber/aop"
-	"github.com/c1ayooo/cyber/core/extension"
-	"github.com/c1ayooo/cyber/pkg/harness"
+	"github.com/chainreactors/cyber/agent/provider"
+	agentsession "github.com/chainreactors/cyber/agent/session"
+	"github.com/chainreactors/cyber/aop"
+	"github.com/chainreactors/cyber/core/extension"
+	"github.com/chainreactors/cyber/pkg/harness"
 )
 
 func main() {

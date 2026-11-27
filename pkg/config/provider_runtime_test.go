@@ -3,7 +3,7 @@ package config
 import (
 	"testing"
 
-	types "github.com/c1ayooo/cyber/core/types"
+	types "github.com/chainreactors/cyber/core/types"
 )
 
 func TestProviderConfigSelectsActiveProfileAndFallbacks(t *testing.T) {

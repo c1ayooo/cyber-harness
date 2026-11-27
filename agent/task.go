@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"strings"
 
-	agenthooks "github.com/c1ayooo/cyber/agent/hooks"
-	"github.com/c1ayooo/cyber/core/operation"
-	types "github.com/c1ayooo/cyber/core/types"
+	agenthooks "github.com/chainreactors/cyber/agent/hooks"
+	"github.com/chainreactors/cyber/core/operation"
+	types "github.com/chainreactors/cyber/core/types"
 	"google.golang.org/protobuf/proto"
 )
 

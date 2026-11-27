@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"strings"
 
-	coretool "github.com/c1ayooo/cyber/core/tool"
 	crtm "github.com/chainreactors/crtm/pkg"
 	"github.com/chainreactors/crtm/pkg/registry"
+	coretool "github.com/chainreactors/cyber/core/tool"
 )
 
 // command is a pseudo-command invoked via bash:

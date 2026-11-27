@@ -11,9 +11,9 @@ import (
 	"strings"
 	"time"
 
-	jevapi "github.com/c1ayooo/cyber/agent/provider/jev"
-	"github.com/c1ayooo/cyber/aop"
-	toolhooks "github.com/c1ayooo/cyber/core/tool/hooks"
+	jevapi "github.com/chainreactors/cyber/agent/provider/jev"
+	"github.com/chainreactors/cyber/aop"
+	toolhooks "github.com/chainreactors/cyber/core/tool/hooks"
 )
 
 type JEVConfig struct {

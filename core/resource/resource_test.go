@@ -6,7 +6,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/c1ayooo/cyber/core/resource"
+	"github.com/chainreactors/cyber/core/resource"
 )
 
 type point[T any] struct {

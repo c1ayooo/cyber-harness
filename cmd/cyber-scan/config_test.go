@@ -5,15 +5,15 @@ import (
 	"strings"
 	"testing"
 
-	passiveconfig "github.com/c1ayooo/cyber/exts/passive/config"
+	passiveconfig "github.com/chainreactors/cyber/exts/passive/config"
 
-	"github.com/c1ayooo/cyber/agent/provider"
-	"github.com/c1ayooo/cyber/core/telemetry"
-	ioaclient "github.com/c1ayooo/cyber/exts/ioa/client"
-	mcpext "github.com/c1ayooo/cyber/exts/mcp"
-	scannerext "github.com/c1ayooo/cyber/exts/scanner"
-	searchext "github.com/c1ayooo/cyber/exts/search"
-	cfg "github.com/c1ayooo/cyber/pkg/config"
+	"github.com/chainreactors/cyber/agent/provider"
+	"github.com/chainreactors/cyber/core/telemetry"
+	ioaclient "github.com/chainreactors/cyber/exts/ioa/client"
+	mcpext "github.com/chainreactors/cyber/exts/mcp"
+	scannerext "github.com/chainreactors/cyber/exts/scanner"
+	searchext "github.com/chainreactors/cyber/exts/search"
+	cfg "github.com/chainreactors/cyber/pkg/config"
 )
 
 func TestApplicationConfigMatchesRawAndResolvedSections(t *testing.T) {

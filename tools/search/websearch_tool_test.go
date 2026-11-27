@@ -9,8 +9,8 @@ import (
 	"strings"
 	"testing"
 
-	coretool "github.com/c1ayooo/cyber/core/tool"
-	toolhooks "github.com/c1ayooo/cyber/core/tool/hooks"
+	coretool "github.com/chainreactors/cyber/core/tool"
+	toolhooks "github.com/chainreactors/cyber/core/tool/hooks"
 )
 
 func TestWebSearchFailureReturnsModelFeedback(t *testing.T) {

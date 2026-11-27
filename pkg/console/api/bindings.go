@@ -4,7 +4,7 @@ package api
 import (
 	"context"
 	"fmt"
-	"github.com/c1ayooo/cyber/core/resource"
+	"github.com/chainreactors/cyber/core/resource"
 	"github.com/spf13/cobra"
 	"io"
 	"sync"

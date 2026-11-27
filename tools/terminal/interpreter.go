@@ -8,7 +8,7 @@ import (
 	"os"
 	"os/exec"
 
-	coretool "github.com/c1ayooo/cyber/core/tool"
+	coretool "github.com/chainreactors/cyber/core/tool"
 	"github.com/chainreactors/utils/proc"
 	"mvdan.cc/sh/v3/expand"
 	"mvdan.cc/sh/v3/interp"

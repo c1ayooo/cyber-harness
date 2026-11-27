@@ -12,7 +12,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/c1ayooo/cyber/agent/provider"
+	"github.com/chainreactors/cyber/agent/provider"
 )
 
 type webSearchTransport func(*http.Request) (*http.Response, error)

@@ -3,8 +3,8 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"github.com/c1ayooo/cyber/core/telemetry"
-	cfg "github.com/c1ayooo/cyber/pkg/config"
+	"github.com/chainreactors/cyber/core/telemetry"
+	cfg "github.com/chainreactors/cyber/pkg/config"
 	"io"
 	"net/http"
 	"net/http/httptest"

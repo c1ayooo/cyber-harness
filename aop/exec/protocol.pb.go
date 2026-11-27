@@ -351,12 +351,34 @@ func (*ProtocolMessage_Result) isProtocolMessage_Message() {}
 var File_aop_exec_protocol_proto protoreflect.FileDescriptor
 
 const file_aop_exec_protocol_proto_rawDesc = "" +
-	"\n\x17aop/exec/protocol.proto\x12\baop.exec\"\xc4\x01\n\aRequest\x12\x18\n\acommand\x18\x01 \x01(\tR\acommand\x12\x10\n\x03cwd\x18\x02 \x01(\tR\x03cwd\x12'\n\x0ftimeout_seconds\x18\x03 \x01(\rR\x0etimeoutSec" +
-	"onds\x12,\n\x03env\x18\x04 \x03(\v2\x1a.aop.exec.Request.EnvEntryR\x03env\x1a6\n\bEnvEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"F\n\x06Output\x12(\n\x06stream\x18\x01" +
-	" \x01(\x0e2\x10.aop.exec.StreamR\x06stream\x12\x12\n\x04data\x18\x02 \x01(\fR\x04data\"Z\n\x06Result\x12\x1b\n\texit_code\x18\x01 \x01(\x05R\bexitCode\x12\x14\n\x05state\x18\x02 \x01(\tR\x05state\x12\x1d\n\nkill_cause\x18\x03 " +
-	"\x01(\tR\tkillCause\"\xa3\x01\n\x0fProtocolMessage\x12-\n\arequest\x18\n \x01(\v2\x11.aop.exec.RequestH\x00R\arequest\x12*\n\x06output\x18\v \x01(\v2\x10.aop.exec.OutputH\x00R\x06output\x12*\n" +
-	"\x06result\x18\f \x01(\v2\x10.aop.exec.ResultH\x00R\x06resultB\t\n\amessage*F\n\x06Stream\x12\x16\n\x12STREAM_UNSPECIFIED\x10\x00\x12\x11\n\rSTREAM_STDOUT\x10\x01\x12\x11\n\rSTREAM_STDERR\x10\x02B(Z&" +
-	"github.com/c1ayooo/cyber/aop/exec;execb\x06proto3"
+	"\n" +
+	"\x17aop/exec/protocol.proto\x12\baop.exec\"\xc4\x01\n" +
+	"\aRequest\x12\x18\n" +
+	"\acommand\x18\x01 \x01(\tR\acommand\x12\x10\n" +
+	"\x03cwd\x18\x02 \x01(\tR\x03cwd\x12'\n" +
+	"\x0ftimeout_seconds\x18\x03 \x01(\rR\x0etimeoutSeconds\x12,\n" +
+	"\x03env\x18\x04 \x03(\v2\x1a.aop.exec.Request.EnvEntryR\x03env\x1a6\n" +
+	"\bEnvEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"F\n" +
+	"\x06Output\x12(\n" +
+	"\x06stream\x18\x01 \x01(\x0e2\x10.aop.exec.StreamR\x06stream\x12\x12\n" +
+	"\x04data\x18\x02 \x01(\fR\x04data\"Z\n" +
+	"\x06Result\x12\x1b\n" +
+	"\texit_code\x18\x01 \x01(\x05R\bexitCode\x12\x14\n" +
+	"\x05state\x18\x02 \x01(\tR\x05state\x12\x1d\n" +
+	"\n" +
+	"kill_cause\x18\x03 \x01(\tR\tkillCause\"\xa3\x01\n" +
+	"\x0fProtocolMessage\x12-\n" +
+	"\arequest\x18\n" +
+	" \x01(\v2\x11.aop.exec.RequestH\x00R\arequest\x12*\n" +
+	"\x06output\x18\v \x01(\v2\x10.aop.exec.OutputH\x00R\x06output\x12*\n" +
+	"\x06result\x18\f \x01(\v2\x10.aop.exec.ResultH\x00R\x06resultB\t\n" +
+	"\amessage*F\n" +
+	"\x06Stream\x12\x16\n" +
+	"\x12STREAM_UNSPECIFIED\x10\x00\x12\x11\n" +
+	"\rSTREAM_STDOUT\x10\x01\x12\x11\n" +
+	"\rSTREAM_STDERR\x10\x02B.Z,github.com/chainreactors/cyber/aop/exec;execb\x06proto3"
 
 var (
 	file_aop_exec_protocol_proto_rawDescOnce sync.Once

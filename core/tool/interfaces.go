@@ -3,7 +3,7 @@ package tool
 import (
 	"context"
 
-	"github.com/c1ayooo/cyber/core/types"
+	"github.com/chainreactors/cyber/core/types"
 )
 
 type CommandExecutor interface {

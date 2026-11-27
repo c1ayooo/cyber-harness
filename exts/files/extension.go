@@ -4,9 +4,9 @@ package files
 import (
 	"context"
 
-	"github.com/c1ayooo/cyber/core/extension"
-	"github.com/c1ayooo/cyber/core/hooks"
-	"github.com/c1ayooo/cyber/tools/files"
+	"github.com/chainreactors/cyber/core/extension"
+	"github.com/chainreactors/cyber/core/hooks"
+	"github.com/chainreactors/cyber/tools/files"
 )
 
 // Extension is the only files plugin and the sole lifecycle owner of Files.

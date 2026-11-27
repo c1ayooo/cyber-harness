@@ -7,7 +7,7 @@
 package rpc
 
 import (
-	types "github.com/c1ayooo/cyber/core/types"
+	types "github.com/chainreactors/cyber/core/types"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -24,11 +24,16 @@ const (
 var File_rpc_config_proto protoreflect.FileDescriptor
 
 const file_rpc_config_proto_rawDesc = "" +
-	"\n\x10rpc/config.proto\x12\x10cyber.rpc.config\x1a\x12types/config.proto2\x86\x04\n\rConfigService\x12L\n\tGetConfig\x12\x1e.cyber.config.GetConfigRequest\x1a\x1f.cyber." +
-	"config.GetConfigResponse\x12U\n\fUpdateConfig\x12!.cyber.config.UpdateConfigRequest\x1a\".cyber.config.UpdateConfigResponse\x12^\n\x0fActivateProfi" +
-	"le\x12$.cyber.config.ActivateProfileRequest\x1a%.cyber.config.ActivateProfileResponse\x12F\n\aTestLLM\x12\x1d.cyber.config.LLMProbeRequest\x1a\x1c.cybe" +
-	"r.config.LLMProbeResult\x12K\n\nListModels\x12\x1d.cyber.config.LLMProbeRequest\x1a\x1e.cyber.config.ListModelsResult\x12[\n\x0eTestConnection\x12#.cyber.c" +
-	"onfig.TestConnectionRequest\x1a$.cyber.config.TestConnectionResponseB&Z$github.com/c1ayooo/cyber/pkg/rpc;rpcb\x06proto3"
+	"\n" +
+	"\x10rpc/config.proto\x12\x10cyber.rpc.config\x1a\x12types/config.proto2\x86\x04\n" +
+	"\rConfigService\x12L\n" +
+	"\tGetConfig\x12\x1e.cyber.config.GetConfigRequest\x1a\x1f.cyber.config.GetConfigResponse\x12U\n" +
+	"\fUpdateConfig\x12!.cyber.config.UpdateConfigRequest\x1a\".cyber.config.UpdateConfigResponse\x12^\n" +
+	"\x0fActivateProfile\x12$.cyber.config.ActivateProfileRequest\x1a%.cyber.config.ActivateProfileResponse\x12F\n" +
+	"\aTestLLM\x12\x1d.cyber.config.LLMProbeRequest\x1a\x1c.cyber.config.LLMProbeResult\x12K\n" +
+	"\n" +
+	"ListModels\x12\x1d.cyber.config.LLMProbeRequest\x1a\x1e.cyber.config.ListModelsResult\x12[\n" +
+	"\x0eTestConnection\x12#.cyber.config.TestConnectionRequest\x1a$.cyber.config.TestConnectionResponseB,Z*github.com/chainreactors/cyber/pkg/rpc;rpcb\x06proto3"
 
 var file_rpc_config_proto_goTypes = []any{
 	(*types.GetConfigRequest)(nil),        // 0: cyber.config.GetConfigRequest

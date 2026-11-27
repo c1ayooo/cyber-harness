@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/c1ayooo/cyber/aop"
-	"github.com/c1ayooo/cyber/core/extension"
-	"github.com/c1ayooo/cyber/core/resource"
+	"github.com/chainreactors/cyber/aop"
+	"github.com/chainreactors/cyber/core/extension"
+	"github.com/chainreactors/cyber/core/resource"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 

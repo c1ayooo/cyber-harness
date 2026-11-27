@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/c1ayooo/cyber/aop"
+	"github.com/chainreactors/cyber/aop"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 )

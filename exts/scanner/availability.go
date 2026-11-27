@@ -1,8 +1,8 @@
 package scanner
 
 import (
-	coretool "github.com/c1ayooo/cyber/core/tool"
-	"github.com/c1ayooo/cyber/tools/scan/engine"
+	coretool "github.com/chainreactors/cyber/core/tool"
+	"github.com/chainreactors/cyber/tools/scan/engine"
 )
 
 // Availability reports the loaded command declarations and their owned

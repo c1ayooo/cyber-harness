@@ -5,8 +5,8 @@ import (
 	"strings"
 	"time"
 
-	aop "github.com/c1ayooo/cyber/aop"
-	"github.com/c1ayooo/cyber/core/collaboration"
+	aop "github.com/chainreactors/cyber/aop"
+	"github.com/chainreactors/cyber/core/collaboration"
 )
 
 type Origin string

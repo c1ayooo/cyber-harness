@@ -10,7 +10,7 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/c1ayooo/cyber/core/decision"
+	"github.com/chainreactors/cyber/core/decision"
 )
 
 const (

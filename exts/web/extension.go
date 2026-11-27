@@ -9,16 +9,16 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/c1ayooo/cyber/agent/provider"
-	"github.com/c1ayooo/cyber/pkg/profile"
-	managementapi "github.com/c1ayooo/cyber/pkg/web/api"
-	webservice "github.com/c1ayooo/cyber/pkg/web/service"
+	"github.com/chainreactors/cyber/agent/provider"
+	"github.com/chainreactors/cyber/pkg/profile"
+	managementapi "github.com/chainreactors/cyber/pkg/web/api"
+	webservice "github.com/chainreactors/cyber/pkg/web/service"
 
-	"github.com/c1ayooo/cyber/core/extension"
-	coreregistry "github.com/c1ayooo/cyber/core/registry"
-	"github.com/c1ayooo/cyber/core/resource"
-	cfg "github.com/c1ayooo/cyber/pkg/config"
-	webpkg "github.com/c1ayooo/cyber/pkg/web"
+	"github.com/chainreactors/cyber/core/extension"
+	coreregistry "github.com/chainreactors/cyber/core/registry"
+	"github.com/chainreactors/cyber/core/resource"
+	cfg "github.com/chainreactors/cyber/pkg/config"
+	webpkg "github.com/chainreactors/cyber/pkg/web"
 )
 
 // Extension defines web.Route as a dynamic resource and contributes the routes

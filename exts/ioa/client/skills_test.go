@@ -1,13 +1,13 @@
 package client
 
 import (
-	"github.com/c1ayooo/cyber/agent/skills"
-	"github.com/c1ayooo/cyber/core/extension"
-	promptext "github.com/c1ayooo/cyber/exts/prompt"
-	scannerskills "github.com/c1ayooo/cyber/exts/scanner/skills"
-	skillsext "github.com/c1ayooo/cyber/exts/skills"
-	"github.com/c1ayooo/cyber/pkg/testutil/hosttest"
-	ioatools "github.com/c1ayooo/cyber/tools/ioa"
+	"github.com/chainreactors/cyber/agent/skills"
+	"github.com/chainreactors/cyber/core/extension"
+	promptext "github.com/chainreactors/cyber/exts/prompt"
+	scannerskills "github.com/chainreactors/cyber/exts/scanner/skills"
+	skillsext "github.com/chainreactors/cyber/exts/skills"
+	"github.com/chainreactors/cyber/pkg/testutil/hosttest"
+	ioatools "github.com/chainreactors/cyber/tools/ioa"
 
 	"strings"
 	"testing"

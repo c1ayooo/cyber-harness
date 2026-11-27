@@ -9,7 +9,7 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/c1ayooo/cyber/pkg/console"
+	"github.com/chainreactors/cyber/pkg/console"
 )
 
 func TestCoverageRejectsEmptyAndContradictoryRecords(t *testing.T) {

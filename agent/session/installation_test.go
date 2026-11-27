@@ -4,9 +4,9 @@ import (
 	"context"
 	"testing"
 
-	"github.com/c1ayooo/cyber/agent"
-	"github.com/c1ayooo/cyber/core/extension"
-	"github.com/c1ayooo/cyber/pkg/testutil/apptest"
+	"github.com/chainreactors/cyber/agent"
+	"github.com/chainreactors/cyber/core/extension"
+	"github.com/chainreactors/cyber/pkg/testutil/apptest"
 )
 
 // newUnitResource supplies explicit dependencies for package-internal resource tests.

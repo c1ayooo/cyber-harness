@@ -11,10 +11,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/c1ayooo/cyber/aop"
-	"github.com/c1ayooo/cyber/core/events"
-	"github.com/c1ayooo/cyber/core/hooks"
-	toolhooks "github.com/c1ayooo/cyber/core/tool/hooks"
+	"github.com/chainreactors/cyber/aop"
+	"github.com/chainreactors/cyber/core/events"
+	"github.com/chainreactors/cyber/core/hooks"
+	toolhooks "github.com/chainreactors/cyber/core/tool/hooks"
 )
 
 // scriptedPolicy is a Policy double: hybrid unit tests never touch a real JEV

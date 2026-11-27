@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	aop "github.com/c1ayooo/cyber/aop"
-	types "github.com/c1ayooo/cyber/core/types"
+	aop "github.com/chainreactors/cyber/aop"
+	types "github.com/chainreactors/cyber/core/types"
 )
 
 // A blank API key means "use the key already stored"

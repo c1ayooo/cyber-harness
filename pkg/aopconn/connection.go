@@ -7,7 +7,7 @@ import (
 	"io"
 	"sync"
 
-	aop "github.com/c1ayooo/cyber/aop"
+	aop "github.com/chainreactors/cyber/aop"
 )
 
 const connectionOutboundBuffer = 128

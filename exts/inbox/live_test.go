@@ -9,10 +9,10 @@ import (
 	"testing"
 	"time"
 
-	mailbox "github.com/c1ayooo/cyber/agent/inbox"
-	"github.com/c1ayooo/cyber/agent/provider"
-	"github.com/c1ayooo/cyber/agent/session"
-	inboxext "github.com/c1ayooo/cyber/exts/inbox"
+	mailbox "github.com/chainreactors/cyber/agent/inbox"
+	"github.com/chainreactors/cyber/agent/provider"
+	"github.com/chainreactors/cyber/agent/session"
+	inboxext "github.com/chainreactors/cyber/exts/inbox"
 )
 
 // Explicit opt-in follows the agent live tests: no ambient credentials or

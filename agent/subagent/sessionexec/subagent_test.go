@@ -7,17 +7,17 @@ import (
 	"testing"
 	"time"
 
-	"github.com/c1ayooo/cyber/agent"
-	agenthooks "github.com/c1ayooo/cyber/agent/hooks"
-	"github.com/c1ayooo/cyber/agent/inbox"
-	"github.com/c1ayooo/cyber/agent/provider"
-	"github.com/c1ayooo/cyber/agent/session"
-	"github.com/c1ayooo/cyber/agent/subagent"
-	aop "github.com/c1ayooo/cyber/aop"
-	coreevents "github.com/c1ayooo/cyber/core/events"
-	"github.com/c1ayooo/cyber/core/operation"
-	coretool "github.com/c1ayooo/cyber/core/tool"
-	types "github.com/c1ayooo/cyber/core/types"
+	"github.com/chainreactors/cyber/agent"
+	agenthooks "github.com/chainreactors/cyber/agent/hooks"
+	"github.com/chainreactors/cyber/agent/inbox"
+	"github.com/chainreactors/cyber/agent/provider"
+	"github.com/chainreactors/cyber/agent/session"
+	"github.com/chainreactors/cyber/agent/subagent"
+	aop "github.com/chainreactors/cyber/aop"
+	coreevents "github.com/chainreactors/cyber/core/events"
+	"github.com/chainreactors/cyber/core/operation"
+	coretool "github.com/chainreactors/cyber/core/tool"
+	types "github.com/chainreactors/cyber/core/types"
 )
 
 func TestSubAgentSyncReturnsResult(t *testing.T) {

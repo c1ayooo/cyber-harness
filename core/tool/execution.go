@@ -2,7 +2,7 @@ package tool
 
 import (
 	"context"
-	procbus "github.com/c1ayooo/cyber/core/proc"
+	procbus "github.com/chainreactors/cyber/core/proc"
 	"github.com/chainreactors/utils/proc"
 	"io"
 	"sync"

@@ -14,11 +14,11 @@ import (
 	"syscall"
 	"time"
 
-	webext "github.com/c1ayooo/cyber/exts/web"
+	webext "github.com/chainreactors/cyber/exts/web"
 
-	"github.com/c1ayooo/cyber/core/extension"
-	"github.com/c1ayooo/cyber/core/telemetry"
-	"github.com/c1ayooo/cyber/pkg/web"
+	"github.com/chainreactors/cyber/core/extension"
+	"github.com/chainreactors/cyber/core/telemetry"
+	"github.com/chainreactors/cyber/pkg/web"
 )
 
 // newHeadlessHandler wires the RPC + AOP WebSocket surfaces without any UI:

@@ -8,8 +8,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/c1ayooo/cyber/core/telemetry"
-	scanengine "github.com/c1ayooo/cyber/tools/scan/engine"
+	"github.com/chainreactors/cyber/core/telemetry"
+	scanengine "github.com/chainreactors/cyber/tools/scan/engine"
 	"github.com/chainreactors/neutron/common"
 	"github.com/chainreactors/neutron/templates"
 	sdkneutron "github.com/chainreactors/sdk/neutron"

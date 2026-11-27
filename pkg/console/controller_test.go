@@ -10,11 +10,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/c1ayooo/cyber/agent/provider"
-	agentsession "github.com/c1ayooo/cyber/agent/session"
-	aop "github.com/c1ayooo/cyber/aop"
-	cfg "github.com/c1ayooo/cyber/pkg/config"
-	"github.com/c1ayooo/cyber/pkg/testutil/apptest"
+	"github.com/chainreactors/cyber/agent/provider"
+	agentsession "github.com/chainreactors/cyber/agent/session"
+	aop "github.com/chainreactors/cyber/aop"
+	cfg "github.com/chainreactors/cyber/pkg/config"
+	"github.com/chainreactors/cyber/pkg/testutil/apptest"
 	rlterm "github.com/chainreactors/tui/readline/terminal"
 )
 

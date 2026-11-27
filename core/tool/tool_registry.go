@@ -6,13 +6,13 @@ import (
 	"reflect"
 	"strings"
 
-	aop "github.com/c1ayooo/cyber/aop"
-	"github.com/c1ayooo/cyber/core/extension"
-	"github.com/c1ayooo/cyber/core/hooks"
-	coreregistry "github.com/c1ayooo/cyber/core/registry"
-	"github.com/c1ayooo/cyber/core/resource"
+	aop "github.com/chainreactors/cyber/aop"
+	"github.com/chainreactors/cyber/core/extension"
+	"github.com/chainreactors/cyber/core/hooks"
+	coreregistry "github.com/chainreactors/cyber/core/registry"
+	"github.com/chainreactors/cyber/core/resource"
 
-	toolhooks "github.com/c1ayooo/cyber/core/tool/hooks"
+	toolhooks "github.com/chainreactors/cyber/core/tool/hooks"
 	"google.golang.org/protobuf/proto"
 )
 

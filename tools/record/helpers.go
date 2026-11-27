@@ -13,9 +13,9 @@ import (
 	"strings"
 	"time"
 
-	aop "github.com/c1ayooo/cyber/aop"
-	"github.com/c1ayooo/cyber/core/operation"
-	coretool "github.com/c1ayooo/cyber/core/tool"
+	aop "github.com/chainreactors/cyber/aop"
+	"github.com/chainreactors/cyber/core/operation"
+	coretool "github.com/chainreactors/cyber/core/tool"
 )
 
 func normalizeDuration(seconds float64, required bool) (time.Duration, error) {

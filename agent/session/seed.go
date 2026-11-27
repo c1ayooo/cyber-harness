@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/c1ayooo/cyber/agent"
+	"github.com/chainreactors/cyber/agent"
 )
 
 // Turn seed (fork patch 26): a control plane on a machine that does not share

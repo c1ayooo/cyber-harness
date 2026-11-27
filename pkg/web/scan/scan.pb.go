@@ -7,7 +7,7 @@
 package scan
 
 import (
-	aop "github.com/c1ayooo/cyber/aop"
+	aop "github.com/chainreactors/cyber/aop"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
@@ -1225,25 +1225,94 @@ func (*ScanProtocolMessage_Event) isScanProtocolMessage_Message() {}
 var File_types_scan_proto protoreflect.FileDescriptor
 
 const file_types_scan_proto_rawDesc = "" +
-	"\n\x10types/scan.proto\x12\ncyber.scan\x1a\x0eaop/chat.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"Y\n\vScanOptions\x12\x1b\n\x06verify\x18\x01 \x01(\bH\x00R\x06verify\x88\x01\x01\x12\x16\n\x06s" +
-	"niper\x18\x02 \x01(\bR\x06sniperB\t\n\a_verifyJ\x04\b\x03\x10\x04R\x04deep\"\xd9\x02\n\x04Scan\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\x12\x16\n\x06target\x18\x02 \x01(\tR\x06target\x12\x12\n\x04mode\x18\x03 \x01(\tR\x04mode\x121\n\aoptions\x18\x04 \x01(\v" +
-	"2\x17.cyber.scan.ScanOptionsR\aoptions\x12.\n\x06status\x18\x05 \x01(\x0e2\x16.cyber.scan.ScanStatusR\x06status\x12\x1a\n\bprogress\x18\x06 \x01(\tR\bprogress\x12\x14\n\x05error\x18\t \x01(\tR\x05e" +
-	"rror\x129\n\ncreated_at\x18\n \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n\nupdated_at\x18\v \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAtJ\x04\b\a\x10\b" +
-	"J\x04\b\b\x10\t\"\x91\x01\n\x11SubmitScanRequest\x12\x1d\n\nrequest_id\x18\x01 \x01(\tR\trequestId\x12\x16\n\x06target\x18\x02 \x01(\tR\x06target\x12\x12\n\x04mode\x18\x03 \x01(\tR\x04mode\x121\n\aoptions\x18\x04 \x01(\v2\x17.cyber" +
-	".scan.ScanOptionsR\aoptions\"\x9c\x01\n\x12SubmitScanResponse\x12\x1d\n\nrequest_id\x18\x01 \x01(\tR\trequestId\x12.\n\baccepted\x18\x02 \x01(\v2\x10.cyber.scan.ScanH\x00R\baccepted" +
-	"\x12,\n\brejected\x18\x03 \x01(\v2\x0e.aop.RejectionH\x00R\brejectedB\t\n\aoutcome\")\n\x0eGetScanRequest\x12\x17\n\ascan_id\x18\x01 \x01(\tR\x06scanId\"7\n\x0fGetScanResponse\x12$\n\x04scan\x18" +
-	"\x01 \x01(\v2\x10.cyber.scan.ScanR\x04scan\"\x12\n\x10ListScansRequest\";\n\x11ListScansResponse\x12&\n\x05scans\x18\x01 \x03(\v2\x10.cyber.scan.ScanR\x05scans\"K\n\x11CancelScanRequ" +
-	"est\x12\x1d\n\nrequest_id\x18\x01 \x01(\tR\trequestId\x12\x17\n\ascan_id\x18\x02 \x01(\tR\x06scanId\"\x9c\x01\n\x12CancelScanResponse\x12\x1d\n\nrequest_id\x18\x01 \x01(\tR\trequestId\x12.\n\baccepted\x18\x02 " +
-	"\x01(\v2\x10.cyber.scan.ScanH\x00R\baccepted\x12,\n\brejected\x18\x03 \x01(\v2\x0e.aop.RejectionH\x00R\brejectedB\t\n\aoutcome\"1\n\x16WatchScanEventsRequest\x12\x17\n\ascan_id\x18" +
-	"\x01 \x01(\tR\x06scanId\"\"\n\fScanProgress\x12\x12\n\x04data\x18\x01 \x01(\tR\x04data\"\x0f\n\rScanCompleted\"B\n\nScanFailed\x12\x18\n\amessage\x18\x01 \x01(\tR\amessage\x12\x1a\n\bcanceled\x18\x02 \x01(\bR\bca" +
-	"nceled\")\n\x0eSessionBinding\x12\x17\n\ascan_id\x18\x01 \x01(\tR\x06scanId\"[\n\x10SessionScanEvent\x12\x17\n\ascan_id\x18\x01 \x01(\tR\x06scanId\x12.\n\x06status\x18\x02 \x01(\x0e2\x16.cyber.scan.Scan" +
-	"StatusR\x06status\"\x93\x03\n\tScanEvent\x12\x17\n\ascan_id\x18\x01 \x01(\tR\x06scanId\x12\x1a\n\bsequence\x18\x02 \x01(\x04R\bsequence\x129\n\nemitted_at\x18\x03 \x01(\v2\x1a.google.protobuf.Timestam" +
-	"pR\temittedAt\x12.\n\bsnapshot\x18\n \x01(\v2\x10.cyber.scan.ScanH\x00R\bsnapshot\x120\n\x06status\x18\v \x01(\x0e2\x16.cyber.scan.ScanStatusH\x00R\x06status\x126\n\bprogress\x18\f \x01(\v" +
-	"2\x18.cyber.scan.ScanProgressH\x00R\bprogress\x129\n\tcompleted\x18\x0e \x01(\v2\x19.cyber.scan.ScanCompletedH\x00R\tcompleted\x120\n\x06failed\x18\x0f \x01(\v2\x16.cyber.scan.S" +
-	"canFailedH\x00R\x06failedB\t\n\apayloadJ\x04\b\r\x10\x0e\"\xa7\x01\n\x13ScanProtocolMessage\x12V\n\x14watch_events_request\x18\n \x01(\v2\".cyber.scan.WatchScanEventsRequestH\x00" +
-	"R\x12watchEventsRequest\x12-\n\x05event\x18\v \x01(\v2\x15.cyber.scan.ScanEventH\x00R\x05eventB\t\n\amessage*\xa7\x01\n\nScanStatus\x12\x1b\n\x17SCAN_STATUS_UNSPECIFIED\x10\x00\x12\x16\n\x12SC" +
-	"AN_STATUS_QUEUED\x10\x01\x12\x17\n\x13SCAN_STATUS_RUNNING\x10\x02\x12\x19\n\x15SCAN_STATUS_COMPLETED\x10\x03\x12\x16\n\x12SCAN_STATUS_FAILED\x10\x04\x12\x18\n\x14SCAN_STATUS_CANCELED\x10\x05B,Z*gith" +
-	"ub.com/c1ayooo/cyber/pkg/web/scan;scanb\x06proto3"
+	"\n" +
+	"\x10types/scan.proto\x12\n" +
+	"cyber.scan\x1a\x0eaop/chat.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"Y\n" +
+	"\vScanOptions\x12\x1b\n" +
+	"\x06verify\x18\x01 \x01(\bH\x00R\x06verify\x88\x01\x01\x12\x16\n" +
+	"\x06sniper\x18\x02 \x01(\bR\x06sniperB\t\n" +
+	"\a_verifyJ\x04\b\x03\x10\x04R\x04deep\"\xd9\x02\n" +
+	"\x04Scan\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x16\n" +
+	"\x06target\x18\x02 \x01(\tR\x06target\x12\x12\n" +
+	"\x04mode\x18\x03 \x01(\tR\x04mode\x121\n" +
+	"\aoptions\x18\x04 \x01(\v2\x17.cyber.scan.ScanOptionsR\aoptions\x12.\n" +
+	"\x06status\x18\x05 \x01(\x0e2\x16.cyber.scan.ScanStatusR\x06status\x12\x1a\n" +
+	"\bprogress\x18\x06 \x01(\tR\bprogress\x12\x14\n" +
+	"\x05error\x18\t \x01(\tR\x05error\x129\n" +
+	"\n" +
+	"created_at\x18\n" +
+	" \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
+	"\n" +
+	"updated_at\x18\v \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAtJ\x04\b\a\x10\bJ\x04\b\b\x10\t\"\x91\x01\n" +
+	"\x11SubmitScanRequest\x12\x1d\n" +
+	"\n" +
+	"request_id\x18\x01 \x01(\tR\trequestId\x12\x16\n" +
+	"\x06target\x18\x02 \x01(\tR\x06target\x12\x12\n" +
+	"\x04mode\x18\x03 \x01(\tR\x04mode\x121\n" +
+	"\aoptions\x18\x04 \x01(\v2\x17.cyber.scan.ScanOptionsR\aoptions\"\x9c\x01\n" +
+	"\x12SubmitScanResponse\x12\x1d\n" +
+	"\n" +
+	"request_id\x18\x01 \x01(\tR\trequestId\x12.\n" +
+	"\baccepted\x18\x02 \x01(\v2\x10.cyber.scan.ScanH\x00R\baccepted\x12,\n" +
+	"\brejected\x18\x03 \x01(\v2\x0e.aop.RejectionH\x00R\brejectedB\t\n" +
+	"\aoutcome\")\n" +
+	"\x0eGetScanRequest\x12\x17\n" +
+	"\ascan_id\x18\x01 \x01(\tR\x06scanId\"7\n" +
+	"\x0fGetScanResponse\x12$\n" +
+	"\x04scan\x18\x01 \x01(\v2\x10.cyber.scan.ScanR\x04scan\"\x12\n" +
+	"\x10ListScansRequest\";\n" +
+	"\x11ListScansResponse\x12&\n" +
+	"\x05scans\x18\x01 \x03(\v2\x10.cyber.scan.ScanR\x05scans\"K\n" +
+	"\x11CancelScanRequest\x12\x1d\n" +
+	"\n" +
+	"request_id\x18\x01 \x01(\tR\trequestId\x12\x17\n" +
+	"\ascan_id\x18\x02 \x01(\tR\x06scanId\"\x9c\x01\n" +
+	"\x12CancelScanResponse\x12\x1d\n" +
+	"\n" +
+	"request_id\x18\x01 \x01(\tR\trequestId\x12.\n" +
+	"\baccepted\x18\x02 \x01(\v2\x10.cyber.scan.ScanH\x00R\baccepted\x12,\n" +
+	"\brejected\x18\x03 \x01(\v2\x0e.aop.RejectionH\x00R\brejectedB\t\n" +
+	"\aoutcome\"1\n" +
+	"\x16WatchScanEventsRequest\x12\x17\n" +
+	"\ascan_id\x18\x01 \x01(\tR\x06scanId\"\"\n" +
+	"\fScanProgress\x12\x12\n" +
+	"\x04data\x18\x01 \x01(\tR\x04data\"\x0f\n" +
+	"\rScanCompleted\"B\n" +
+	"\n" +
+	"ScanFailed\x12\x18\n" +
+	"\amessage\x18\x01 \x01(\tR\amessage\x12\x1a\n" +
+	"\bcanceled\x18\x02 \x01(\bR\bcanceled\")\n" +
+	"\x0eSessionBinding\x12\x17\n" +
+	"\ascan_id\x18\x01 \x01(\tR\x06scanId\"[\n" +
+	"\x10SessionScanEvent\x12\x17\n" +
+	"\ascan_id\x18\x01 \x01(\tR\x06scanId\x12.\n" +
+	"\x06status\x18\x02 \x01(\x0e2\x16.cyber.scan.ScanStatusR\x06status\"\x93\x03\n" +
+	"\tScanEvent\x12\x17\n" +
+	"\ascan_id\x18\x01 \x01(\tR\x06scanId\x12\x1a\n" +
+	"\bsequence\x18\x02 \x01(\x04R\bsequence\x129\n" +
+	"\n" +
+	"emitted_at\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\temittedAt\x12.\n" +
+	"\bsnapshot\x18\n" +
+	" \x01(\v2\x10.cyber.scan.ScanH\x00R\bsnapshot\x120\n" +
+	"\x06status\x18\v \x01(\x0e2\x16.cyber.scan.ScanStatusH\x00R\x06status\x126\n" +
+	"\bprogress\x18\f \x01(\v2\x18.cyber.scan.ScanProgressH\x00R\bprogress\x129\n" +
+	"\tcompleted\x18\x0e \x01(\v2\x19.cyber.scan.ScanCompletedH\x00R\tcompleted\x120\n" +
+	"\x06failed\x18\x0f \x01(\v2\x16.cyber.scan.ScanFailedH\x00R\x06failedB\t\n" +
+	"\apayloadJ\x04\b\r\x10\x0e\"\xa7\x01\n" +
+	"\x13ScanProtocolMessage\x12V\n" +
+	"\x14watch_events_request\x18\n" +
+	" \x01(\v2\".cyber.scan.WatchScanEventsRequestH\x00R\x12watchEventsRequest\x12-\n" +
+	"\x05event\x18\v \x01(\v2\x15.cyber.scan.ScanEventH\x00R\x05eventB\t\n" +
+	"\amessage*\xa7\x01\n" +
+	"\n" +
+	"ScanStatus\x12\x1b\n" +
+	"\x17SCAN_STATUS_UNSPECIFIED\x10\x00\x12\x16\n" +
+	"\x12SCAN_STATUS_QUEUED\x10\x01\x12\x17\n" +
+	"\x13SCAN_STATUS_RUNNING\x10\x02\x12\x19\n" +
+	"\x15SCAN_STATUS_COMPLETED\x10\x03\x12\x16\n" +
+	"\x12SCAN_STATUS_FAILED\x10\x04\x12\x18\n" +
+	"\x14SCAN_STATUS_CANCELED\x10\x05B2Z0github.com/chainreactors/cyber/pkg/web/scan;scanb\x06proto3"
 
 var (
 	file_types_scan_proto_rawDescOnce sync.Once

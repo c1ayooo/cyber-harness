@@ -14,8 +14,8 @@ import (
 	"sync"
 	"testing"
 
-	coretool "github.com/c1ayooo/cyber/core/tool"
-	"github.com/c1ayooo/cyber/tools/headless"
+	coretool "github.com/chainreactors/cyber/core/tool"
+	"github.com/chainreactors/cyber/tools/headless"
 	"github.com/go-rod/rod/lib/launcher"
 	"gopkg.in/yaml.v3"
 )

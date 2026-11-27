@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	agentsession "github.com/c1ayooo/cyber/agent/session"
+	agentsession "github.com/chainreactors/cyber/agent/session"
 )
 
 func listSavedSessions(dir string) ([]SavedSession, error) {

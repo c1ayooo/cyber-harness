@@ -3,7 +3,7 @@ package search
 import (
 	"bytes"
 	"context"
-	coretool "github.com/c1ayooo/cyber/core/tool"
+	coretool "github.com/chainreactors/cyber/core/tool"
 	"net/http"
 	"net/http/httptest"
 	"strings"

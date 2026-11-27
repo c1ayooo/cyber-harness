@@ -1,7 +1,7 @@
 package config
 
 import (
-	"github.com/c1ayooo/cyber/core/types"
+	"github.com/chainreactors/cyber/core/types"
 	"google.golang.org/protobuf/proto"
 )
 

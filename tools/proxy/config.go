@@ -8,11 +8,11 @@ import (
 	"strings"
 	"sync"
 
-	operationpb "github.com/c1ayooo/cyber/aop/operation"
-	"github.com/c1ayooo/cyber/core/egress"
-	"github.com/c1ayooo/cyber/core/hooks"
-	"github.com/c1ayooo/cyber/core/operation"
-	cfg "github.com/c1ayooo/cyber/pkg/config"
+	operationpb "github.com/chainreactors/cyber/aop/operation"
+	"github.com/chainreactors/cyber/core/egress"
+	"github.com/chainreactors/cyber/core/hooks"
+	"github.com/chainreactors/cyber/core/operation"
+	cfg "github.com/chainreactors/cyber/pkg/config"
 	"github.com/chainreactors/proxyclient"
 	"google.golang.org/protobuf/proto"
 )

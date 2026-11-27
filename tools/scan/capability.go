@@ -3,8 +3,8 @@ package scan
 import (
 	"context"
 
-	"github.com/c1ayooo/cyber/tools/scan/engine"
-	"github.com/c1ayooo/cyber/tools/scan/pipeline"
+	"github.com/chainreactors/cyber/tools/scan/engine"
+	"github.com/chainreactors/cyber/tools/scan/pipeline"
 )
 
 const (

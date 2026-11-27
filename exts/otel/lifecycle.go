@@ -6,9 +6,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/c1ayooo/cyber/aop"
-	operationpb "github.com/c1ayooo/cyber/aop/operation"
-	"github.com/c1ayooo/cyber/core/types"
+	"github.com/chainreactors/cyber/aop"
+	operationpb "github.com/chainreactors/cyber/aop/operation"
+	"github.com/chainreactors/cyber/core/types"
 	"go.opentelemetry.io/otel/attribute"
 	otellog "go.opentelemetry.io/otel/log"
 	"go.opentelemetry.io/otel/metric"

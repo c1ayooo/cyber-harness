@@ -7,9 +7,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/c1ayooo/cyber/core/resource"
-	"github.com/c1ayooo/cyber/core/types"
-	cfg "github.com/c1ayooo/cyber/pkg/config"
+	"github.com/chainreactors/cyber/core/resource"
+	"github.com/chainreactors/cyber/core/types"
+	cfg "github.com/chainreactors/cyber/pkg/config"
 )
 
 func TestHunterConnection(t *testing.T) {

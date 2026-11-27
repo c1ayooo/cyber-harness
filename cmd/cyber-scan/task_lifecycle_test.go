@@ -14,10 +14,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/c1ayooo/cyber/core/telemetry"
-	taskcli "github.com/c1ayooo/cyber/pkg/cli/task"
-	cfg "github.com/c1ayooo/cyber/pkg/config"
-	"github.com/c1ayooo/cyber/pkg/profile"
+	"github.com/chainreactors/cyber/core/telemetry"
+	taskcli "github.com/chainreactors/cyber/pkg/cli/task"
+	cfg "github.com/chainreactors/cyber/pkg/config"
+	"github.com/chainreactors/cyber/pkg/profile"
 )
 
 type closeFailureProfile struct {

@@ -2,8 +2,8 @@ package client
 
 import (
 	"context"
-	hostcli "github.com/c1ayooo/cyber/pkg/cli"
-	cfg "github.com/c1ayooo/cyber/pkg/config"
+	hostcli "github.com/chainreactors/cyber/pkg/cli"
+	cfg "github.com/chainreactors/cyber/pkg/config"
 
 	flags "github.com/jessevdk/go-flags"
 	"testing"

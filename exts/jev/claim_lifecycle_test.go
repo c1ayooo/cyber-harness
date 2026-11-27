@@ -10,12 +10,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/c1ayooo/cyber/agent"
-	"github.com/c1ayooo/cyber/agent/hooks"
-	"github.com/c1ayooo/cyber/agent/provider"
-	jevapi "github.com/c1ayooo/cyber/agent/provider/jev"
-	"github.com/c1ayooo/cyber/aop"
-	coretool "github.com/c1ayooo/cyber/core/tool"
+	"github.com/chainreactors/cyber/agent"
+	"github.com/chainreactors/cyber/agent/hooks"
+	"github.com/chainreactors/cyber/agent/provider"
+	jevapi "github.com/chainreactors/cyber/agent/provider/jev"
+	"github.com/chainreactors/cyber/aop"
+	coretool "github.com/chainreactors/cyber/core/tool"
 )
 
 func TestClaimLibraryRejectsUnknownAndInvalidFieldsWithoutRewriting(t *testing.T) {

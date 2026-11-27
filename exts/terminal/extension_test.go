@@ -5,11 +5,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/c1ayooo/cyber/core/extension"
-	coretool "github.com/c1ayooo/cyber/core/tool"
-	"github.com/c1ayooo/cyber/pkg/testutil/hosttest"
+	"github.com/chainreactors/cyber/core/extension"
+	coretool "github.com/chainreactors/cyber/core/tool"
+	"github.com/chainreactors/cyber/pkg/testutil/hosttest"
 
-	terminaltool "github.com/c1ayooo/cyber/tools/terminal"
+	terminaltool "github.com/chainreactors/cyber/tools/terminal"
 )
 
 func TestExtensionOwnsTerminalRegistrationAndShellBinding(t *testing.T) {

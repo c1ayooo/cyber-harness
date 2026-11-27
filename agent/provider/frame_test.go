@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	aop "github.com/c1ayooo/cyber/aop"
+	aop "github.com/chainreactors/cyber/aop"
 )
 
 func TestFrameObserversCompose(t *testing.T) {

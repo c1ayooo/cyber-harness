@@ -10,11 +10,11 @@ import (
 	"sync"
 	"time"
 
-	eventjsonl "github.com/c1ayooo/cyber/core/events/jsonl"
+	eventjsonl "github.com/chainreactors/cyber/core/events/jsonl"
 
-	aop "github.com/c1ayooo/cyber/aop"
-	types "github.com/c1ayooo/cyber/core/types"
-	cfg "github.com/c1ayooo/cyber/pkg/config"
+	aop "github.com/chainreactors/cyber/aop"
+	types "github.com/chainreactors/cyber/core/types"
+	cfg "github.com/chainreactors/cyber/pkg/config"
 	"github.com/charmbracelet/glamour"
 	"github.com/muesli/termenv"
 )

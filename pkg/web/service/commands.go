@@ -8,8 +8,8 @@ import (
 	"google.golang.org/protobuf/proto"
 	"strings"
 
-	aop "github.com/c1ayooo/cyber/aop"
-	types "github.com/c1ayooo/cyber/core/types"
+	aop "github.com/chainreactors/cyber/aop"
+	types "github.com/chainreactors/cyber/core/types"
 )
 
 // Stable system-message codes mirrored by the frontend i18n catalog.

@@ -7,8 +7,8 @@ import (
 	"context"
 	"errors"
 
-	aop "github.com/c1ayooo/cyber/aop"
-	operationpb "github.com/c1ayooo/cyber/aop/operation"
+	aop "github.com/chainreactors/cyber/aop"
+	operationpb "github.com/chainreactors/cyber/aop/operation"
 )
 
 var (

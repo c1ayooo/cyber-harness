@@ -1,8 +1,8 @@
 package agent
 
 import (
-	coretool "github.com/c1ayooo/cyber/core/tool"
-	"github.com/c1ayooo/cyber/pkg/testutil/hosttest"
+	coretool "github.com/chainreactors/cyber/core/tool"
+	"github.com/chainreactors/cyber/pkg/testutil/hosttest"
 	"testing"
 )
 

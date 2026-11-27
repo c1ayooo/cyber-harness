@@ -8,7 +8,7 @@ import (
 	"math"
 	"sync/atomic"
 
-	browserutil "github.com/c1ayooo/cyber/tools/headless"
+	browserutil "github.com/chainreactors/cyber/tools/headless"
 	"github.com/projectdiscovery/katana/pkg/engine"
 	"github.com/projectdiscovery/katana/pkg/engine/headless"
 	"github.com/projectdiscovery/katana/pkg/engine/standard"

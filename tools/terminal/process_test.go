@@ -5,10 +5,10 @@ import (
 	"errors"
 	"testing"
 
-	corehooks "github.com/c1ayooo/cyber/core/hooks"
-	"github.com/c1ayooo/cyber/core/operation"
-	coretool "github.com/c1ayooo/cyber/core/tool"
-	toolhooks "github.com/c1ayooo/cyber/core/tool/hooks"
+	corehooks "github.com/chainreactors/cyber/core/hooks"
+	"github.com/chainreactors/cyber/core/operation"
+	coretool "github.com/chainreactors/cyber/core/tool"
+	toolhooks "github.com/chainreactors/cyber/core/tool/hooks"
 )
 
 func TestProcessHooksFollowActualCompletion(t *testing.T) {

@@ -9,8 +9,8 @@ import (
 	"strings"
 	"syscall"
 
-	aop "github.com/c1ayooo/cyber/aop"
-	coretool "github.com/c1ayooo/cyber/core/tool"
+	aop "github.com/chainreactors/cyber/aop"
+	coretool "github.com/chainreactors/cyber/core/tool"
 )
 
 // Application WebSocket example: send one natural-language prompt to cyber

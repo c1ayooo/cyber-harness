@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	filepb "github.com/c1ayooo/cyber/aop/file"
-	"github.com/c1ayooo/cyber/core/operation"
+	filepb "github.com/chainreactors/cyber/aop/file"
+	"github.com/chainreactors/cyber/core/operation"
 	"io"
 )
 

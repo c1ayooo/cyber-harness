@@ -5,7 +5,7 @@ import (
 	"io/fs"
 	"strings"
 
-	"github.com/c1ayooo/cyber/agent/skills"
+	"github.com/chainreactors/cyber/agent/skills"
 )
 
 // RuntimeDocsURI is the virtual prefix of the neutral runtime tool documents

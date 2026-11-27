@@ -6,8 +6,8 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/c1ayooo/cyber/aop"
-	"github.com/c1ayooo/cyber/core/operation"
+	"github.com/chainreactors/cyber/aop"
+	"github.com/chainreactors/cyber/core/operation"
 )
 
 type deniedCommandExecutor struct {

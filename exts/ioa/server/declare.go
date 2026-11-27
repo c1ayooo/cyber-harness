@@ -1,9 +1,9 @@
 package server
 
 import (
-	"github.com/c1ayooo/cyber/core/resource"
-	hostcli "github.com/c1ayooo/cyber/pkg/cli"
-	cfg "github.com/c1ayooo/cyber/pkg/config"
+	"github.com/chainreactors/cyber/core/resource"
+	hostcli "github.com/chainreactors/cyber/pkg/cli"
+	cfg "github.com/chainreactors/cyber/pkg/config"
 )
 
 // Declare contributes the server resources needed before argument parsing.

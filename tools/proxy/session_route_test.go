@@ -10,8 +10,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/c1ayooo/cyber/core/egress"
-	"github.com/c1ayooo/cyber/core/operation"
+	"github.com/chainreactors/cyber/core/egress"
+	"github.com/chainreactors/cyber/core/operation"
 	"github.com/chainreactors/proxyclient"
 )
 

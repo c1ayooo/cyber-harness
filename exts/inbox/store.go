@@ -12,8 +12,8 @@ import (
 	"path/filepath"
 	"time"
 
-	mailbox "github.com/c1ayooo/cyber/agent/inbox"
-	aop "github.com/c1ayooo/cyber/aop"
+	mailbox "github.com/chainreactors/cyber/agent/inbox"
+	aop "github.com/chainreactors/cyber/aop"
 	"google.golang.org/protobuf/proto"
 	_ "modernc.org/sqlite"
 )

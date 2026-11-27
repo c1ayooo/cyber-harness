@@ -7,10 +7,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/c1ayooo/cyber/agent/inbox"
-	procbus "github.com/c1ayooo/cyber/core/proc"
-	coretool "github.com/c1ayooo/cyber/core/tool"
-	"github.com/c1ayooo/cyber/core/truncate"
+	"github.com/chainreactors/cyber/agent/inbox"
+	procbus "github.com/chainreactors/cyber/core/proc"
+	coretool "github.com/chainreactors/cyber/core/tool"
+	"github.com/chainreactors/cyber/core/truncate"
 	"github.com/chainreactors/utils/proc"
 	"mvdan.cc/sh/v3/syntax"
 )

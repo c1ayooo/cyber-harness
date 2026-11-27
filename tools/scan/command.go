@@ -9,11 +9,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/c1ayooo/cyber/core/telemetry"
-	coretool "github.com/c1ayooo/cyber/core/tool"
-	"github.com/c1ayooo/cyber/tools/scan/engine"
-	"github.com/c1ayooo/cyber/tools/scan/pipeline"
-	"github.com/c1ayooo/cyber/tools/toolargs"
+	"github.com/chainreactors/cyber/core/telemetry"
+	coretool "github.com/chainreactors/cyber/core/tool"
+	"github.com/chainreactors/cyber/tools/scan/engine"
+	"github.com/chainreactors/cyber/tools/scan/pipeline"
+	"github.com/chainreactors/cyber/tools/toolargs"
 	goflags "github.com/jessevdk/go-flags"
 )
 

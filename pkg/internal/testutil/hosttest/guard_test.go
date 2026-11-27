@@ -12,10 +12,10 @@ import (
 )
 
 const (
-	hosttestPath       = "github.com/c1ayooo/cyber/pkg/internal/testutil/hosttest"
-	apptestPath        = "github.com/c1ayooo/cyber/pkg/internal/testutil/apptest"
-	hosttestPublicPath = "github.com/c1ayooo/cyber/pkg/testutil/hosttest"
-	apptestPublicPath  = "github.com/c1ayooo/cyber/pkg/testutil/apptest"
+	hosttestPath       = "github.com/chainreactors/cyber/pkg/internal/testutil/hosttest"
+	apptestPath        = "github.com/chainreactors/cyber/pkg/internal/testutil/apptest"
+	hosttestPublicPath = "github.com/chainreactors/cyber/pkg/testutil/hosttest"
+	apptestPublicPath  = "github.com/chainreactors/cyber/pkg/testutil/apptest"
 )
 
 // The two helper packages exist for tests only: they take a testing.TB and call

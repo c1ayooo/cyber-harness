@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	aop "github.com/c1ayooo/cyber/aop"
-	toolpb "github.com/c1ayooo/cyber/aop/tool"
+	aop "github.com/chainreactors/cyber/aop"
+	toolpb "github.com/chainreactors/cyber/aop/tool"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"

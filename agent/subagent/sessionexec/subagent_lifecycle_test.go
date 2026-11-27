@@ -9,12 +9,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/c1ayooo/cyber/agent"
-	agenthooks "github.com/c1ayooo/cyber/agent/hooks"
-	"github.com/c1ayooo/cyber/agent/inbox"
-	"github.com/c1ayooo/cyber/core/hooks"
-	"github.com/c1ayooo/cyber/core/operation"
-	coretool "github.com/c1ayooo/cyber/core/tool"
+	"github.com/chainreactors/cyber/agent"
+	agenthooks "github.com/chainreactors/cyber/agent/hooks"
+	"github.com/chainreactors/cyber/agent/inbox"
+	"github.com/chainreactors/cyber/core/hooks"
+	"github.com/chainreactors/cyber/core/operation"
+	coretool "github.com/chainreactors/cyber/core/tool"
 )
 
 type taskLoop func(context.Context, agent.Config) (*agent.Result, error)

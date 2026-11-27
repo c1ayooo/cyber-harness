@@ -5,14 +5,14 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/c1ayooo/cyber/agent"
-	agentsession "github.com/c1ayooo/cyber/agent/session"
-	aop "github.com/c1ayooo/cyber/aop"
-	"github.com/c1ayooo/cyber/core/telemetry"
-	taskcli "github.com/c1ayooo/cyber/pkg/cli/task"
-	cfg "github.com/c1ayooo/cyber/pkg/config"
-	"github.com/c1ayooo/cyber/pkg/host"
-	"github.com/c1ayooo/cyber/pkg/profile"
+	"github.com/chainreactors/cyber/agent"
+	agentsession "github.com/chainreactors/cyber/agent/session"
+	aop "github.com/chainreactors/cyber/aop"
+	"github.com/chainreactors/cyber/core/telemetry"
+	taskcli "github.com/chainreactors/cyber/pkg/cli/task"
+	cfg "github.com/chainreactors/cyber/pkg/config"
+	"github.com/chainreactors/cyber/pkg/host"
+	"github.com/chainreactors/cyber/pkg/profile"
 )
 
 // RunStdio assembles a Profile around the transport-only host.

@@ -3,7 +3,7 @@ package hooks
 import (
 	"strings"
 
-	"github.com/c1ayooo/cyber/aop"
+	"github.com/chainreactors/cyber/aop"
 )
 
 // Feedback projects an execution error into the existing model-visible result.

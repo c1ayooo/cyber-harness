@@ -17,7 +17,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/c1ayooo/cyber/core/resource"
+	"github.com/chainreactors/cyber/core/resource"
 	"github.com/mark3labs/mcp-go/client"
 	"github.com/mark3labs/mcp-go/client/transport"
 	mcpsdk "github.com/mark3labs/mcp-go/mcp"

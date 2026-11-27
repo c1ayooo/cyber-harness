@@ -7,9 +7,9 @@ import (
 	"path/filepath"
 	"testing"
 
-	filepb "github.com/c1ayooo/cyber/aop/file"
-	corehooks "github.com/c1ayooo/cyber/core/hooks"
-	toolhooks "github.com/c1ayooo/cyber/core/tool/hooks"
+	filepb "github.com/chainreactors/cyber/aop/file"
+	corehooks "github.com/chainreactors/cyber/core/hooks"
+	toolhooks "github.com/chainreactors/cyber/core/tool/hooks"
 )
 
 func TestFileHookReportsCommittedOperationsAndFailures(t *testing.T) {

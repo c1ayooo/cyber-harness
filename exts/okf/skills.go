@@ -3,7 +3,7 @@ package okf
 import (
 	"embed"
 
-	"github.com/c1ayooo/cyber/agent/skills"
+	"github.com/chainreactors/cyber/agent/skills"
 )
 
 //go:embed assets

@@ -2,9 +2,9 @@ package console
 
 import (
 	"context"
-	coreevents "github.com/c1ayooo/cyber/core/events"
-	"github.com/c1ayooo/cyber/core/extension"
-	telemetry "github.com/c1ayooo/cyber/exts/telemetry"
+	coreevents "github.com/chainreactors/cyber/core/events"
+	"github.com/chainreactors/cyber/core/extension"
+	telemetry "github.com/chainreactors/cyber/exts/telemetry"
 	"testing"
 )
 

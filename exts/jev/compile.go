@@ -8,8 +8,8 @@ import (
 	"slices"
 	"sort"
 
-	jev "github.com/c1ayooo/cyber/agent/provider/jev"
-	coretool "github.com/c1ayooo/cyber/core/tool"
+	jev "github.com/chainreactors/cyber/agent/provider/jev"
+	coretool "github.com/chainreactors/cyber/core/tool"
 )
 
 type compilation struct {

@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	agentprompt "github.com/c1ayooo/cyber/agent/prompt"
-	"github.com/c1ayooo/cyber/core/extension"
+	agentprompt "github.com/chainreactors/cyber/agent/prompt"
+	"github.com/chainreactors/cyber/core/extension"
 )
 
 func loadResolver(t *testing.T, contributions ...agentprompt.Contribution) agentprompt.Resolver {

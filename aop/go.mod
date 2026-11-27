@@ -1,4 +1,4 @@
-module github.com/c1ayooo/cyber/aop
+module github.com/chainreactors/cyber/aop
 
 go 1.26
 

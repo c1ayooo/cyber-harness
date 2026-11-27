@@ -4,9 +4,9 @@ import (
 	"context"
 	"testing"
 
-	"github.com/c1ayooo/cyber/agent"
-	provider "github.com/c1ayooo/cyber/agent/provider"
-	aop "github.com/c1ayooo/cyber/aop"
+	"github.com/chainreactors/cyber/agent"
+	provider "github.com/chainreactors/cyber/agent/provider"
+	aop "github.com/chainreactors/cyber/aop"
 )
 
 // seqProvider answers from a queue so the executor call and the judgement call

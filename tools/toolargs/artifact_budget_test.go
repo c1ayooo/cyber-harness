@@ -8,11 +8,11 @@ import (
 	"testing"
 	"unicode/utf8"
 
-	aop "github.com/c1ayooo/cyber/aop"
-	operationpb "github.com/c1ayooo/cyber/aop/operation"
-	toolpb "github.com/c1ayooo/cyber/aop/tool"
-	coreevents "github.com/c1ayooo/cyber/core/events"
-	"github.com/c1ayooo/cyber/core/operation"
+	aop "github.com/chainreactors/cyber/aop"
+	operationpb "github.com/chainreactors/cyber/aop/operation"
+	toolpb "github.com/chainreactors/cyber/aop/tool"
+	coreevents "github.com/chainreactors/cyber/core/events"
+	"github.com/chainreactors/cyber/core/operation"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

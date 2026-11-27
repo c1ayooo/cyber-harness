@@ -9,12 +9,12 @@ import (
 	"path/filepath"
 	"time"
 
-	agentsession "github.com/c1ayooo/cyber/agent/session"
-	aop "github.com/c1ayooo/cyber/aop"
-	"github.com/c1ayooo/cyber/core/eventbus"
-	cfg "github.com/c1ayooo/cyber/pkg/config"
-	"github.com/c1ayooo/cyber/pkg/console"
-	outputpkg "github.com/c1ayooo/cyber/pkg/output"
+	agentsession "github.com/chainreactors/cyber/agent/session"
+	aop "github.com/chainreactors/cyber/aop"
+	"github.com/chainreactors/cyber/core/eventbus"
+	cfg "github.com/chainreactors/cyber/pkg/config"
+	"github.com/chainreactors/cyber/pkg/console"
+	outputpkg "github.com/chainreactors/cyber/pkg/output"
 	flags "github.com/jessevdk/go-flags"
 )
 

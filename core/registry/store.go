@@ -9,7 +9,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/c1ayooo/cyber/core/resource"
+	"github.com/chainreactors/cyber/core/resource"
 )
 
 var (

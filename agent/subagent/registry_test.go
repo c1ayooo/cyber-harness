@@ -7,9 +7,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/c1ayooo/cyber/agent"
-	"github.com/c1ayooo/cyber/core/registry"
-	"github.com/c1ayooo/cyber/core/resource"
+	"github.com/chainreactors/cyber/agent"
+	"github.com/chainreactors/cyber/core/registry"
+	"github.com/chainreactors/cyber/core/resource"
 )
 
 func newRegistry(t *testing.T) *Registry {

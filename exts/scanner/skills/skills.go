@@ -10,7 +10,7 @@ import (
 	"io/fs"
 	"strings"
 
-	"github.com/c1ayooo/cyber/agent/skills"
+	"github.com/chainreactors/cyber/agent/skills"
 )
 
 //go:embed all:*

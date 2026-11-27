@@ -6,20 +6,20 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/c1ayooo/cyber/core/eventbus"
-	"github.com/c1ayooo/cyber/core/extension"
-	"github.com/c1ayooo/cyber/pkg/testutil/hosttest"
+	"github.com/chainreactors/cyber/core/eventbus"
+	"github.com/chainreactors/cyber/core/extension"
+	"github.com/chainreactors/cyber/pkg/testutil/hosttest"
 
 	"os"
 	"path/filepath"
 	"testing"
 
-	coreevents "github.com/c1ayooo/cyber/core/events"
-	telemetryext "github.com/c1ayooo/cyber/exts/telemetry"
+	coreevents "github.com/chainreactors/cyber/core/events"
+	telemetryext "github.com/chainreactors/cyber/exts/telemetry"
 
-	aop "github.com/c1ayooo/cyber/aop"
-	operationpb "github.com/c1ayooo/cyber/aop/operation"
-	toolpb "github.com/c1ayooo/cyber/aop/tool"
+	aop "github.com/chainreactors/cyber/aop"
+	operationpb "github.com/chainreactors/cyber/aop/operation"
+	toolpb "github.com/chainreactors/cyber/aop/tool"
 	"github.com/chainreactors/utils/parsers"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/types/known/anypb"

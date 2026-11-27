@@ -5,10 +5,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/c1ayooo/cyber/core/extension"
+	"github.com/chainreactors/cyber/core/extension"
 
-	"github.com/c1ayooo/cyber/agent/prompt"
-	"github.com/c1ayooo/cyber/tools/scan"
+	"github.com/chainreactors/cyber/agent/prompt"
+	"github.com/chainreactors/cyber/tools/scan"
 	"github.com/chainreactors/utils/parsers"
 )
 

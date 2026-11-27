@@ -7,16 +7,16 @@ import (
 	"testing"
 	"time"
 
-	"github.com/c1ayooo/cyber/agent/provider"
-	"github.com/c1ayooo/cyber/agent/session"
-	"github.com/c1ayooo/cyber/aop"
-	"github.com/c1ayooo/cyber/core/events"
-	eventjsonl "github.com/c1ayooo/cyber/core/events/jsonl"
-	"github.com/c1ayooo/cyber/core/extension"
-	"github.com/c1ayooo/cyber/core/telemetry"
-	"github.com/c1ayooo/cyber/core/types"
-	recapext "github.com/c1ayooo/cyber/exts/recap"
-	telemetryext "github.com/c1ayooo/cyber/exts/telemetry"
+	"github.com/chainreactors/cyber/agent/provider"
+	"github.com/chainreactors/cyber/agent/session"
+	"github.com/chainreactors/cyber/aop"
+	"github.com/chainreactors/cyber/core/events"
+	eventjsonl "github.com/chainreactors/cyber/core/events/jsonl"
+	"github.com/chainreactors/cyber/core/extension"
+	"github.com/chainreactors/cyber/core/telemetry"
+	"github.com/chainreactors/cyber/core/types"
+	recapext "github.com/chainreactors/cyber/exts/recap"
+	telemetryext "github.com/chainreactors/cyber/exts/telemetry"
 )
 
 type model struct {

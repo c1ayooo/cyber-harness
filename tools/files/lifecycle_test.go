@@ -5,7 +5,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/c1ayooo/cyber/core/extension"
+	"github.com/chainreactors/cyber/core/extension"
 )
 
 func filesystemSet(t *testing.T, f *Resource) *extension.Set {

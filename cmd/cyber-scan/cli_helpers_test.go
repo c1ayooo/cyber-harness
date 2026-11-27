@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	ioaclient "github.com/c1ayooo/cyber/exts/ioa/client"
-	cfg "github.com/c1ayooo/cyber/pkg/config"
+	ioaclient "github.com/chainreactors/cyber/exts/ioa/client"
+	cfg "github.com/chainreactors/cyber/pkg/config"
 )
 
 func containsAny(value string, candidates ...string) bool {

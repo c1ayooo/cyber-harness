@@ -6,8 +6,8 @@ package tui
 import (
 	"context"
 	"fmt"
-	"github.com/c1ayooo/cyber/core/extension"
-	"github.com/c1ayooo/cyber/pkg/console/api"
+	"github.com/chainreactors/cyber/core/extension"
+	"github.com/chainreactors/cyber/pkg/console/api"
 )
 
 type Extension struct{ registry *api.Registry }

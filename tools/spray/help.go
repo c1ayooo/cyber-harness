@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/c1ayooo/cyber/tools/toolargs"
+	"github.com/chainreactors/cyber/tools/toolargs"
 	spraycore "github.com/chainreactors/spray/core"
 	flags "github.com/jessevdk/go-flags"
 )

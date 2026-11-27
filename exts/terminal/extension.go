@@ -7,13 +7,13 @@ import (
 	"sync"
 	"time"
 
-	"github.com/c1ayooo/cyber/core/egress"
-	"github.com/c1ayooo/cyber/core/extension"
-	"github.com/c1ayooo/cyber/core/hooks"
-	procbus "github.com/c1ayooo/cyber/core/proc"
-	coretool "github.com/c1ayooo/cyber/core/tool"
+	"github.com/chainreactors/cyber/core/egress"
+	"github.com/chainreactors/cyber/core/extension"
+	"github.com/chainreactors/cyber/core/hooks"
+	procbus "github.com/chainreactors/cyber/core/proc"
+	coretool "github.com/chainreactors/cyber/core/tool"
 
-	terminaltool "github.com/c1ayooo/cyber/tools/terminal"
+	terminaltool "github.com/chainreactors/cyber/tools/terminal"
 )
 
 type Config struct {

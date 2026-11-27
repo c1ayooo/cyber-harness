@@ -7,7 +7,7 @@
 package rpc
 
 import (
-	types "github.com/c1ayooo/cyber/core/types"
+	types "github.com/chainreactors/cyber/core/types"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -24,8 +24,10 @@ const (
 var File_rpc_artifact_proto protoreflect.FileDescriptor
 
 const file_rpc_artifact_proto_rawDesc = "" +
-	"\n\x12rpc/artifact.proto\x12\x12cyber.rpc.artifact\x1a\x14types/artifact.proto2o\n\x0fArtifactService\x12\\\n\rSyncArtifacts\x12$.cyber.artifact.SyncArtifact" +
-	"sRequest\x1a%.cyber.artifact.SyncArtifactsResponseB&Z$github.com/c1ayooo/cyber/pkg/rpc;rpcb\x06proto3"
+	"\n" +
+	"\x12rpc/artifact.proto\x12\x12cyber.rpc.artifact\x1a\x14types/artifact.proto2o\n" +
+	"\x0fArtifactService\x12\\\n" +
+	"\rSyncArtifacts\x12$.cyber.artifact.SyncArtifactsRequest\x1a%.cyber.artifact.SyncArtifactsResponseB,Z*github.com/chainreactors/cyber/pkg/rpc;rpcb\x06proto3"
 
 var file_rpc_artifact_proto_goTypes = []any{
 	(*types.SyncArtifactsRequest)(nil),  // 0: cyber.artifact.SyncArtifactsRequest

@@ -3,8 +3,8 @@ package provider
 import (
 	"context"
 	"fmt"
-	"github.com/c1ayooo/cyber/core/telemetry"
-	types "github.com/c1ayooo/cyber/core/types"
+	"github.com/chainreactors/cyber/core/telemetry"
+	types "github.com/chainreactors/cyber/core/types"
 	"strings"
 	"sync"
 	"time"

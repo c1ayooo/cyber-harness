@@ -13,7 +13,7 @@ import (
 	"testing"
 	"time"
 
-	decision "github.com/c1ayooo/cyber/core/decision"
+	decision "github.com/chainreactors/cyber/core/decision"
 )
 
 type inferenceQuestion struct {

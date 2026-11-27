@@ -8,8 +8,8 @@ import (
 	"reflect"
 	"sync"
 
-	"github.com/c1ayooo/cyber/agent"
-	"github.com/c1ayooo/cyber/core/extension"
+	"github.com/chainreactors/cyber/agent"
+	"github.com/chainreactors/cyber/core/extension"
 )
 
 var ErrUnavailable = errors.New("agent extension is not active")

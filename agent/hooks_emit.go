@@ -3,10 +3,10 @@ package agent
 import (
 	"context"
 
-	"github.com/c1ayooo/cyber/agent/hooks"
-	"github.com/c1ayooo/cyber/agent/provider"
-	aop "github.com/c1ayooo/cyber/aop"
-	"github.com/c1ayooo/cyber/core/operation"
+	"github.com/chainreactors/cyber/agent/hooks"
+	"github.com/chainreactors/cyber/agent/provider"
+	aop "github.com/chainreactors/cyber/aop"
+	"github.com/chainreactors/cyber/core/operation"
 	"google.golang.org/protobuf/proto"
 )
 

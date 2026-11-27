@@ -5,13 +5,13 @@ import (
 	"slices"
 	"time"
 
-	"github.com/c1ayooo/cyber/exts/gateway"
-	ioaclient "github.com/c1ayooo/cyber/exts/ioa/client"
-	passiveconfig "github.com/c1ayooo/cyber/exts/passive/config"
-	scannerext "github.com/c1ayooo/cyber/exts/scanner"
-	searchext "github.com/c1ayooo/cyber/exts/search"
-	"github.com/c1ayooo/cyber/pkg/cli/configuration"
-	cfg "github.com/c1ayooo/cyber/pkg/config"
+	"github.com/chainreactors/cyber/exts/gateway"
+	ioaclient "github.com/chainreactors/cyber/exts/ioa/client"
+	passiveconfig "github.com/chainreactors/cyber/exts/passive/config"
+	scannerext "github.com/chainreactors/cyber/exts/scanner"
+	searchext "github.com/chainreactors/cyber/exts/search"
+	"github.com/chainreactors/cyber/pkg/cli/configuration"
+	cfg "github.com/chainreactors/cyber/pkg/config"
 )
 
 // Product connections are contributed here; the shared commands do not import

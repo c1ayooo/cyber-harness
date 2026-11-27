@@ -3,7 +3,7 @@ package provider
 import (
 	"context"
 	"encoding/json"
-	"github.com/c1ayooo/cyber/core/telemetry"
+	"github.com/chainreactors/cyber/core/telemetry"
 	"net"
 	"net/http"
 	"net/http/httptest"

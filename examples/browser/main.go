@@ -7,11 +7,11 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/c1ayooo/cyber/agent/provider"
-	"github.com/c1ayooo/cyber/core/extension"
-	coretool "github.com/c1ayooo/cyber/core/tool"
-	browserext "github.com/c1ayooo/cyber/exts/browser"
-	"github.com/c1ayooo/cyber/pkg/harness"
+	"github.com/chainreactors/cyber/agent/provider"
+	"github.com/chainreactors/cyber/core/extension"
+	coretool "github.com/chainreactors/cyber/core/tool"
+	browserext "github.com/chainreactors/cyber/exts/browser"
+	"github.com/chainreactors/cyber/pkg/harness"
 )
 
 func main() {

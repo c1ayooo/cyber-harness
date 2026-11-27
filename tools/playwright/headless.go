@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/c1ayooo/cyber/tools/headless"
+	"github.com/chainreactors/cyber/tools/headless"
 	"github.com/chainreactors/neutron/protocols"
 )
 

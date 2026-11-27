@@ -14,11 +14,11 @@ import (
 	"path/filepath"
 	"testing"
 
-	aop "github.com/c1ayooo/cyber/aop"
-	operationpb "github.com/c1ayooo/cyber/aop/operation"
-	"github.com/c1ayooo/cyber/core/artifactsync"
-	coreevents "github.com/c1ayooo/cyber/core/events"
-	toolhooks "github.com/c1ayooo/cyber/core/tool/hooks"
+	aop "github.com/chainreactors/cyber/aop"
+	operationpb "github.com/chainreactors/cyber/aop/operation"
+	"github.com/chainreactors/cyber/core/artifactsync"
+	coreevents "github.com/chainreactors/cyber/core/events"
+	toolhooks "github.com/chainreactors/cyber/core/tool/hooks"
 )
 
 func TestArtifactsSidecarsOnProcessCompleted(t *testing.T) {

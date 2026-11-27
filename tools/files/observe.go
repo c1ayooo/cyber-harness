@@ -5,10 +5,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	filepb "github.com/c1ayooo/cyber/aop/file"
-	corehooks "github.com/c1ayooo/cyber/core/hooks"
-	"github.com/c1ayooo/cyber/core/operation"
-	toolhooks "github.com/c1ayooo/cyber/core/tool/hooks"
+	filepb "github.com/chainreactors/cyber/aop/file"
+	corehooks "github.com/chainreactors/cyber/core/hooks"
+	"github.com/chainreactors/cyber/core/operation"
+	toolhooks "github.com/chainreactors/cyber/core/tool/hooks"
 )
 
 // observe emits at the actual file-operation boundary, including failures.

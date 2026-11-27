@@ -10,15 +10,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/c1ayooo/cyber/agent"
-	mailbox "github.com/c1ayooo/cyber/agent/inbox"
-	agentsession "github.com/c1ayooo/cyber/agent/session"
-	"github.com/c1ayooo/cyber/core/telemetry"
-	coretool "github.com/c1ayooo/cyber/core/tool"
-	inboxext "github.com/c1ayooo/cyber/exts/inbox"
-	taskcli "github.com/c1ayooo/cyber/pkg/cli/task"
-	cfg "github.com/c1ayooo/cyber/pkg/config"
-	"github.com/c1ayooo/cyber/pkg/profile"
+	"github.com/chainreactors/cyber/agent"
+	mailbox "github.com/chainreactors/cyber/agent/inbox"
+	agentsession "github.com/chainreactors/cyber/agent/session"
+	"github.com/chainreactors/cyber/core/telemetry"
+	coretool "github.com/chainreactors/cyber/core/tool"
+	inboxext "github.com/chainreactors/cyber/exts/inbox"
+	taskcli "github.com/chainreactors/cyber/pkg/cli/task"
+	cfg "github.com/chainreactors/cyber/pkg/config"
+	"github.com/chainreactors/cyber/pkg/profile"
 )
 
 func runInbox(ctx context.Context, newProfile func(profile.Request) (profile.Profile, error), option *cfg.Option, logger telemetry.Logger, input io.Reader, output io.Writer, outputTask *taskcli.Output) (runErr error) {

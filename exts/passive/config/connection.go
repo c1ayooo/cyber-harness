@@ -12,8 +12,8 @@ import (
 	"strings"
 	"time"
 
-	types "github.com/c1ayooo/cyber/core/types"
-	cfg "github.com/c1ayooo/cyber/pkg/config"
+	types "github.com/chainreactors/cyber/core/types"
+	cfg "github.com/chainreactors/cyber/pkg/config"
 )
 
 const connectionTimeout = 20 * time.Second

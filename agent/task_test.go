@@ -6,13 +6,13 @@ import (
 	"testing"
 	"time"
 
-	agenthooks "github.com/c1ayooo/cyber/agent/hooks"
-	"github.com/c1ayooo/cyber/agent/inbox"
-	provider "github.com/c1ayooo/cyber/agent/provider"
-	aop "github.com/c1ayooo/cyber/aop"
-	coreevents "github.com/c1ayooo/cyber/core/events"
-	"github.com/c1ayooo/cyber/core/operation"
-	types "github.com/c1ayooo/cyber/core/types"
+	agenthooks "github.com/chainreactors/cyber/agent/hooks"
+	"github.com/chainreactors/cyber/agent/inbox"
+	provider "github.com/chainreactors/cyber/agent/provider"
+	aop "github.com/chainreactors/cyber/aop"
+	coreevents "github.com/chainreactors/cyber/core/events"
+	"github.com/chainreactors/cyber/core/operation"
+	types "github.com/chainreactors/cyber/core/types"
 )
 
 type taskTestLoop func(context.Context, Config) (*Result, error)

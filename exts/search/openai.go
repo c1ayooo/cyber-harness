@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/c1ayooo/cyber/agent/provider"
+	"github.com/chainreactors/cyber/agent/provider"
 )
 
 func parseOpenAIWebSearchResponse(data []byte, maxResults int) (*searchResponse, error) {

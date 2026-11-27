@@ -13,9 +13,9 @@ import (
 	"testing"
 	"time"
 
-	aop "github.com/c1ayooo/cyber/aop"
-	coreevents "github.com/c1ayooo/cyber/core/events"
-	"github.com/c1ayooo/cyber/core/telemetry"
+	aop "github.com/chainreactors/cyber/aop"
+	coreevents "github.com/chainreactors/cyber/core/events"
+	"github.com/chainreactors/cyber/core/telemetry"
 	"github.com/gorilla/websocket"
 )
 

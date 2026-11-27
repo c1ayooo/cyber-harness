@@ -9,9 +9,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/c1ayooo/cyber/core/telemetry"
-	coretool "github.com/c1ayooo/cyber/core/tool"
-	"github.com/c1ayooo/cyber/tools/toolargs"
+	"github.com/chainreactors/cyber/core/telemetry"
+	coretool "github.com/chainreactors/cyber/core/tool"
+	"github.com/chainreactors/cyber/tools/toolargs"
 )
 
 func TestExecuteDebugActivatesTelemetryLogger(t *testing.T) {

@@ -7,7 +7,7 @@
 package types
 
 import (
-	aop "github.com/c1ayooo/cyber/aop"
+	aop "github.com/chainreactors/cyber/aop"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	structpb "google.golang.org/protobuf/types/known/structpb"
@@ -889,21 +889,73 @@ func (x *WebMessageMetadata) GetCommands() []*CommandSpec {
 var File_types_agent_proto protoreflect.FileDescriptor
 
 const file_types_agent_proto_rawDesc = "" +
-	"\n\x11types/agent.proto\x12\vcyber.agent\x1a\x12aop/protocol.proto\x1a\x13types/command.proto\x1a\x1cgoogle/protobuf/struct.proto\x1a\x1fgoogle/protobuf/timesta" +
-	"mp.proto\"\x94\x02\n\tAgentView\x12%\n\x05hello\x18\x01 \x01(\v2\x0f.aop.AgentHelloR\x05hello\x12(\n\x06status\x18\x02 \x01(\v2\x10.aop.AgentStatusR\x06status\x12%\n\x05stats\x18\x03 \x01(\v2\x0f.aop.Age" +
-	"ntStatsR\x05stats\x12=\n\fconnected_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\vconnectedAt\x126\n\bcommands\x18\x06 \x03(\v2\x1a.cyber.command.CommandSpecR\bcom" +
-	"mands\x12\x12\n\x04busy\x18\a \x01(\bR\x04busyJ\x04\b\x04\x10\x05\"\x13\n\x11ListAgentsRequest\"D\n\x12ListAgentsResponse\x12.\n\x06agents\x18\x01 \x03(\v2\x16.cyber.agent.AgentViewR\x06agents\"n\n\x0fAg" +
-	"entRunOptions\x12#\n\reval_criteria\x18\x01 \x01(\tR\fevalCriteria\x12\x1f\n\veval_rounds\x18\x03 \x01(\tR\nevalRoundsJ\x04\b\x02\x10\x03R\x0feval_max_rounds\"G\n\rCommandDetail\x12\x12\n\x04l" +
-	"ine\x18\x01 \x01(\tR\x04line\x12\"\n\fpresentation\x18\x02 \x01(\tR\fpresentation\"\x92\x01\n\rCompactDetail\x12\x14\n\x05error\x18\x01 \x01(\tR\x05error\x12#\n\rkept_messages\x18\x02 \x01(\x04R\fkeptMessages" +
-	"\x12!\n\ftokens_after\x18\x03 \x01(\x04R\vtokensAfter\x12#\n\rtokens_before\x18\x04 \x01(\x04R\ftokensBefore\"\x1b\n\x05Recap\x12\x12\n\x04text\x18\x01 \x01(\tR\x04text\"\xbd\x01\n\x10DelegationDetail\x12\x19\n\bag" +
-	"ent_id\x18\x01 \x01(\tR\aagentId\x12\x1d\n\nagent_name\x18\x02 \x01(\tR\tagentName\x12\x1d\n\nagent_type\x18\x03 \x01(\tR\tagentType\x12!\n\fcontext_mode\x18\x04 \x01(\tR\vcontextMode\x12\x19\n\brun_mo" +
-	"de\x18\x05 \x01(\tR\arunMode\x12\x12\n\x04task\x18\x06 \x01(\tR\x04task\"\x83\x01\n\nEvalDetail\x12\x14\n\x05error\x18\x01 \x01(\tR\x05error\x12\x1d\n\nmax_rounds\x18\x02 \x01(\rR\tmaxRounds\x12\x12\n\x04pass\x18\x03 \x01(\bR\x04pass\x12\x16\n" +
-	"\x06reason\x18\x04 \x01(\tR\x06reason\x12\x14\n\x05round\x18\x05 \x01(\rR\x05round\"Y\n\rBudgetWarning\x12%\n\x0econtext_tokens\x18\x01 \x01(\x04R\rcontextTokens\x12!\n\ftoken_budget\x18\x02 \x01(\x04R\vtoken" +
-	"Budget\"{\n\x10LLMRequestDetail\x12\x14\n\x05model\x18\x01 \x01(\tR\x05model\x12\x1a\n\bmessages\x18\x02 \x01(\rR\bmessages\x12\x1d\n\nmax_tokens\x18\x03 \x01(\rR\tmaxTokens\x12\x16\n\x06stream\x18\x04 \x01(\bR\x06str" +
-	"eam\"\x83\x01\n\x0eAgentListEntry\x12\x12\n\x04name\x18\x01 \x01(\tR\x04name\x12\x17\n\anode_id\x18\x02 \x01(\tR\x06nodeId\x12\x12\n\x04busy\x18\x03 \x01(\bR\x04busy\x12\x1a\n\bprovider\x18\x04 \x01(\tR\bprovider\x12\x14\n\x05model\x18\x05 \x01" +
-	"(\tR\x05model\"H\n\x11AgentListMetadata\x123\n\x06agents\x18\x01 \x03(\v2\x1b.cyber.agent.AgentListEntryR\x06agents\"\xe9\x01\n\x12WebMessageMetadata\x12\x17\n\anode_id\x18\x01 \x01(\tR\x06nod" +
-	"eId\x12\x12\n\x04code\x18\x02 \x01(\tR\x04code\x12/\n\x06params\x18\x03 \x01(\v2\x17.google.protobuf.StructR\x06params\x12=\n\nagent_list\x18\x04 \x01(\v2\x1e.cyber.agent.AgentListMetadataR\tag" +
-	"entList\x126\n\bcommands\x18\x05 \x03(\v2\x1a.cyber.command.CommandSpecR\bcommandsB+Z)github.com/c1ayooo/cyber/core/types;typesb\x06proto3"
+	"\n" +
+	"\x11types/agent.proto\x12\vcyber.agent\x1a\x12aop/protocol.proto\x1a\x13types/command.proto\x1a\x1cgoogle/protobuf/struct.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\x94\x02\n" +
+	"\tAgentView\x12%\n" +
+	"\x05hello\x18\x01 \x01(\v2\x0f.aop.AgentHelloR\x05hello\x12(\n" +
+	"\x06status\x18\x02 \x01(\v2\x10.aop.AgentStatusR\x06status\x12%\n" +
+	"\x05stats\x18\x03 \x01(\v2\x0f.aop.AgentStatsR\x05stats\x12=\n" +
+	"\fconnected_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\vconnectedAt\x126\n" +
+	"\bcommands\x18\x06 \x03(\v2\x1a.cyber.command.CommandSpecR\bcommands\x12\x12\n" +
+	"\x04busy\x18\a \x01(\bR\x04busyJ\x04\b\x04\x10\x05\"\x13\n" +
+	"\x11ListAgentsRequest\"D\n" +
+	"\x12ListAgentsResponse\x12.\n" +
+	"\x06agents\x18\x01 \x03(\v2\x16.cyber.agent.AgentViewR\x06agents\"n\n" +
+	"\x0fAgentRunOptions\x12#\n" +
+	"\reval_criteria\x18\x01 \x01(\tR\fevalCriteria\x12\x1f\n" +
+	"\veval_rounds\x18\x03 \x01(\tR\n" +
+	"evalRoundsJ\x04\b\x02\x10\x03R\x0feval_max_rounds\"G\n" +
+	"\rCommandDetail\x12\x12\n" +
+	"\x04line\x18\x01 \x01(\tR\x04line\x12\"\n" +
+	"\fpresentation\x18\x02 \x01(\tR\fpresentation\"\x92\x01\n" +
+	"\rCompactDetail\x12\x14\n" +
+	"\x05error\x18\x01 \x01(\tR\x05error\x12#\n" +
+	"\rkept_messages\x18\x02 \x01(\x04R\fkeptMessages\x12!\n" +
+	"\ftokens_after\x18\x03 \x01(\x04R\vtokensAfter\x12#\n" +
+	"\rtokens_before\x18\x04 \x01(\x04R\ftokensBefore\"\x1b\n" +
+	"\x05Recap\x12\x12\n" +
+	"\x04text\x18\x01 \x01(\tR\x04text\"\xbd\x01\n" +
+	"\x10DelegationDetail\x12\x19\n" +
+	"\bagent_id\x18\x01 \x01(\tR\aagentId\x12\x1d\n" +
+	"\n" +
+	"agent_name\x18\x02 \x01(\tR\tagentName\x12\x1d\n" +
+	"\n" +
+	"agent_type\x18\x03 \x01(\tR\tagentType\x12!\n" +
+	"\fcontext_mode\x18\x04 \x01(\tR\vcontextMode\x12\x19\n" +
+	"\brun_mode\x18\x05 \x01(\tR\arunMode\x12\x12\n" +
+	"\x04task\x18\x06 \x01(\tR\x04task\"\x83\x01\n" +
+	"\n" +
+	"EvalDetail\x12\x14\n" +
+	"\x05error\x18\x01 \x01(\tR\x05error\x12\x1d\n" +
+	"\n" +
+	"max_rounds\x18\x02 \x01(\rR\tmaxRounds\x12\x12\n" +
+	"\x04pass\x18\x03 \x01(\bR\x04pass\x12\x16\n" +
+	"\x06reason\x18\x04 \x01(\tR\x06reason\x12\x14\n" +
+	"\x05round\x18\x05 \x01(\rR\x05round\"Y\n" +
+	"\rBudgetWarning\x12%\n" +
+	"\x0econtext_tokens\x18\x01 \x01(\x04R\rcontextTokens\x12!\n" +
+	"\ftoken_budget\x18\x02 \x01(\x04R\vtokenBudget\"{\n" +
+	"\x10LLMRequestDetail\x12\x14\n" +
+	"\x05model\x18\x01 \x01(\tR\x05model\x12\x1a\n" +
+	"\bmessages\x18\x02 \x01(\rR\bmessages\x12\x1d\n" +
+	"\n" +
+	"max_tokens\x18\x03 \x01(\rR\tmaxTokens\x12\x16\n" +
+	"\x06stream\x18\x04 \x01(\bR\x06stream\"\x83\x01\n" +
+	"\x0eAgentListEntry\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\x12\x17\n" +
+	"\anode_id\x18\x02 \x01(\tR\x06nodeId\x12\x12\n" +
+	"\x04busy\x18\x03 \x01(\bR\x04busy\x12\x1a\n" +
+	"\bprovider\x18\x04 \x01(\tR\bprovider\x12\x14\n" +
+	"\x05model\x18\x05 \x01(\tR\x05model\"H\n" +
+	"\x11AgentListMetadata\x123\n" +
+	"\x06agents\x18\x01 \x03(\v2\x1b.cyber.agent.AgentListEntryR\x06agents\"\xe9\x01\n" +
+	"\x12WebMessageMetadata\x12\x17\n" +
+	"\anode_id\x18\x01 \x01(\tR\x06nodeId\x12\x12\n" +
+	"\x04code\x18\x02 \x01(\tR\x04code\x12/\n" +
+	"\x06params\x18\x03 \x01(\v2\x17.google.protobuf.StructR\x06params\x12=\n" +
+	"\n" +
+	"agent_list\x18\x04 \x01(\v2\x1e.cyber.agent.AgentListMetadataR\tagentList\x126\n" +
+	"\bcommands\x18\x05 \x03(\v2\x1a.cyber.command.CommandSpecR\bcommandsB1Z/github.com/chainreactors/cyber/core/types;typesb\x06proto3"
 
 var (
 	file_types_agent_proto_rawDescOnce sync.Once

@@ -4,7 +4,7 @@
 package proc
 
 import (
-	"github.com/c1ayooo/cyber/core/eventbus"
+	"github.com/chainreactors/cyber/core/eventbus"
 	"github.com/chainreactors/utils/proc"
 )
 

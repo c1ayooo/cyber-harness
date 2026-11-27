@@ -21,7 +21,7 @@ import (
 	"sync"
 	"unsafe"
 
-	recordtool "github.com/c1ayooo/cyber/tools/record"
+	recordtool "github.com/chainreactors/cyber/tools/record"
 )
 
 const nativeABIVersion = 1

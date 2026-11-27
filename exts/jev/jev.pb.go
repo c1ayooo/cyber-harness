@@ -7,8 +7,8 @@
 package jev
 
 import (
-	aop "github.com/c1ayooo/cyber/aop"
-	decision "github.com/c1ayooo/cyber/core/decision"
+	aop "github.com/chainreactors/cyber/aop"
+	decision "github.com/chainreactors/cyber/core/decision"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	structpb "google.golang.org/protobuf/types/known/structpb"
@@ -1721,45 +1721,182 @@ func (*ProtocolMessage_Idle) isProtocolMessage_Message() {}
 var File_types_jev_proto protoreflect.FileDescriptor
 
 const file_types_jev_proto_rawDesc = "" +
-	"\n\x0ftypes/jev.proto\x12\tcyber.jev\x1a\x11aop/content.proto\x1a\x0faop/event.proto\x1a\x14decision/claim.proto\x1a\x1cgoogle/protobuf/struct.proto\"\xb0\x01\n\x0fClaimDe" +
-	"finition\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\x12'\n\x04type\x18\x02 \x01(\x0e2\x13.decision.ClaimTypeR\x04type\x12\x18\n\acontext\x18\x03 \x01(\tR\acontext\x12\x18\n\aoptions\x18\x04 \x03(\tR\aoptions\x12$\n\x0esource_" +
-	"task_id\x18\x05 \x01(\tR\fsourceTaskIdJ\x04\b\x06\x10\aJ\x04\b\a\x10\b\"\xc3\x02\n\x13ReflexQualification\x12\x1f\n\vsource_hash\x18\x01 \x01(\tR\nsourceHash\x12K\n\tcontracts\x18\x02 \x03(\v2-.cyber.jev." +
-	"ReflexQualification.ContractsEntryR\tcontracts\x12\x16\n\x06checks\x18\x03 \x03(\tR\x06checks\x12'\n\x0ftrajectory_hash\x18\x04 \x01(\tR\x0etrajectoryHash\x12\x1a\n\breplayed\x18\x05 \x01(\x03" +
-	"R\breplayed\x12#\n\rcoverage_gaps\x18\x06 \x03(\tR\fcoverageGaps\x1a<\n\x0eContractsEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"e\n\nReflexStep\x12\x1a\n\bc" +
-	"ontract\x18\x01 \x01(\tR\bcontract\x12\x14\n\x05count\x18\x02 \x01(\x03R\x05count\x12%\n\x0ecount_argument\x18\x03 \x01(\tR\rcountArgument\"\xea\x05\n\x10ReflexDefinition\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n\x04whe" +
-	"n\x18\x02 \x01(\tR\x04when\x12\x16\n\x06decide\x18\x03 \x01(\tR\x06decide\x12\x18\n\aobserve\x18\x04 \x01(\tR\aobserve\x12\x1b\n\tclaim_ids\x18\x05 \x03(\tR\bclaimIds\x12B\n\areaders\x18\x06 \x03(\v2(.cyber.jev.Reflex" +
-	"Definition.ReadersEntryR\areaders\x12H\n\tcontracts\x18\a \x03(\v2*.cyber.jev.ReflexDefinition.ContractsEntryR\tcontracts\x12D\n\rqualification\x18\b \x01(" +
-	"\v2\x1e.cyber.jev.ReflexQualificationR\rqualification\x12<\n\x05steps\x18\t \x03(\v2&.cyber.jev.ReflexDefinition.StepsEntryR\x05steps\x12C\n\x11parameters_sch" +
-	"ema\x18\n \x01(\v2\x16.google.protobuf.ValueR\x10parametersSchema\x12\x1a\n\barchived\x18\v \x01(\bR\barchived\x12%\n\x0earchive_reason\x18\f \x01(\tR\rarchiveReason\x1a:\n\fReader" +
-	"sEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\x1a<\n\x0eContractsEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\x1aO\n\nStepsEntry\x12\x10" +
-	"\n\x03key\x18\x01 \x01(\tR\x03key\x12+\n\x05value\x18\x02 \x01(\v2\x15.cyber.jev.ReflexStepR\x05value:\x028\x01\"\"\n\bBoundary\x12\x16\n\x06reason\x18\x01 \x01(\tR\x06reason\"U\n\vObservation\x12\x1d\n\nstate_js" +
-	"on\x18\x01 \x01(\tR\tstateJson\x12'\n\x0fcandidates_json\x18\x02 \x01(\tR\x0ecandidatesJson\"\xd6\x01\n\x0fDecisionRequest\x12\x1d\n\nrequest_id\x18\x01 \x01(\tR\trequestId\x12\x18\n\apurpose\x18\x02 \x01(\t" +
-	"R\apurpose\x12>\n\x06claims\x18\x03 \x03(\v2&.cyber.jev.DecisionRequest.ClaimsEntryR\x06claims\x1aJ\n\vClaimsEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12%\n\x05value\x18\x02 \x01(\v2\x0f.deci" +
-	"sion.ClaimR\x05value:\x028\x01\"\xc9\x02\n\x0eDecisionResult\x12\x1d\n\nrequest_id\x18\x01 \x01(\tR\trequestId\x12\x18\n\apurpose\x18\x02 \x01(\tR\apurpose\x12L\n\vevaluations\x18\x03 \x03(\v2*.cyber.j" +
-	"ev.DecisionResult.EvaluationsEntryR\vevaluations\x12\x1d\n\nelapsed_ms\x18\x04 \x01(\x03R\telapsedMs\x12\x14\n\x05error\x18\x05 \x01(\tR\x05error\x12%\n\x05usage\x18\x06 \x01(\v2\x0f.aop.TokenU" +
-	"sageR\x05usage\x1aT\n\x10EvaluationsEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12*\n\x05value\x18\x02 \x01(\v2\x14.decision.EvaluationR\x05value:\x028\x01\"G\n\bTakeover\x12;\n\ndefinition\x18\x01 \x01(" +
-	"\v2\x1b.cyber.jev.ReflexDefinitionR\ndefinition\"\xba\x01\n\bDispatch\x12!\n\x04call\x18\x01 \x01(\v2\r.aop.ToolCallR\x04call\x12!\n\fcandidate_id\x18\x02 \x01(\tR\vcandidateId\x12\x12\n" +
-	"\x04read\x18\x03 \x01(\bR\x04read\x12\x1b\n\teffect_id\x18\x04 \x01(\tR\beffectId\x12\x17\n\astep_id\x18\x05 \x01(\tR\x06stepId\x12\x1e\n\noccurrence\x18\x06 \x01(\rR\noccurrence\"P\n\x06Result\x12'\n\x06result\x18\x01 \x01(" +
-	"\v2\x0f.aop.ToolResultR\x06result\x12\x1d\n\nelapsed_ms\x18\x02 \x01(\x03R\telapsedMs\"\x91\x01\n\aHandoff\x12\x16\n\x06reason\x18\x01 \x01(\tR\x06reason\x12\x12\n\x04code\x18\x02 \x01(\tR\x04code\x12\x16\n\x06detail\x18\x03 \x01(" +
-	"\tR\x06detail\x12!\n\feffects_json\x18\x04 \x01(\tR\veffectsJson\x12\x1f\n\vresult_json\x18\x05 \x01(\tR\nresultJson\"\xf1\x02\n\nGeneration\x12\x12\n\x04kind\x18\x01 \x01(\tR\x04kind\x12\x14\n\x05state\x18\x02 \x01(\tR" +
-	"\x05state\x12\x16\n\x06output\x18\x03 \x01(\tR\x06output\x12\x14\n\x05error\x18\x04 \x01(\tR\x05error\x12\x1d\n\nelapsed_ms\x18\x05 \x01(\x03R\telapsedMs\x12%\n\x05usage\x18\x06 \x01(\v2\x0f.aop.TokenUsageR\x05usage\x12\x1d\n\nre" +
-	"quest_id\x18\a \x01(\tR\trequestId\x12\x18\n\aattempt\x18\b \x01(\rR\aattempt\x12\x1f\n\verror_stage\x18\t \x01(\tR\nerrorStage\x12)\n\x10requested_effort\x18\n \x01(\tR\x0frequestedEffort\x12" +
-	"*\n\x11parent_request_id\x18\v \x01(\tR\x0fparentRequestId\x12\x14\n\x05phase\x18\f \x01(\tR\x05phase\"\xf3\x01\n\rLibraryChange\x12\x14\n\x05state\x18\x01 \x01(\tR\x05state\x120\n\x05claim\x18\x02 \x01(\v2\x1a.cyber" +
-	".jev.ClaimDefinitionR\x05claim\x123\n\x06reflex\x18\x03 \x01(\v2\x1b.cyber.jev.ReflexDefinitionR\x06reflex\x12,\n\x12replaced_reflex_id\x18\x04 \x01(\tR\x10replacedReflexId\x12\x16" +
-	"\n\x06reason\x18\x05 \x01(\tR\x06reason\x12\x1f\n\verror_stage\x18\x06 \x01(\tR\nerrorStage\"\xe4\x06\n\fRuntimeEvent\x12\x17\n\atask_id\x18\x01 \x01(\tR\x06taskId\x12\x1d\n\nsegment_id\x18\x02 \x01(\tR\tsegmentId" +
-	"\x12.\n\x13previous_segment_id\x18\x03 \x01(\tR\x11previousSegmentId\x12\x12\n\x04step\x18\x04 \x01(\rR\x04step\x12\x1b\n\treflex_id\x18\x05 \x01(\tR\breflexId\x12\x17\n\acall_id\x18\x06 \x01(\tR\x06callId\x12\x1e\n\nba" +
-	"ckground\x18\a \x01(\bR\nbackground\x12\x1f\n\vboundary_id\x18\b \x01(\tR\nboundaryId\x12\x19\n\bclaim_id\x18\t \x01(\tR\aclaimId\x121\n\bboundary\x18\n \x01(\v2\x13.cyber.jev.BoundaryH\x00R" +
-	"\bboundary\x12:\n\vobservation\x18\v \x01(\v2\x16.cyber.jev.ObservationH\x00R\vobservation\x12G\n\x10decision_request\x18\f \x01(\v2\x1a.cyber.jev.DecisionRequestH\x00R\x0fd" +
-	"ecisionRequest\x12D\n\x0fdecision_result\x18\r \x01(\v2\x19.cyber.jev.DecisionResultH\x00R\x0edecisionResult\x121\n\btakeover\x18\x0e \x01(\v2\x13.cyber.jev.TakeoverH\x00R\bt" +
-	"akeover\x121\n\bdispatch\x18\x0f \x01(\v2\x13.cyber.jev.DispatchH\x00R\bdispatch\x12+\n\x06result\x18\x10 \x01(\v2\x11.cyber.jev.ResultH\x00R\x06result\x12.\n\ahandoff\x18\x11 \x01(\v2\x12.cyber" +
-	".jev.HandoffH\x00R\ahandoff\x127\n\ngeneration\x18\x12 \x01(\v2\x15.cyber.jev.GenerationH\x00R\ngeneration\x12A\n\x0elibrary_change\x18\x13 \x01(\v2\x18.cyber.jev.LibraryChan" +
-	"geH\x00R\rlibraryChangeB\t\n\apayload\"2\n\x11GetLibraryRequest\x12\x1d\n\nsession_id\x18\x01 \x01(\tR\tsessionId\"O\n\x0fWaitIdleRequest\x12\x1d\n\nsession_id\x18\x01 \x01(\tR\tsessi" +
-	"onId\x12\x1d\n\ntimeout_ms\x18\x02 \x01(\rR\ttimeoutMs\"B\n\x10WaitIdleResponse\x12\x18\n\asettled\x18\x01 \x01(\bR\asettled\x12\x14\n\x05error\x18\x02 \x01(\tR\x05error\"\xeb\x01\n\x12GetLibraryResponse\x12\x12" +
-	"\n\x04mode\x18\x01 \x01(\tR\x04mode\x12\x16\n\x06status\x18\x02 \x01(\tR\x06status\x12\x1a\n\brevision\x18\x04 \x01(\tR\brevision\x122\n\x06claims\x18\x05 \x03(\v2\x1a.cyber.jev.ClaimDefinitionR\x06claims\x127\n\bre" +
-	"flexes\x18\x06 \x03(\v2\x1b.cyber.jev.ReflexDefinitionR\breflexes\x12\x1a\n\blearning\x18\b \x01(\tR\blearningJ\x04\b\x03\x10\x04\"\xff\x01\n\x0fProtocolMessage\x128\n\arequest\x18\x01 \x01(\v2\x1c.cyb" +
-	"er.jev.GetLibraryRequestH\x00R\arequest\x129\n\alibrary\x18\x02 \x01(\v2\x1d.cyber.jev.GetLibraryResponseH\x00R\alibrary\x129\n\twait_idle\x18\x03 \x01(\v2\x1a.cyber.jev.Wa" +
-	"itIdleRequestH\x00R\bwaitIdle\x121\n\x04idle\x18\x04 \x01(\v2\x1b.cyber.jev.WaitIdleResponseH\x00R\x04idleB\t\n\amessageB'Z%github.com/c1ayooo/cyber/exts/jev;jev" +
-	"b\x06proto3"
+	"\n" +
+	"\x0ftypes/jev.proto\x12\tcyber.jev\x1a\x11aop/content.proto\x1a\x0faop/event.proto\x1a\x14decision/claim.proto\x1a\x1cgoogle/protobuf/struct.proto\"\xb0\x01\n" +
+	"\x0fClaimDefinition\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12'\n" +
+	"\x04type\x18\x02 \x01(\x0e2\x13.decision.ClaimTypeR\x04type\x12\x18\n" +
+	"\acontext\x18\x03 \x01(\tR\acontext\x12\x18\n" +
+	"\aoptions\x18\x04 \x03(\tR\aoptions\x12$\n" +
+	"\x0esource_task_id\x18\x05 \x01(\tR\fsourceTaskIdJ\x04\b\x06\x10\aJ\x04\b\a\x10\b\"\xc3\x02\n" +
+	"\x13ReflexQualification\x12\x1f\n" +
+	"\vsource_hash\x18\x01 \x01(\tR\n" +
+	"sourceHash\x12K\n" +
+	"\tcontracts\x18\x02 \x03(\v2-.cyber.jev.ReflexQualification.ContractsEntryR\tcontracts\x12\x16\n" +
+	"\x06checks\x18\x03 \x03(\tR\x06checks\x12'\n" +
+	"\x0ftrajectory_hash\x18\x04 \x01(\tR\x0etrajectoryHash\x12\x1a\n" +
+	"\breplayed\x18\x05 \x01(\x03R\breplayed\x12#\n" +
+	"\rcoverage_gaps\x18\x06 \x03(\tR\fcoverageGaps\x1a<\n" +
+	"\x0eContractsEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"e\n" +
+	"\n" +
+	"ReflexStep\x12\x1a\n" +
+	"\bcontract\x18\x01 \x01(\tR\bcontract\x12\x14\n" +
+	"\x05count\x18\x02 \x01(\x03R\x05count\x12%\n" +
+	"\x0ecount_argument\x18\x03 \x01(\tR\rcountArgument\"\xea\x05\n" +
+	"\x10ReflexDefinition\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
+	"\x04when\x18\x02 \x01(\tR\x04when\x12\x16\n" +
+	"\x06decide\x18\x03 \x01(\tR\x06decide\x12\x18\n" +
+	"\aobserve\x18\x04 \x01(\tR\aobserve\x12\x1b\n" +
+	"\tclaim_ids\x18\x05 \x03(\tR\bclaimIds\x12B\n" +
+	"\areaders\x18\x06 \x03(\v2(.cyber.jev.ReflexDefinition.ReadersEntryR\areaders\x12H\n" +
+	"\tcontracts\x18\a \x03(\v2*.cyber.jev.ReflexDefinition.ContractsEntryR\tcontracts\x12D\n" +
+	"\rqualification\x18\b \x01(\v2\x1e.cyber.jev.ReflexQualificationR\rqualification\x12<\n" +
+	"\x05steps\x18\t \x03(\v2&.cyber.jev.ReflexDefinition.StepsEntryR\x05steps\x12C\n" +
+	"\x11parameters_schema\x18\n" +
+	" \x01(\v2\x16.google.protobuf.ValueR\x10parametersSchema\x12\x1a\n" +
+	"\barchived\x18\v \x01(\bR\barchived\x12%\n" +
+	"\x0earchive_reason\x18\f \x01(\tR\rarchiveReason\x1a:\n" +
+	"\fReadersEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\x1a<\n" +
+	"\x0eContractsEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\x1aO\n" +
+	"\n" +
+	"StepsEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12+\n" +
+	"\x05value\x18\x02 \x01(\v2\x15.cyber.jev.ReflexStepR\x05value:\x028\x01\"\"\n" +
+	"\bBoundary\x12\x16\n" +
+	"\x06reason\x18\x01 \x01(\tR\x06reason\"U\n" +
+	"\vObservation\x12\x1d\n" +
+	"\n" +
+	"state_json\x18\x01 \x01(\tR\tstateJson\x12'\n" +
+	"\x0fcandidates_json\x18\x02 \x01(\tR\x0ecandidatesJson\"\xd6\x01\n" +
+	"\x0fDecisionRequest\x12\x1d\n" +
+	"\n" +
+	"request_id\x18\x01 \x01(\tR\trequestId\x12\x18\n" +
+	"\apurpose\x18\x02 \x01(\tR\apurpose\x12>\n" +
+	"\x06claims\x18\x03 \x03(\v2&.cyber.jev.DecisionRequest.ClaimsEntryR\x06claims\x1aJ\n" +
+	"\vClaimsEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12%\n" +
+	"\x05value\x18\x02 \x01(\v2\x0f.decision.ClaimR\x05value:\x028\x01\"\xc9\x02\n" +
+	"\x0eDecisionResult\x12\x1d\n" +
+	"\n" +
+	"request_id\x18\x01 \x01(\tR\trequestId\x12\x18\n" +
+	"\apurpose\x18\x02 \x01(\tR\apurpose\x12L\n" +
+	"\vevaluations\x18\x03 \x03(\v2*.cyber.jev.DecisionResult.EvaluationsEntryR\vevaluations\x12\x1d\n" +
+	"\n" +
+	"elapsed_ms\x18\x04 \x01(\x03R\telapsedMs\x12\x14\n" +
+	"\x05error\x18\x05 \x01(\tR\x05error\x12%\n" +
+	"\x05usage\x18\x06 \x01(\v2\x0f.aop.TokenUsageR\x05usage\x1aT\n" +
+	"\x10EvaluationsEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12*\n" +
+	"\x05value\x18\x02 \x01(\v2\x14.decision.EvaluationR\x05value:\x028\x01\"G\n" +
+	"\bTakeover\x12;\n" +
+	"\n" +
+	"definition\x18\x01 \x01(\v2\x1b.cyber.jev.ReflexDefinitionR\n" +
+	"definition\"\xba\x01\n" +
+	"\bDispatch\x12!\n" +
+	"\x04call\x18\x01 \x01(\v2\r.aop.ToolCallR\x04call\x12!\n" +
+	"\fcandidate_id\x18\x02 \x01(\tR\vcandidateId\x12\x12\n" +
+	"\x04read\x18\x03 \x01(\bR\x04read\x12\x1b\n" +
+	"\teffect_id\x18\x04 \x01(\tR\beffectId\x12\x17\n" +
+	"\astep_id\x18\x05 \x01(\tR\x06stepId\x12\x1e\n" +
+	"\n" +
+	"occurrence\x18\x06 \x01(\rR\n" +
+	"occurrence\"P\n" +
+	"\x06Result\x12'\n" +
+	"\x06result\x18\x01 \x01(\v2\x0f.aop.ToolResultR\x06result\x12\x1d\n" +
+	"\n" +
+	"elapsed_ms\x18\x02 \x01(\x03R\telapsedMs\"\x91\x01\n" +
+	"\aHandoff\x12\x16\n" +
+	"\x06reason\x18\x01 \x01(\tR\x06reason\x12\x12\n" +
+	"\x04code\x18\x02 \x01(\tR\x04code\x12\x16\n" +
+	"\x06detail\x18\x03 \x01(\tR\x06detail\x12!\n" +
+	"\feffects_json\x18\x04 \x01(\tR\veffectsJson\x12\x1f\n" +
+	"\vresult_json\x18\x05 \x01(\tR\n" +
+	"resultJson\"\xf1\x02\n" +
+	"\n" +
+	"Generation\x12\x12\n" +
+	"\x04kind\x18\x01 \x01(\tR\x04kind\x12\x14\n" +
+	"\x05state\x18\x02 \x01(\tR\x05state\x12\x16\n" +
+	"\x06output\x18\x03 \x01(\tR\x06output\x12\x14\n" +
+	"\x05error\x18\x04 \x01(\tR\x05error\x12\x1d\n" +
+	"\n" +
+	"elapsed_ms\x18\x05 \x01(\x03R\telapsedMs\x12%\n" +
+	"\x05usage\x18\x06 \x01(\v2\x0f.aop.TokenUsageR\x05usage\x12\x1d\n" +
+	"\n" +
+	"request_id\x18\a \x01(\tR\trequestId\x12\x18\n" +
+	"\aattempt\x18\b \x01(\rR\aattempt\x12\x1f\n" +
+	"\verror_stage\x18\t \x01(\tR\n" +
+	"errorStage\x12)\n" +
+	"\x10requested_effort\x18\n" +
+	" \x01(\tR\x0frequestedEffort\x12*\n" +
+	"\x11parent_request_id\x18\v \x01(\tR\x0fparentRequestId\x12\x14\n" +
+	"\x05phase\x18\f \x01(\tR\x05phase\"\xf3\x01\n" +
+	"\rLibraryChange\x12\x14\n" +
+	"\x05state\x18\x01 \x01(\tR\x05state\x120\n" +
+	"\x05claim\x18\x02 \x01(\v2\x1a.cyber.jev.ClaimDefinitionR\x05claim\x123\n" +
+	"\x06reflex\x18\x03 \x01(\v2\x1b.cyber.jev.ReflexDefinitionR\x06reflex\x12,\n" +
+	"\x12replaced_reflex_id\x18\x04 \x01(\tR\x10replacedReflexId\x12\x16\n" +
+	"\x06reason\x18\x05 \x01(\tR\x06reason\x12\x1f\n" +
+	"\verror_stage\x18\x06 \x01(\tR\n" +
+	"errorStage\"\xe4\x06\n" +
+	"\fRuntimeEvent\x12\x17\n" +
+	"\atask_id\x18\x01 \x01(\tR\x06taskId\x12\x1d\n" +
+	"\n" +
+	"segment_id\x18\x02 \x01(\tR\tsegmentId\x12.\n" +
+	"\x13previous_segment_id\x18\x03 \x01(\tR\x11previousSegmentId\x12\x12\n" +
+	"\x04step\x18\x04 \x01(\rR\x04step\x12\x1b\n" +
+	"\treflex_id\x18\x05 \x01(\tR\breflexId\x12\x17\n" +
+	"\acall_id\x18\x06 \x01(\tR\x06callId\x12\x1e\n" +
+	"\n" +
+	"background\x18\a \x01(\bR\n" +
+	"background\x12\x1f\n" +
+	"\vboundary_id\x18\b \x01(\tR\n" +
+	"boundaryId\x12\x19\n" +
+	"\bclaim_id\x18\t \x01(\tR\aclaimId\x121\n" +
+	"\bboundary\x18\n" +
+	" \x01(\v2\x13.cyber.jev.BoundaryH\x00R\bboundary\x12:\n" +
+	"\vobservation\x18\v \x01(\v2\x16.cyber.jev.ObservationH\x00R\vobservation\x12G\n" +
+	"\x10decision_request\x18\f \x01(\v2\x1a.cyber.jev.DecisionRequestH\x00R\x0fdecisionRequest\x12D\n" +
+	"\x0fdecision_result\x18\r \x01(\v2\x19.cyber.jev.DecisionResultH\x00R\x0edecisionResult\x121\n" +
+	"\btakeover\x18\x0e \x01(\v2\x13.cyber.jev.TakeoverH\x00R\btakeover\x121\n" +
+	"\bdispatch\x18\x0f \x01(\v2\x13.cyber.jev.DispatchH\x00R\bdispatch\x12+\n" +
+	"\x06result\x18\x10 \x01(\v2\x11.cyber.jev.ResultH\x00R\x06result\x12.\n" +
+	"\ahandoff\x18\x11 \x01(\v2\x12.cyber.jev.HandoffH\x00R\ahandoff\x127\n" +
+	"\n" +
+	"generation\x18\x12 \x01(\v2\x15.cyber.jev.GenerationH\x00R\n" +
+	"generation\x12A\n" +
+	"\x0elibrary_change\x18\x13 \x01(\v2\x18.cyber.jev.LibraryChangeH\x00R\rlibraryChangeB\t\n" +
+	"\apayload\"2\n" +
+	"\x11GetLibraryRequest\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x01 \x01(\tR\tsessionId\"O\n" +
+	"\x0fWaitIdleRequest\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x01 \x01(\tR\tsessionId\x12\x1d\n" +
+	"\n" +
+	"timeout_ms\x18\x02 \x01(\rR\ttimeoutMs\"B\n" +
+	"\x10WaitIdleResponse\x12\x18\n" +
+	"\asettled\x18\x01 \x01(\bR\asettled\x12\x14\n" +
+	"\x05error\x18\x02 \x01(\tR\x05error\"\xeb\x01\n" +
+	"\x12GetLibraryResponse\x12\x12\n" +
+	"\x04mode\x18\x01 \x01(\tR\x04mode\x12\x16\n" +
+	"\x06status\x18\x02 \x01(\tR\x06status\x12\x1a\n" +
+	"\brevision\x18\x04 \x01(\tR\brevision\x122\n" +
+	"\x06claims\x18\x05 \x03(\v2\x1a.cyber.jev.ClaimDefinitionR\x06claims\x127\n" +
+	"\breflexes\x18\x06 \x03(\v2\x1b.cyber.jev.ReflexDefinitionR\breflexes\x12\x1a\n" +
+	"\blearning\x18\b \x01(\tR\blearningJ\x04\b\x03\x10\x04\"\xff\x01\n" +
+	"\x0fProtocolMessage\x128\n" +
+	"\arequest\x18\x01 \x01(\v2\x1c.cyber.jev.GetLibraryRequestH\x00R\arequest\x129\n" +
+	"\alibrary\x18\x02 \x01(\v2\x1d.cyber.jev.GetLibraryResponseH\x00R\alibrary\x129\n" +
+	"\twait_idle\x18\x03 \x01(\v2\x1a.cyber.jev.WaitIdleRequestH\x00R\bwaitIdle\x121\n" +
+	"\x04idle\x18\x04 \x01(\v2\x1b.cyber.jev.WaitIdleResponseH\x00R\x04idleB\t\n" +
+	"\amessageB-Z+github.com/chainreactors/cyber/exts/jev;jevb\x06proto3"
 
 var (
 	file_types_jev_proto_rawDescOnce sync.Once

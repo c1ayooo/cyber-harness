@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"strings"
 
-	coretool "github.com/c1ayooo/cyber/core/tool"
+	coretool "github.com/chainreactors/cyber/core/tool"
 )
 
 var requiredMechanismChecks = []string{"syntax", "parameters", "manifest", "native_contracts", "finite_branches", "recorded_replay", "entry_report"}

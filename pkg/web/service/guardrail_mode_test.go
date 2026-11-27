@@ -3,8 +3,8 @@ package service
 import (
 	"context"
 	"errors"
-	"github.com/c1ayooo/cyber/core/types"
-	"github.com/c1ayooo/cyber/pkg/profile"
+	"github.com/chainreactors/cyber/core/types"
+	"github.com/chainreactors/cyber/pkg/profile"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/structpb"
 	"testing"

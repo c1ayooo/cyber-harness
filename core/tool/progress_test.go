@@ -1,9 +1,9 @@
 package tool
 
 import (
-	"github.com/c1ayooo/cyber/aop"
-	toolpb "github.com/c1ayooo/cyber/aop/tool"
-	"github.com/c1ayooo/cyber/core/eventbus"
+	"github.com/chainreactors/cyber/aop"
+	toolpb "github.com/chainreactors/cyber/aop/tool"
+	"github.com/chainreactors/cyber/core/eventbus"
 	"testing"
 	"unicode/utf8"
 )

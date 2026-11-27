@@ -24,9 +24,9 @@ import (
 	"sync"
 	"time"
 
-	toolpb "github.com/c1ayooo/cyber/aop/tool"
-	traffic "github.com/c1ayooo/cyber/aop/traffic"
-	coretool "github.com/c1ayooo/cyber/core/tool"
+	toolpb "github.com/chainreactors/cyber/aop/tool"
+	traffic "github.com/chainreactors/cyber/aop/traffic"
+	coretool "github.com/chainreactors/cyber/core/tool"
 )
 
 // A single stable, modern Chrome identity. Keeping one fingerprint per process

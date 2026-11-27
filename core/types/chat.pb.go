@@ -7,7 +7,7 @@
 package types
 
 import (
-	aop "github.com/c1ayooo/cyber/aop"
+	aop "github.com/chainreactors/cyber/aop"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	structpb "google.golang.org/protobuf/types/known/structpb"
@@ -1037,25 +1037,95 @@ func (*UpdateSessionResponse_Rejected) isUpdateSessionResponse_Outcome() {}
 var File_types_chat_proto protoreflect.FileDescriptor
 
 const file_types_chat_proto_rawDesc = "" +
-	"\n\x10types/chat.proto\x12\ncyber.chat\x1a\x0eaop/chat.proto\x1a\x13types/command.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1cgoogle/protobuf/struct.pro" +
-	"to\"\x88\x01\n\x0eSessionHistory\x123\n\x04mode\x18\x01 \x01(\x0e2\x1f.cyber.chat.SessionHistory.ModeR\x04mode\"A\n\x04Mode\x12\x14\n\x10MODE_UNSPECIFIED\x10\x00\x12\x10\n\fMODE_INHERIT\x10\x01\x12\x11\n\rMO" +
-	"DE_SNAPSHOT\x10\x02\"\x91\x03\n\rSessionRecord\x12&\n\asession\x18\x01 \x01(\v2\f.aop.SessionR\asession\x12\x1d\n\nagent_name\x18\x02 \x01(\tR\tagentName\x129\n\ncreated_at\x18\x04 \x01(\v2\x1a.goo" +
-	"gle.protobuf.TimestampR\tcreatedAt\x129\n\nupdated_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\x12I\n\nextensions\x18\x06 \x03(\v2).cyber.chat.Se" +
-	"ssionRecord.ExtensionsEntryR\nextensions\x12\x1a\n\barchived\x18\a \x01(\bR\barchived\x1aV\n\x0fExtensionsEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12-\n\x05value\x18\x02 \x01(\v2\x17.google" +
-	".protobuf.StructR\x05value:\x028\x01J\x04\b\x03\x10\x04\"\xec\x01\n\x13ListSessionsRequest\x12!\n\fafter_cursor\x18\x01 \x01(\tR\vafterCursor\x12\x14\n\x05limit\x18\x02 \x01(\rR\x05limit\x12%\n\x0einclude_cl" +
-	"osed\x18\x03 \x01(\bR\rincludeClosed\x12\x16\n\x06search\x18\x04 \x01(\tR\x06search\x12\x17\n\anode_id\x18\x05 \x01(\tR\x06nodeId\x12\x1f\n\barchived\x18\x06 \x01(\bH\x00R\barchived\x88\x01\x01\x12\x16\n\x06target\x18\a \x01(\tR\x06tar" +
-	"getB\v\n\t_archived\"n\n\x14ListSessionsResponse\x125\n\bsessions\x18\x01 \x03(\v2\x19.cyber.chat.SessionRecordR\bsessions\x12\x1f\n\vnext_cursor\x18\x02 \x01(\tR\nnextCursor" +
-	"\"2\n\x11GetSessionRequest\x12\x1d\n\nsession_id\x18\x01 \x01(\tR\tsessionId\"I\n\x12GetSessionResponse\x123\n\asession\x18\x01 \x01(\v2\x19.cyber.chat.SessionRecordR\asession\"" +
-	"\x8f\x01\n\x13ResetSessionRequest\x12\x1d\n\nrequest_id\x18\x01 \x01(\tR\trequestId\x12\x1d\n\nsession_id\x18\x02 \x01(\tR\tsessionId\x12$\n\x0enew_session_id\x18\x03 \x01(\tR\fnewSessionId\x12\x14\n\x05t" +
-	"itle\x18\x04 \x01(\tR\x05title\"t\n\x13ResetSessionReceipt\x12(\n\bprevious\x18\x01 \x01(\v2\f.aop.SessionR\bprevious\x123\n\acurrent\x18\x02 \x01(\v2\x19.cyber.chat.SessionRecordR\a" +
-	"current\"\xad\x01\n\x14ResetSessionResponse\x12\x1d\n\nrequest_id\x18\x01 \x01(\tR\trequestId\x12=\n\baccepted\x18\x02 \x01(\v2\x1f.cyber.chat.ResetSessionReceiptH\x00R\baccepted\x12," +
-	"\n\brejected\x18\x03 \x01(\v2\x0e.aop.RejectionH\x00R\brejectedB\t\n\aoutcome\"T\n\x14DeleteSessionRequest\x12\x1d\n\nrequest_id\x18\x01 \x01(\tR\trequestId\x12\x1d\n\nsession_id\x18\x02 \x01" +
-	"(\tR\tsessionId\"\x9b\x01\n\x15DeleteSessionResponse\x12\x1d\n\nrequest_id\x18\x01 \x01(\tR\trequestId\x12*\n\baccepted\x18\x02 \x01(\v2\f.aop.SessionH\x00R\baccepted\x12,\n\brejected\x18\x03" +
-	" \x01(\v2\x0e.aop.RejectionH\x00R\brejectedB\t\n\aoutcome\"4\n\x13ListCommandsRequest\x12\x1d\n\nsession_id\x18\x01 \x01(\tR\tsessionId\"N\n\x14ListCommandsResponse\x126\n\bcom" +
-	"mands\x18\x01 \x03(\v2\x1a.cyber.command.CommandSpecR\bcommands\"\xa7\x01\n\x14UpdateSessionRequest\x12\x1d\n\nrequest_id\x18\x01 \x01(\tR\trequestId\x12\x1d\n\nsession_id\x18\x02 \x01(\tR\ts" +
-	"essionId\x12\x19\n\x05title\x18\x03 \x01(\tH\x00R\x05title\x88\x01\x01\x12\x1f\n\barchived\x18\x04 \x01(\bH\x01R\barchived\x88\x01\x01B\b\n\x06_titleB\v\n\t_archived\"\xa8\x01\n\x15UpdateSessionResponse\x12\x1d\n\nrequest" +
-	"_id\x18\x01 \x01(\tR\trequestId\x127\n\baccepted\x18\x02 \x01(\v2\x19.cyber.chat.SessionRecordH\x00R\baccepted\x12,\n\brejected\x18\x03 \x01(\v2\x0e.aop.RejectionH\x00R\brejectedB\t\n\ao" +
-	"utcomeB+Z)github.com/c1ayooo/cyber/core/types;typesb\x06proto3"
+	"\n" +
+	"\x10types/chat.proto\x12\n" +
+	"cyber.chat\x1a\x0eaop/chat.proto\x1a\x13types/command.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1cgoogle/protobuf/struct.proto\"\x88\x01\n" +
+	"\x0eSessionHistory\x123\n" +
+	"\x04mode\x18\x01 \x01(\x0e2\x1f.cyber.chat.SessionHistory.ModeR\x04mode\"A\n" +
+	"\x04Mode\x12\x14\n" +
+	"\x10MODE_UNSPECIFIED\x10\x00\x12\x10\n" +
+	"\fMODE_INHERIT\x10\x01\x12\x11\n" +
+	"\rMODE_SNAPSHOT\x10\x02\"\x91\x03\n" +
+	"\rSessionRecord\x12&\n" +
+	"\asession\x18\x01 \x01(\v2\f.aop.SessionR\asession\x12\x1d\n" +
+	"\n" +
+	"agent_name\x18\x02 \x01(\tR\tagentName\x129\n" +
+	"\n" +
+	"created_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
+	"\n" +
+	"updated_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\x12I\n" +
+	"\n" +
+	"extensions\x18\x06 \x03(\v2).cyber.chat.SessionRecord.ExtensionsEntryR\n" +
+	"extensions\x12\x1a\n" +
+	"\barchived\x18\a \x01(\bR\barchived\x1aV\n" +
+	"\x0fExtensionsEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12-\n" +
+	"\x05value\x18\x02 \x01(\v2\x17.google.protobuf.StructR\x05value:\x028\x01J\x04\b\x03\x10\x04\"\xec\x01\n" +
+	"\x13ListSessionsRequest\x12!\n" +
+	"\fafter_cursor\x18\x01 \x01(\tR\vafterCursor\x12\x14\n" +
+	"\x05limit\x18\x02 \x01(\rR\x05limit\x12%\n" +
+	"\x0einclude_closed\x18\x03 \x01(\bR\rincludeClosed\x12\x16\n" +
+	"\x06search\x18\x04 \x01(\tR\x06search\x12\x17\n" +
+	"\anode_id\x18\x05 \x01(\tR\x06nodeId\x12\x1f\n" +
+	"\barchived\x18\x06 \x01(\bH\x00R\barchived\x88\x01\x01\x12\x16\n" +
+	"\x06target\x18\a \x01(\tR\x06targetB\v\n" +
+	"\t_archived\"n\n" +
+	"\x14ListSessionsResponse\x125\n" +
+	"\bsessions\x18\x01 \x03(\v2\x19.cyber.chat.SessionRecordR\bsessions\x12\x1f\n" +
+	"\vnext_cursor\x18\x02 \x01(\tR\n" +
+	"nextCursor\"2\n" +
+	"\x11GetSessionRequest\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x01 \x01(\tR\tsessionId\"I\n" +
+	"\x12GetSessionResponse\x123\n" +
+	"\asession\x18\x01 \x01(\v2\x19.cyber.chat.SessionRecordR\asession\"\x8f\x01\n" +
+	"\x13ResetSessionRequest\x12\x1d\n" +
+	"\n" +
+	"request_id\x18\x01 \x01(\tR\trequestId\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x02 \x01(\tR\tsessionId\x12$\n" +
+	"\x0enew_session_id\x18\x03 \x01(\tR\fnewSessionId\x12\x14\n" +
+	"\x05title\x18\x04 \x01(\tR\x05title\"t\n" +
+	"\x13ResetSessionReceipt\x12(\n" +
+	"\bprevious\x18\x01 \x01(\v2\f.aop.SessionR\bprevious\x123\n" +
+	"\acurrent\x18\x02 \x01(\v2\x19.cyber.chat.SessionRecordR\acurrent\"\xad\x01\n" +
+	"\x14ResetSessionResponse\x12\x1d\n" +
+	"\n" +
+	"request_id\x18\x01 \x01(\tR\trequestId\x12=\n" +
+	"\baccepted\x18\x02 \x01(\v2\x1f.cyber.chat.ResetSessionReceiptH\x00R\baccepted\x12,\n" +
+	"\brejected\x18\x03 \x01(\v2\x0e.aop.RejectionH\x00R\brejectedB\t\n" +
+	"\aoutcome\"T\n" +
+	"\x14DeleteSessionRequest\x12\x1d\n" +
+	"\n" +
+	"request_id\x18\x01 \x01(\tR\trequestId\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x02 \x01(\tR\tsessionId\"\x9b\x01\n" +
+	"\x15DeleteSessionResponse\x12\x1d\n" +
+	"\n" +
+	"request_id\x18\x01 \x01(\tR\trequestId\x12*\n" +
+	"\baccepted\x18\x02 \x01(\v2\f.aop.SessionH\x00R\baccepted\x12,\n" +
+	"\brejected\x18\x03 \x01(\v2\x0e.aop.RejectionH\x00R\brejectedB\t\n" +
+	"\aoutcome\"4\n" +
+	"\x13ListCommandsRequest\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x01 \x01(\tR\tsessionId\"N\n" +
+	"\x14ListCommandsResponse\x126\n" +
+	"\bcommands\x18\x01 \x03(\v2\x1a.cyber.command.CommandSpecR\bcommands\"\xa7\x01\n" +
+	"\x14UpdateSessionRequest\x12\x1d\n" +
+	"\n" +
+	"request_id\x18\x01 \x01(\tR\trequestId\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x02 \x01(\tR\tsessionId\x12\x19\n" +
+	"\x05title\x18\x03 \x01(\tH\x00R\x05title\x88\x01\x01\x12\x1f\n" +
+	"\barchived\x18\x04 \x01(\bH\x01R\barchived\x88\x01\x01B\b\n" +
+	"\x06_titleB\v\n" +
+	"\t_archived\"\xa8\x01\n" +
+	"\x15UpdateSessionResponse\x12\x1d\n" +
+	"\n" +
+	"request_id\x18\x01 \x01(\tR\trequestId\x127\n" +
+	"\baccepted\x18\x02 \x01(\v2\x19.cyber.chat.SessionRecordH\x00R\baccepted\x12,\n" +
+	"\brejected\x18\x03 \x01(\v2\x0e.aop.RejectionH\x00R\brejectedB\t\n" +
+	"\aoutcomeB1Z/github.com/chainreactors/cyber/core/types;typesb\x06proto3"
 
 var (
 	file_types_chat_proto_rawDescOnce sync.Once

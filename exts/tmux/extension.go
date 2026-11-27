@@ -10,8 +10,8 @@ package tmux
 import (
 	"fmt"
 
-	"github.com/c1ayooo/cyber/core/extension"
-	terminaltool "github.com/c1ayooo/cyber/tools/terminal"
+	"github.com/chainreactors/cyber/core/extension"
+	terminaltool "github.com/chainreactors/cyber/tools/terminal"
 )
 
 type Extension struct{}

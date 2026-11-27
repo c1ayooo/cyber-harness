@@ -10,17 +10,17 @@ import (
 	"testing"
 	"time"
 
-	"github.com/c1ayooo/cyber/agent"
-	"github.com/c1ayooo/cyber/agent/provider"
-	jevapi "github.com/c1ayooo/cyber/agent/provider/jev"
-	aop "github.com/c1ayooo/cyber/aop"
-	"github.com/c1ayooo/cyber/core/egress"
-	"github.com/c1ayooo/cyber/core/events"
-	"github.com/c1ayooo/cyber/core/extension"
-	corehooks "github.com/c1ayooo/cyber/core/hooks"
-	"github.com/c1ayooo/cyber/core/telemetry"
-	coretool "github.com/c1ayooo/cyber/core/tool"
-	terminalext "github.com/c1ayooo/cyber/exts/terminal"
+	"github.com/chainreactors/cyber/agent"
+	"github.com/chainreactors/cyber/agent/provider"
+	jevapi "github.com/chainreactors/cyber/agent/provider/jev"
+	aop "github.com/chainreactors/cyber/aop"
+	"github.com/chainreactors/cyber/core/egress"
+	"github.com/chainreactors/cyber/core/events"
+	"github.com/chainreactors/cyber/core/extension"
+	corehooks "github.com/chainreactors/cyber/core/hooks"
+	"github.com/chainreactors/cyber/core/telemetry"
+	coretool "github.com/chainreactors/cyber/core/tool"
+	terminalext "github.com/chainreactors/cyber/exts/terminal"
 )
 
 // The mock describes the external inference API independently of the adapter.

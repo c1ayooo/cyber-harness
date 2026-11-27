@@ -1,9 +1,9 @@
 package mcp
 
 import (
-	"github.com/c1ayooo/cyber/core/resource"
-	cfg "github.com/c1ayooo/cyber/pkg/config"
-	mcptools "github.com/c1ayooo/cyber/tools/mcp"
+	"github.com/chainreactors/cyber/core/resource"
+	cfg "github.com/chainreactors/cyber/pkg/config"
+	mcptools "github.com/chainreactors/cyber/tools/mcp"
 )
 
 // ConfigKey is the configuration section owned by this extension.

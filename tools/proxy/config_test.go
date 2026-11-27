@@ -3,7 +3,7 @@ package proxy
 import (
 	"context"
 	"errors"
-	cfg "github.com/c1ayooo/cyber/pkg/config"
+	cfg "github.com/chainreactors/cyber/pkg/config"
 	"os"
 	"path/filepath"
 	"testing"

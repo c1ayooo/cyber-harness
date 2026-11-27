@@ -9,11 +9,11 @@ import (
 	"path/filepath"
 	"testing"
 
-	aop "github.com/c1ayooo/cyber/aop"
-	toolpb "github.com/c1ayooo/cyber/aop/tool"
-	"github.com/c1ayooo/cyber/core/events"
-	cfg "github.com/c1ayooo/cyber/pkg/config"
-	outputpkg "github.com/c1ayooo/cyber/pkg/output"
+	aop "github.com/chainreactors/cyber/aop"
+	toolpb "github.com/chainreactors/cyber/aop/tool"
+	"github.com/chainreactors/cyber/core/events"
+	cfg "github.com/chainreactors/cyber/pkg/config"
+	outputpkg "github.com/chainreactors/cyber/pkg/output"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/types/known/anypb"
 )

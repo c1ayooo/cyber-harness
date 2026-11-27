@@ -4,12 +4,12 @@ import (
 	"context"
 	"embed"
 
-	"github.com/c1ayooo/cyber/core/egress"
-	"github.com/c1ayooo/cyber/core/events"
-	"github.com/c1ayooo/cyber/core/extension"
-	"github.com/c1ayooo/cyber/core/telemetry"
-	"github.com/c1ayooo/cyber/tools/files"
-	"github.com/c1ayooo/cyber/tools/katana"
+	"github.com/chainreactors/cyber/core/egress"
+	"github.com/chainreactors/cyber/core/events"
+	"github.com/chainreactors/cyber/core/extension"
+	"github.com/chainreactors/cyber/core/telemetry"
+	"github.com/chainreactors/cyber/tools/files"
+	"github.com/chainreactors/cyber/tools/katana"
 )
 
 //go:embed katana.md

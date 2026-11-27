@@ -8,7 +8,7 @@ import (
 	"sort"
 	"sync"
 
-	"github.com/c1ayooo/cyber/core/extension"
+	"github.com/chainreactors/cyber/core/extension"
 	libcstx "github.com/chainreactors/libcstx/go"
 	"github.com/chainreactors/libcstx/go/proto/cstxproto"
 )

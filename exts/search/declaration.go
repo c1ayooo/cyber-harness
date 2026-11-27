@@ -1,8 +1,8 @@
 package search
 
 import (
-	"github.com/c1ayooo/cyber/core/resource"
-	cfg "github.com/c1ayooo/cyber/pkg/config"
+	"github.com/chainreactors/cyber/core/resource"
+	cfg "github.com/chainreactors/cyber/pkg/config"
 )
 
 func Declare(resources *resource.Registry) error {

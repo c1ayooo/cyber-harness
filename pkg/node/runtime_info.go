@@ -6,12 +6,12 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/c1ayooo/cyber/agent/provider"
-	"github.com/c1ayooo/cyber/agent/session"
-	"github.com/c1ayooo/cyber/agent/skills"
-	"github.com/c1ayooo/cyber/aop"
-	coretool "github.com/c1ayooo/cyber/core/tool"
-	types "github.com/c1ayooo/cyber/core/types"
+	"github.com/chainreactors/cyber/agent/provider"
+	"github.com/chainreactors/cyber/agent/session"
+	"github.com/chainreactors/cyber/agent/skills"
+	"github.com/chainreactors/cyber/aop"
+	coretool "github.com/chainreactors/cyber/core/tool"
+	types "github.com/chainreactors/cyber/core/types"
 	"google.golang.org/protobuf/types/known/structpb"
 )
 

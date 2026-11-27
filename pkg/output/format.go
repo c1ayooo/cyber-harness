@@ -4,7 +4,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/c1ayooo/cyber/core/truncate"
+	"github.com/chainreactors/cyber/core/truncate"
 )
 
 var ansiPattern = regexp.MustCompile(`\x1b(?:\[[0-?]*[ -/]*[@-~]|\][^\x07]*(?:\x07|\x1b\\)|[PX^_].*?\x1b\\|[@-_])`)

@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/c1ayooo/cyber/agent/inbox"
-	coretool "github.com/c1ayooo/cyber/core/tool"
+	"github.com/chainreactors/cyber/agent/inbox"
+	coretool "github.com/chainreactors/cyber/core/tool"
 	"github.com/chainreactors/utils/proc"
 )
 

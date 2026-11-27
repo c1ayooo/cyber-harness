@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	service "github.com/c1ayooo/cyber/tools/ioa/server"
+	service "github.com/chainreactors/cyber/tools/ioa/server"
 	"github.com/chainreactors/ioa/protocols"
 )
 

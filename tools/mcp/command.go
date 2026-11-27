@@ -11,7 +11,7 @@ import (
 	"slices"
 	"strings"
 
-	coretool "github.com/c1ayooo/cyber/core/tool"
+	coretool "github.com/chainreactors/cyber/core/tool"
 )
 
 // Command exposes tools as subcommands of the configured server alias.

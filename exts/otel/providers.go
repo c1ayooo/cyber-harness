@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	instrumentationName    = "github.com/c1ayooo/cyber/exts/otel"
+	instrumentationName    = "github.com/chainreactors/cyber/exts/otel"
 	instrumentationVersion = "0.2.0"
 	// Pin one complete GenAI dialect; SDK versions evolve independently.
 	genAIVersion = "1.41.0"

@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	agentsession "github.com/c1ayooo/cyber/agent/session"
-	ioatools "github.com/c1ayooo/cyber/tools/ioa"
+	agentsession "github.com/chainreactors/cyber/agent/session"
+	ioatools "github.com/chainreactors/cyber/tools/ioa"
 )
 
 // loadCyberScan builds, loads and returns one profile plus its session runtime.

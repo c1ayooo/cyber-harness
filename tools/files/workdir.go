@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/c1ayooo/cyber/core/operation"
+	"github.com/chainreactors/cyber/core/operation"
 )
 
 // sessionPath resolves a tool-supplied path against the session's workspace.

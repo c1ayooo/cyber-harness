@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	aop "github.com/c1ayooo/cyber/aop"
+	aop "github.com/chainreactors/cyber/aop"
 )
 
 // CacheRetention controls prompt caching behavior across providers.

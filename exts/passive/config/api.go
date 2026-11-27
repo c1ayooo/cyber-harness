@@ -5,7 +5,7 @@ import (
 	"sort"
 	"strings"
 
-	cfg "github.com/c1ayooo/cyber/pkg/config"
+	cfg "github.com/chainreactors/cyber/pkg/config"
 )
 
 var apiKeys = map[string]string{

@@ -5,11 +5,11 @@ package hooks
 import (
 	"time"
 
-	aop "github.com/c1ayooo/cyber/aop"
-	filepb "github.com/c1ayooo/cyber/aop/file"
-	operationpb "github.com/c1ayooo/cyber/aop/operation"
-	trafficpb "github.com/c1ayooo/cyber/aop/traffic"
-	corehooks "github.com/c1ayooo/cyber/core/hooks"
+	aop "github.com/chainreactors/cyber/aop"
+	filepb "github.com/chainreactors/cyber/aop/file"
+	operationpb "github.com/chainreactors/cyber/aop/operation"
+	trafficpb "github.com/chainreactors/cyber/aop/traffic"
+	corehooks "github.com/chainreactors/cyber/core/hooks"
 	"github.com/chainreactors/utils/proc"
 )
 

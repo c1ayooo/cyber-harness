@@ -10,12 +10,12 @@ import (
 	"runtime/debug"
 	"strings"
 
-	aop "github.com/c1ayooo/cyber/aop"
-	"github.com/c1ayooo/cyber/core/telemetry"
-	coretool "github.com/c1ayooo/cyber/core/tool"
-	"github.com/c1ayooo/cyber/pkg/output"
-	managementapi "github.com/c1ayooo/cyber/pkg/web/api"
-	scanpb "github.com/c1ayooo/cyber/pkg/web/scan"
+	aop "github.com/chainreactors/cyber/aop"
+	"github.com/chainreactors/cyber/core/telemetry"
+	coretool "github.com/chainreactors/cyber/core/tool"
+	"github.com/chainreactors/cyber/pkg/output"
+	managementapi "github.com/chainreactors/cyber/pkg/web/api"
+	scanpb "github.com/chainreactors/cyber/pkg/web/scan"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )

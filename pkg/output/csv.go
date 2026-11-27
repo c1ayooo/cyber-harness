@@ -10,8 +10,8 @@ import (
 	"strings"
 	"time"
 
-	aop "github.com/c1ayooo/cyber/aop"
-	toolpb "github.com/c1ayooo/cyber/aop/tool"
+	aop "github.com/chainreactors/cyber/aop"
+	toolpb "github.com/chainreactors/cyber/aop/tool"
 )
 
 // renderEventsCSV exports recorded scanner artifacts, joined with their final

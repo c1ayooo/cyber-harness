@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/c1ayooo/cyber/core/types"
+	"github.com/chainreactors/cyber/core/types"
 	"google.golang.org/protobuf/types/known/structpb"
 )
 

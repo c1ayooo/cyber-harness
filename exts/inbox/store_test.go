@@ -8,9 +8,9 @@ import (
 	"strings"
 	"testing"
 
-	mailbox "github.com/c1ayooo/cyber/agent/inbox"
-	aop "github.com/c1ayooo/cyber/aop"
-	harness "github.com/c1ayooo/cyber/core/collaboration"
+	mailbox "github.com/chainreactors/cyber/agent/inbox"
+	aop "github.com/chainreactors/cyber/aop"
+	harness "github.com/chainreactors/cyber/core/collaboration"
 )
 
 func TestStoredMessageMetadataRoundTrip(t *testing.T) {

@@ -14,8 +14,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/c1ayooo/cyber/core/operation"
-	coretool "github.com/c1ayooo/cyber/core/tool"
+	"github.com/chainreactors/cyber/core/operation"
+	coretool "github.com/chainreactors/cyber/core/tool"
 	"github.com/chainreactors/utils/proc"
 )
 

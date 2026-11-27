@@ -8,12 +8,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/c1ayooo/cyber/core/extension"
-	"github.com/c1ayooo/cyber/core/resource"
-	"github.com/c1ayooo/cyber/exts/gateway"
-	passiveconfig "github.com/c1ayooo/cyber/exts/passive/config"
-	proxyext "github.com/c1ayooo/cyber/exts/proxy"
-	cfg "github.com/c1ayooo/cyber/pkg/config"
+	"github.com/chainreactors/cyber/core/extension"
+	"github.com/chainreactors/cyber/core/resource"
+	"github.com/chainreactors/cyber/exts/gateway"
+	passiveconfig "github.com/chainreactors/cyber/exts/passive/config"
+	proxyext "github.com/chainreactors/cyber/exts/proxy"
+	cfg "github.com/chainreactors/cyber/pkg/config"
 )
 
 func TestFlatConfigAndSecretEdits(t *testing.T) {

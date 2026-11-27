@@ -7,9 +7,9 @@ import (
 	"slices"
 	"sort"
 
-	"github.com/c1ayooo/cyber/core/extension"
-	"github.com/c1ayooo/cyber/core/resource"
-	cfg "github.com/c1ayooo/cyber/pkg/config"
+	"github.com/chainreactors/cyber/core/extension"
+	"github.com/chainreactors/cyber/core/resource"
+	cfg "github.com/chainreactors/cyber/pkg/config"
 )
 
 // Kind binds a configuration schema to an existing service owner. Use selects

@@ -12,10 +12,10 @@ package guardrail
 import (
 	"context"
 
-	toolhooks "github.com/c1ayooo/cyber/core/tool/hooks"
+	toolhooks "github.com/chainreactors/cyber/core/tool/hooks"
 
-	aop "github.com/c1ayooo/cyber/aop"
-	"github.com/c1ayooo/cyber/tools/resources"
+	aop "github.com/chainreactors/cyber/aop"
+	"github.com/chainreactors/cyber/tools/resources"
 )
 
 // BuiltinCommandReason returns the guaranteed-audit reason for one tool call,

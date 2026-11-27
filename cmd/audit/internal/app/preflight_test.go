@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/c1ayooo/cyber/cmd/audit/internal/toolchain"
+	"github.com/chainreactors/cyber/cmd/audit/internal/toolchain"
 )
 
 func TestInvalidInvocationDoesNotPrepareTools(t *testing.T) {

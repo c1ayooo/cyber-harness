@@ -14,8 +14,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/c1ayooo/cyber/aop"
-	toolhooks "github.com/c1ayooo/cyber/core/tool/hooks"
+	"github.com/chainreactors/cyber/aop"
+	toolhooks "github.com/chainreactors/cyber/core/tool/hooks"
 )
 
 const (

@@ -7,7 +7,7 @@
 package rpc
 
 import (
-	scan "github.com/c1ayooo/cyber/pkg/web/scan"
+	scan "github.com/chainreactors/cyber/pkg/web/scan"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -24,10 +24,15 @@ const (
 var File_rpc_scan_proto protoreflect.FileDescriptor
 
 const file_rpc_scan_proto_rawDesc = "" +
-	"\n\x0erpc/scan.proto\x12\x0ecyber.rpc.scan\x1a\x10types/scan.proto2\xb5\x02\n\vScanService\x12K\n\nSubmitScan\x12\x1d.cyber.scan.SubmitScanRequest\x1a\x1e.cyber.scan.Sub" +
-	"mitScanResponse\x12B\n\aGetScan\x12\x1a.cyber.scan.GetScanRequest\x1a\x1b.cyber.scan.GetScanResponse\x12H\n\tListScans\x12\x1c.cyber.scan.ListScansRequest\x1a\x1d" +
-	".cyber.scan.ListScansResponse\x12K\n\nCancelScan\x12\x1d.cyber.scan.CancelScanRequest\x1a\x1e.cyber.scan.CancelScanResponseB&Z$github.com/c1ayooo" +
-	"/cyber/pkg/rpc;rpcb\x06proto3"
+	"\n" +
+	"\x0erpc/scan.proto\x12\x0ecyber.rpc.scan\x1a\x10types/scan.proto2\xb5\x02\n" +
+	"\vScanService\x12K\n" +
+	"\n" +
+	"SubmitScan\x12\x1d.cyber.scan.SubmitScanRequest\x1a\x1e.cyber.scan.SubmitScanResponse\x12B\n" +
+	"\aGetScan\x12\x1a.cyber.scan.GetScanRequest\x1a\x1b.cyber.scan.GetScanResponse\x12H\n" +
+	"\tListScans\x12\x1c.cyber.scan.ListScansRequest\x1a\x1d.cyber.scan.ListScansResponse\x12K\n" +
+	"\n" +
+	"CancelScan\x12\x1d.cyber.scan.CancelScanRequest\x1a\x1e.cyber.scan.CancelScanResponseB,Z*github.com/chainreactors/cyber/pkg/rpc;rpcb\x06proto3"
 
 var file_rpc_scan_proto_goTypes = []any{
 	(*scan.SubmitScanRequest)(nil),  // 0: cyber.scan.SubmitScanRequest

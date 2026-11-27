@@ -5,8 +5,8 @@ import (
 	"context"
 	"testing"
 
-	aop "github.com/c1ayooo/cyber/aop"
-	cfg "github.com/c1ayooo/cyber/pkg/config"
+	aop "github.com/chainreactors/cyber/aop"
+	cfg "github.com/chainreactors/cyber/pkg/config"
 )
 
 func TestSubscribeAgentOutputTracksRotatedRuntimeSession(t *testing.T) {

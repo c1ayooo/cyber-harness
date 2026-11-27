@@ -2,12 +2,12 @@ package guardrail
 
 import (
 	"fmt"
-	agentsession "github.com/c1ayooo/cyber/agent/session"
+	agentsession "github.com/chainreactors/cyber/agent/session"
 
-	"github.com/c1ayooo/cyber/core/extension"
+	"github.com/chainreactors/cyber/core/extension"
 
-	"github.com/c1ayooo/cyber/core/operation"
-	"github.com/c1ayooo/cyber/pkg/console/api"
+	"github.com/chainreactors/cyber/core/operation"
+	"github.com/chainreactors/cyber/pkg/console/api"
 	"github.com/spf13/cobra"
 )
 

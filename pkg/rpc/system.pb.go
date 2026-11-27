@@ -7,7 +7,7 @@
 package rpc
 
 import (
-	types "github.com/c1ayooo/cyber/core/types"
+	types "github.com/chainreactors/cyber/core/types"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -24,8 +24,10 @@ const (
 var File_rpc_system_proto protoreflect.FileDescriptor
 
 const file_rpc_system_proto_rawDesc = "" +
-	"\n\x10rpc/system.proto\x12\x10cyber.rpc.system\x1a\x12types/system.proto2]\n\rSystemService\x12L\n\tGetStatus\x12\x1e.cyber.system.GetStatusRequest\x1a\x1f.cyber.s" +
-	"ystem.GetStatusResponseB&Z$github.com/c1ayooo/cyber/pkg/rpc;rpcb\x06proto3"
+	"\n" +
+	"\x10rpc/system.proto\x12\x10cyber.rpc.system\x1a\x12types/system.proto2]\n" +
+	"\rSystemService\x12L\n" +
+	"\tGetStatus\x12\x1e.cyber.system.GetStatusRequest\x1a\x1f.cyber.system.GetStatusResponseB,Z*github.com/chainreactors/cyber/pkg/rpc;rpcb\x06proto3"
 
 var file_rpc_system_proto_goTypes = []any{
 	(*types.GetStatusRequest)(nil),  // 0: cyber.system.GetStatusRequest

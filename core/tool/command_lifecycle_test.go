@@ -3,12 +3,12 @@ package tool
 import (
 	"context"
 	"errors"
-	"github.com/c1ayooo/cyber/core/hooks"
+	"github.com/chainreactors/cyber/core/hooks"
 	"slices"
 	"strings"
 	"testing"
 
-	"github.com/c1ayooo/cyber/core/extension"
+	"github.com/chainreactors/cyber/core/extension"
 )
 
 func TestCommandRegistrationsPreserveOrderAndMetadataSnapshots(t *testing.T) {

@@ -1,10 +1,10 @@
-module github.com/c1ayooo/cyber/cmd/audit
+module github.com/chainreactors/cyber/cmd/audit
 
 go 1.26.0
 
 require (
-	github.com/c1ayooo/cyber v0.0.0
-	github.com/c1ayooo/cyber/aop v0.0.0
+	github.com/chainreactors/cyber v0.0.0
+	github.com/chainreactors/cyber/aop v0.0.0
 	github.com/chainreactors/crtm v0.0.3-0.20260924103954-9432523918ae
 	github.com/gorilla/websocket v1.5.3
 	github.com/jessevdk/go-flags v1.6.1
@@ -163,8 +163,8 @@ require (
 	sigs.k8s.io/yaml v1.6.0 // indirect
 )
 
-replace github.com/c1ayooo/cyber => ../..
+replace github.com/chainreactors/cyber => ../..
 
-replace github.com/c1ayooo/cyber/aop => ../../aop
+replace github.com/chainreactors/cyber/aop => ../../aop
 
 replace github.com/wasilibs/go-re2 => github.com/chainreactors/native v1.11.1-native.1

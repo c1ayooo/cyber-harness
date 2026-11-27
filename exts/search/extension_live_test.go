@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/c1ayooo/cyber/agent/provider"
-	coretool "github.com/c1ayooo/cyber/core/tool"
+	"github.com/chainreactors/cyber/agent/provider"
+	coretool "github.com/chainreactors/cyber/core/tool"
 )
 
 func TestLiveDeepSeekWebSearchTool(t *testing.T) {

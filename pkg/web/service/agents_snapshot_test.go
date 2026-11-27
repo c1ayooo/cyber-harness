@@ -2,7 +2,7 @@ package service
 
 import (
 	"bytes"
-	"github.com/c1ayooo/cyber/aop"
+	"github.com/chainreactors/cyber/aop"
 	"testing"
 )
 

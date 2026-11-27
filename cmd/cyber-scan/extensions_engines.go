@@ -10,11 +10,11 @@ package main
 // to cross it as data, not as a linked reference.
 
 import (
-	"github.com/c1ayooo/cyber/core/extension"
-	"github.com/c1ayooo/cyber/exts/gateway"
-	protonext "github.com/c1ayooo/cyber/exts/proton"
-	scannerext "github.com/c1ayooo/cyber/exts/scanner"
-	"github.com/c1ayooo/cyber/tools/katana"
+	"github.com/chainreactors/cyber/core/extension"
+	"github.com/chainreactors/cyber/exts/gateway"
+	protonext "github.com/chainreactors/cyber/exts/proton"
+	scannerext "github.com/chainreactors/cyber/exts/scanner"
+	"github.com/chainreactors/cyber/tools/katana"
 )
 
 func engineExtensions(config appConfig, workDir string) ([]extension.Extension, []gateway.Kind) {

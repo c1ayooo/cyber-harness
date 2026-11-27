@@ -1037,22 +1037,84 @@ func (x *ListEventsResponse) GetNextCursor() string {
 var File_aop_chat_proto protoreflect.FileDescriptor
 
 const file_aop_chat_proto_rawDesc = "" +
-	"\n\x0eaop/chat.proto\x12\x03aop\x1a\x11aop/content.proto\x1a\x0faop/event.proto\x1a\x19google/protobuf/any.proto\"]\n\tRejection\x12\x12\n\x04code\x18\x01 \x01(\tR\x04code\x12\x18\n\amessage" +
-	"\x18\x02 \x01(\tR\amessage\x12\x1c\n\tretryable\x18\x03 \x01(\bR\tretryableJ\x04\b\x04\x10\x05\"^\n\aSession\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\x12\x14\n\x05state\x18\x02 \x01(\tR\x05state\x12\x17\n\anode_id\x18\x03 \x01(\tR\x06nodeId\x12\x14\n" +
-	"\x05title\x18\x04 \x01(\tR\x05title\"\xff\x01\n\x12OpenSessionRequest\x12\x1d\n\nsession_id\x18\x02 \x01(\tR\tsessionId\x12\x17\n\anode_id\x18\x03 \x01(\tR\x06nodeId\x12\x14\n\x05title\x18\x04 \x01(\tR\x05title\x12*\n\x11pare" +
-	"nt_session_id\x18\x05 \x01(\tR\x0fparentSessionId\x12-\n\x13parent_tool_call_id\x18\x06 \x01(\tR\x10parentToolCallId\x124\n\nextensions\x18\b \x03(\v2\x14.google.protobuf.AnyR\ne" +
-	"xtensionsJ\x04\b\x01\x10\x02J\x04\b\a\x10\b\"\x80\x01\n\x13OpenSessionResponse\x12*\n\baccepted\x18\x02 \x01(\v2\f.aop.SessionH\x00R\baccepted\x12,\n\brejected\x18\x03 \x01(\v2\x0e.aop.RejectionH\x00R\br" +
-	"ejectedB\t\n\aoutcomeJ\x04\b\x01\x10\x02\"\xf6\x01\n\x0eRunTurnRequest\x12\x1d\n\nsession_id\x18\x02 \x01(\tR\tsessionId\x12\x17\n\aturn_id\x18\x03 \x01(\tR\x06turnId\x12\"\n\x05input\x18\x04 \x01(\v2\f.aop.Message" +
-	"R\x05input\x12)\n\x10continue_session\x18\x05 \x01(\bR\x0fcontinueSession\x12\x1b\n\tmax_turns\x18\x06 \x01(\rR\bmaxTurns\x124\n\nextensions\x18\b \x03(\v2\x14.google.protobuf.AnyR\nexten" +
-	"sionsJ\x04\b\x01\x10\x02J\x04\b\a\x10\b\"[\n\vTurnReceipt\x12\x1d\n\nsession_id\x18\x01 \x01(\tR\tsessionId\x12\x17\n\aturn_id\x18\x02 \x01(\tR\x06turnId\x12\x14\n\x05state\x18\x03 \x01(\tR\x05state\"\x80\x01\n\x0fRunTurnRespon" +
-	"se\x12.\n\baccepted\x18\x02 \x01(\v2\x10.aop.TurnReceiptH\x00R\baccepted\x12,\n\brejected\x18\x03 \x01(\v2\x0e.aop.RejectionH\x00R\brejectedB\t\n\aoutcomeJ\x04\b\x01\x10\x02\"i\n\x11CancelTurnR" +
-	"equest\x12\x1d\n\nsession_id\x18\x02 \x01(\tR\tsessionId\x12\x17\n\aturn_id\x18\x03 \x01(\tR\x06turnId\x12\x16\n\x06reason\x18\x04 \x01(\tR\x06reasonJ\x04\b\x01\x10\x02\"\x83\x01\n\x12CancelTurnResponse\x12.\n\baccepted\x18" +
-	"\x02 \x01(\v2\x10.aop.TurnReceiptH\x00R\baccepted\x12,\n\brejected\x18\x03 \x01(\v2\x0e.aop.RejectionH\x00R\brejectedB\t\n\aoutcomeJ\x04\b\x01\x10\x02\"R\n\x13CloseSessionRequest\x12\x1d\n\nses" +
-	"sion_id\x18\x02 \x01(\tR\tsessionId\x12\x16\n\x06reason\x18\x03 \x01(\tR\x06reasonJ\x04\b\x01\x10\x02\"\x81\x01\n\x14CloseSessionResponse\x12*\n\baccepted\x18\x02 \x01(\v2\f.aop.SessionH\x00R\baccepted\x12,\n\br" +
-	"ejected\x18\x03 \x01(\v2\x0e.aop.RejectionH\x00R\brejectedB\t\n\aoutcomeJ\x04\b\x01\x10\x02\"V\n\x12WatchEventsRequest\x12\x1d\n\nsession_id\x18\x01 \x01(\tR\tsessionId\x12!\n\fafter_cursor\x18" +
-	"\x02 \x01(\tR\vafterCursor\"I\n\rEventDelivery\x12\x16\n\x06cursor\x18\x01 \x01(\tR\x06cursor\x12 \n\x05event\x18\x02 \x01(\v2\n.aop.EventR\x05event\"k\n\x11ListEventsRequest\x12\x1d\n\nsession_id" +
-	"\x18\x01 \x01(\tR\tsessionId\x12!\n\fafter_cursor\x18\x02 \x01(\tR\vafterCursor\x12\x14\n\x05limit\x18\x03 \x01(\rR\x05limit\"a\n\x12ListEventsResponse\x12*\n\x06events\x18\x01 \x03(\v2\x12.aop.EventDeli" +
-	"veryR\x06events\x12\x1f\n\vnext_cursor\x18\x02 \x01(\tR\nnextCursorB\x1eZ\x1cgithub.com/c1ayooo/cyber/aopb\x06proto3"
+	"\n" +
+	"\x0eaop/chat.proto\x12\x03aop\x1a\x11aop/content.proto\x1a\x0faop/event.proto\x1a\x19google/protobuf/any.proto\"]\n" +
+	"\tRejection\x12\x12\n" +
+	"\x04code\x18\x01 \x01(\tR\x04code\x12\x18\n" +
+	"\amessage\x18\x02 \x01(\tR\amessage\x12\x1c\n" +
+	"\tretryable\x18\x03 \x01(\bR\tretryableJ\x04\b\x04\x10\x05\"^\n" +
+	"\aSession\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x14\n" +
+	"\x05state\x18\x02 \x01(\tR\x05state\x12\x17\n" +
+	"\anode_id\x18\x03 \x01(\tR\x06nodeId\x12\x14\n" +
+	"\x05title\x18\x04 \x01(\tR\x05title\"\xff\x01\n" +
+	"\x12OpenSessionRequest\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x02 \x01(\tR\tsessionId\x12\x17\n" +
+	"\anode_id\x18\x03 \x01(\tR\x06nodeId\x12\x14\n" +
+	"\x05title\x18\x04 \x01(\tR\x05title\x12*\n" +
+	"\x11parent_session_id\x18\x05 \x01(\tR\x0fparentSessionId\x12-\n" +
+	"\x13parent_tool_call_id\x18\x06 \x01(\tR\x10parentToolCallId\x124\n" +
+	"\n" +
+	"extensions\x18\b \x03(\v2\x14.google.protobuf.AnyR\n" +
+	"extensionsJ\x04\b\x01\x10\x02J\x04\b\a\x10\b\"\x80\x01\n" +
+	"\x13OpenSessionResponse\x12*\n" +
+	"\baccepted\x18\x02 \x01(\v2\f.aop.SessionH\x00R\baccepted\x12,\n" +
+	"\brejected\x18\x03 \x01(\v2\x0e.aop.RejectionH\x00R\brejectedB\t\n" +
+	"\aoutcomeJ\x04\b\x01\x10\x02\"\xf6\x01\n" +
+	"\x0eRunTurnRequest\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x02 \x01(\tR\tsessionId\x12\x17\n" +
+	"\aturn_id\x18\x03 \x01(\tR\x06turnId\x12\"\n" +
+	"\x05input\x18\x04 \x01(\v2\f.aop.MessageR\x05input\x12)\n" +
+	"\x10continue_session\x18\x05 \x01(\bR\x0fcontinueSession\x12\x1b\n" +
+	"\tmax_turns\x18\x06 \x01(\rR\bmaxTurns\x124\n" +
+	"\n" +
+	"extensions\x18\b \x03(\v2\x14.google.protobuf.AnyR\n" +
+	"extensionsJ\x04\b\x01\x10\x02J\x04\b\a\x10\b\"[\n" +
+	"\vTurnReceipt\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x01 \x01(\tR\tsessionId\x12\x17\n" +
+	"\aturn_id\x18\x02 \x01(\tR\x06turnId\x12\x14\n" +
+	"\x05state\x18\x03 \x01(\tR\x05state\"\x80\x01\n" +
+	"\x0fRunTurnResponse\x12.\n" +
+	"\baccepted\x18\x02 \x01(\v2\x10.aop.TurnReceiptH\x00R\baccepted\x12,\n" +
+	"\brejected\x18\x03 \x01(\v2\x0e.aop.RejectionH\x00R\brejectedB\t\n" +
+	"\aoutcomeJ\x04\b\x01\x10\x02\"i\n" +
+	"\x11CancelTurnRequest\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x02 \x01(\tR\tsessionId\x12\x17\n" +
+	"\aturn_id\x18\x03 \x01(\tR\x06turnId\x12\x16\n" +
+	"\x06reason\x18\x04 \x01(\tR\x06reasonJ\x04\b\x01\x10\x02\"\x83\x01\n" +
+	"\x12CancelTurnResponse\x12.\n" +
+	"\baccepted\x18\x02 \x01(\v2\x10.aop.TurnReceiptH\x00R\baccepted\x12,\n" +
+	"\brejected\x18\x03 \x01(\v2\x0e.aop.RejectionH\x00R\brejectedB\t\n" +
+	"\aoutcomeJ\x04\b\x01\x10\x02\"R\n" +
+	"\x13CloseSessionRequest\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x02 \x01(\tR\tsessionId\x12\x16\n" +
+	"\x06reason\x18\x03 \x01(\tR\x06reasonJ\x04\b\x01\x10\x02\"\x81\x01\n" +
+	"\x14CloseSessionResponse\x12*\n" +
+	"\baccepted\x18\x02 \x01(\v2\f.aop.SessionH\x00R\baccepted\x12,\n" +
+	"\brejected\x18\x03 \x01(\v2\x0e.aop.RejectionH\x00R\brejectedB\t\n" +
+	"\aoutcomeJ\x04\b\x01\x10\x02\"V\n" +
+	"\x12WatchEventsRequest\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x01 \x01(\tR\tsessionId\x12!\n" +
+	"\fafter_cursor\x18\x02 \x01(\tR\vafterCursor\"I\n" +
+	"\rEventDelivery\x12\x16\n" +
+	"\x06cursor\x18\x01 \x01(\tR\x06cursor\x12 \n" +
+	"\x05event\x18\x02 \x01(\v2\n" +
+	".aop.EventR\x05event\"k\n" +
+	"\x11ListEventsRequest\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x01 \x01(\tR\tsessionId\x12!\n" +
+	"\fafter_cursor\x18\x02 \x01(\tR\vafterCursor\x12\x14\n" +
+	"\x05limit\x18\x03 \x01(\rR\x05limit\"a\n" +
+	"\x12ListEventsResponse\x12*\n" +
+	"\x06events\x18\x01 \x03(\v2\x12.aop.EventDeliveryR\x06events\x12\x1f\n" +
+	"\vnext_cursor\x18\x02 \x01(\tR\n" +
+	"nextCursorB$Z\"github.com/chainreactors/cyber/aopb\x06proto3"
 
 var (
 	file_aop_chat_proto_rawDescOnce sync.Once

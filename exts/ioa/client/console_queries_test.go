@@ -10,12 +10,12 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"github.com/c1ayooo/cyber/core/extension"
-	promptext "github.com/c1ayooo/cyber/exts/prompt"
-	consoleapi "github.com/c1ayooo/cyber/pkg/console/api"
+	"github.com/chainreactors/cyber/core/extension"
+	promptext "github.com/chainreactors/cyber/exts/prompt"
+	consoleapi "github.com/chainreactors/cyber/pkg/console/api"
 
-	"github.com/c1ayooo/cyber/pkg/testutil/hosttest"
-	ioatools "github.com/c1ayooo/cyber/tools/ioa"
+	"github.com/chainreactors/cyber/pkg/testutil/hosttest"
+	ioatools "github.com/chainreactors/cyber/tools/ioa"
 )
 
 func TestConsoleQueriesReuseExtensionIdentity(t *testing.T) {

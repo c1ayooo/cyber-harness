@@ -4,11 +4,11 @@ import (
 	"maps"
 	"slices"
 
-	"github.com/c1ayooo/cyber/core/extension"
-	"github.com/c1ayooo/cyber/core/resource"
-	"github.com/c1ayooo/cyber/exts/gateway"
-	passiveconfig "github.com/c1ayooo/cyber/exts/passive/config"
-	cfg "github.com/c1ayooo/cyber/pkg/config"
+	"github.com/chainreactors/cyber/core/extension"
+	"github.com/chainreactors/cyber/core/resource"
+	"github.com/chainreactors/cyber/exts/gateway"
+	passiveconfig "github.com/chainreactors/cyber/exts/passive/config"
+	cfg "github.com/chainreactors/cyber/pkg/config"
 )
 
 // Gateway configures this owner before its command is loaded. No command or

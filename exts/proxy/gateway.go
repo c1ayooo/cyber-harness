@@ -3,11 +3,11 @@ package proxy
 import (
 	"fmt"
 
-	"github.com/c1ayooo/cyber/core/extension"
-	"github.com/c1ayooo/cyber/core/resource"
-	"github.com/c1ayooo/cyber/exts/gateway"
-	cfg "github.com/c1ayooo/cyber/pkg/config"
-	proxytool "github.com/c1ayooo/cyber/tools/proxy"
+	"github.com/chainreactors/cyber/core/extension"
+	"github.com/chainreactors/cyber/core/resource"
+	"github.com/chainreactors/cyber/exts/gateway"
+	cfg "github.com/chainreactors/cyber/pkg/config"
+	proxytool "github.com/chainreactors/cyber/tools/proxy"
 )
 
 func ClashSection() cfg.Section {

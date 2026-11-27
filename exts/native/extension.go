@@ -2,10 +2,10 @@
 package native
 
 import (
-	"github.com/c1ayooo/cyber/agent"
-	"github.com/c1ayooo/cyber/core/extension"
-	coretool "github.com/c1ayooo/cyber/core/tool"
-	looptool "github.com/c1ayooo/cyber/tools/loop"
+	"github.com/chainreactors/cyber/agent"
+	"github.com/chainreactors/cyber/core/extension"
+	coretool "github.com/chainreactors/cyber/core/tool"
+	looptool "github.com/chainreactors/cyber/tools/loop"
 )
 
 type Extension struct{}

@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/c1ayooo/cyber/agent/skills"
+	"github.com/chainreactors/cyber/agent/skills"
 )
 
 func TestBundleProvidesCyberSkill(t *testing.T) {

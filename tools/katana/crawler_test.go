@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	browserutil "github.com/c1ayooo/cyber/tools/headless"
+	browserutil "github.com/chainreactors/cyber/tools/headless"
 	katanaoutput "github.com/projectdiscovery/katana/pkg/output"
 )
 

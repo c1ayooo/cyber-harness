@@ -9,13 +9,13 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/c1ayooo/cyber/core/extension"
-	"github.com/c1ayooo/cyber/core/telemetry"
-	ioaclient "github.com/c1ayooo/cyber/exts/ioa/client"
-	ioaserver "github.com/c1ayooo/cyber/exts/ioa/server"
-	hostcli "github.com/c1ayooo/cyber/pkg/cli"
-	ioatools "github.com/c1ayooo/cyber/tools/ioa"
-	service "github.com/c1ayooo/cyber/tools/ioa/server"
+	"github.com/chainreactors/cyber/core/extension"
+	"github.com/chainreactors/cyber/core/telemetry"
+	ioaclient "github.com/chainreactors/cyber/exts/ioa/client"
+	ioaserver "github.com/chainreactors/cyber/exts/ioa/server"
+	hostcli "github.com/chainreactors/cyber/pkg/cli"
+	ioatools "github.com/chainreactors/cyber/tools/ioa"
+	service "github.com/chainreactors/cyber/tools/ioa/server"
 )
 
 // Query commands own only the IOA resource; they do not install Agent hooks.

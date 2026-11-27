@@ -8,8 +8,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/c1ayooo/cyber/core/resource"
-	cfg "github.com/c1ayooo/cyber/pkg/config"
+	"github.com/chainreactors/cyber/core/resource"
+	cfg "github.com/chainreactors/cyber/pkg/config"
 )
 
 const ConfigKey = "gateway"

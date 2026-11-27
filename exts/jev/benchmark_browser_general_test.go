@@ -12,9 +12,9 @@ import (
 	"strings"
 	"testing"
 
-	coretool "github.com/c1ayooo/cyber/core/tool"
-	browserext "github.com/c1ayooo/cyber/exts/browser"
-	"github.com/c1ayooo/cyber/pkg/testutil/hosttest"
+	coretool "github.com/chainreactors/cyber/core/tool"
+	browserext "github.com/chainreactors/cyber/exts/browser"
+	"github.com/chainreactors/cyber/pkg/testutil/hosttest"
 	"github.com/go-rod/rod/lib/launcher"
 )
 

@@ -3,8 +3,8 @@ package session
 import (
 	"testing"
 
-	aop "github.com/c1ayooo/cyber/aop"
-	"github.com/c1ayooo/cyber/core/globalfence"
+	aop "github.com/chainreactors/cyber/aop"
+	"github.com/chainreactors/cyber/core/globalfence"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 

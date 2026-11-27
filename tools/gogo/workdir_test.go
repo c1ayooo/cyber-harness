@@ -11,11 +11,11 @@ import (
 	"testing"
 	"time"
 
-	coretool "github.com/c1ayooo/cyber/core/tool"
-	"github.com/c1ayooo/cyber/pkg/testutil/hosttest"
-	gogotool "github.com/c1ayooo/cyber/tools/gogo"
-	"github.com/c1ayooo/cyber/tools/resources"
-	"github.com/c1ayooo/cyber/tools/terminal"
+	coretool "github.com/chainreactors/cyber/core/tool"
+	"github.com/chainreactors/cyber/pkg/testutil/hosttest"
+	gogotool "github.com/chainreactors/cyber/tools/gogo"
+	"github.com/chainreactors/cyber/tools/resources"
+	"github.com/chainreactors/cyber/tools/terminal"
 	sdkgogo "github.com/chainreactors/sdk/gogo"
 )
 
