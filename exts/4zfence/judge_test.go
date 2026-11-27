@@ -201,10 +201,9 @@ func TestHybridThroughJudge(t *testing.T) {
 				})
 				done <- err
 			}()
-			if !test.executed {
-				// The operator refuses the held invocation (safe review) or
-				// denies the auto-mode review hold; waiting for the 5m
-				// approval timeout would stall the suite.
+			if test.mode == "safe" && !test.executed {
+				// Safe mode holds; the operator refuses. Auto mode denies
+				// outright, so there is nothing to resolve there.
 				var released bool
 				for i := 0; i < 200 && !released; i++ {
 					if reviews := rt.Pending("session"); len(reviews) > 0 {

@@ -1027,7 +1027,9 @@ The E3 items 3 and 4 land as code (4zrcin docs/19, ticket 02-fence-internals):
   seam for the readers that predate the contribution point
   (`tools/proxy/scope_judge.go`, `exts/observe/sidecar.go`,
   `tools/proxy/hub_traffic.go`); without a mounted store they judge and
-  record nothing. The rotation park (E2-2) moved into the store unchanged;
+  record nothing. Registered exit: when those readers borrow the provided
+  `*Store` (composition lane), the install mechanism and the package
+  delegators delete. The rotation park (E2-2) moved into the store unchanged;
   `SetForTest`/`DropForTest` are deleted and the tests register through
   `SetRules` on a fresh store.
 

@@ -44,8 +44,10 @@ type jevPolicy struct {
 	reportUsage func(context.Context, *aop.TokenUsage)
 }
 
-func NewJEV(c JEVRules, client *jevapi.Client) *jevPolicy {
-	return &jevPolicy{config: jevDefaults(c), client: client}
+// NewJEV builds the JEV stage. reportUsage may be nil: outside the extension
+// composition there is no canonical stream to publish on.
+func NewJEV(c JEVRules, client *jevapi.Client, reportUsage func(context.Context, *aop.TokenUsage)) *jevPolicy {
+	return &jevPolicy{config: jevDefaults(c), client: client, reportUsage: reportUsage}
 }
 
 // Check and Confirm make jevPolicy an admission Policy. The function-level

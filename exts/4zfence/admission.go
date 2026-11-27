@@ -54,7 +54,9 @@ func (e *Extension) admit(ctx context.Context, ev toolhooks.CallEvent) (toolhook
 			return e.redLine(ctx, ev, rule)
 		}
 	}
-	return e.judgeStage(ctx, ev)
+	// The policy judge (docs/19 E3-3) runs last: a red line denies — or holds
+	// — before any model judge sees the invocation.
+	return e.judge(ctx, ev, e.options)
 }
 
 // redLine enforces one instance-fence row: a deny refuses here, a review
@@ -86,13 +88,6 @@ func (e *Extension) redLine(ctx context.Context, ev toolhooks.CallEvent, rule gl
 		return admission, nil
 	}
 	return denied(reason), nil
-}
-
-// The policy judge (docs/19 E3-3) runs at the end of admit, after the
-// guaranteed audit and the red lines: a red line denies — or holds — before
-// any model judge sees the invocation.
-func (e *Extension) judgeStage(ctx context.Context, ev toolhooks.CallEvent) (toolhooks.Admission, error) {
-	return e.judge(ctx, ev, e.options)
 }
 
 // denied builds the admission denial the guardrail journal already uses.

@@ -20,14 +20,3 @@ func NewLLM(config fenceconfig.LLMConfig, onError string, timeout time.Duration,
 // its own usage reporter: the LLM stage reports its own request usage and JEV
 // reports its own, never merged into one event.
 func NewHybrid(llm, jev Policy) Policy { return newHybridPolicy(llm, jev) }
-
-// SetUsage wires a JEV stage's usage reporter after NewJEV (the hybrid needs
-// the two stages' reporters to differ).
-func SetUsage(p Policy, report func(context.Context, *aop.TokenUsage)) {
-	switch typed := p.(type) {
-	case *jevPolicy:
-		typed.reportUsage = report
-	case *llmPolicy:
-		typed.reportUsage = report
-	}
-}
