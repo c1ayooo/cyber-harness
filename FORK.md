@@ -48,6 +48,101 @@ the 4zrcin checkout at `425e6175`.
 
 ## Local patches
 
+### Registered upstream files by exact path
+
+`scripts/check-fork.sh` reads every backticked path from this heading up to
+"## Superseded patches". The numbered entries describe each patch but often name a
+directory or use a brace list the check cannot match, so this index lists every
+modified upstream file by exact path. The budget is 20 added lines per upstream
+Go source file that is not a test (docs/19 red line 1); tests, docs and manifests
+are registered without a budget (已决 24). Figures are added lines against
+`upstream/master`, from the check itself.
+
+- **#1 continued turn input to the inbox**
+  - hooks: `agent/session/session.go` (93, over budget)
+- **#2 resolved context_window with token usage**
+  - hooks: `agent/loop.go` (8), `agent/retry.go` (69, over budget)
+  - tests and docs: `agent/loop_test.go`, `agent/retry_test.go`
+- **#3 per-session working directory** — includes the 2026-11-20 follow-up: the work dir is read on every turn, and curl creates a missing parent directory before writing
+  - hooks: `agent/agent.go` (27), `agent/loop.go` (8), `agent/session/protocol.go` (111, over budget), `agent/session/session.go` (93, over budget), `agent/types.go` (11), `tools/curl/client.go` (32), `tools/curl/cookies.go` (8), `tools/files/fs.go` (8), `tools/files/list.go` (8), `tools/files/range.go` (8), `tools/playwright/browser.go` (9), `tools/playwright/interact.go` (2), `tools/playwright/recorder.go` (1), `tools/playwright/session.go` (5), `tools/playwright/storage.go` (2)
+  - tests and docs: `tools/curl/client_test.go`, `tools/playwright/browser_test.go`
+- **#4 activate a slow but working endpoint**
+  - hooks: `agent/provider/state.go` (30, over budget)
+  - tests and docs: `agent/provider/state_test.go`
+- **#5 exclude agent tools via CYBER_EXCLUDE_TOOLS**
+  - hooks: `cmd/cyber-scan/cli.go` (3)
+- **#6 native command invocation directories**
+  - hooks: `tools/gogo/gogo.go` (10), `tools/katana/katana.go` (7), `tools/neutron/neutron.go` (65, over budget), `tools/proton/command.go` (3), `tools/scan/command.go` (1), `tools/spray/spray.go` (1), `tools/toolargs/resolve.go` (15), `tools/zombie/zombie.go` (1)
+  - tests and docs: `tools/gogo/gogo_test.go`, `tools/neutron/neutron_test.go`, `tools/scan/command_test.go`
+- **#7 null device arguments and environment contracts** — includes the 2026-11-20 change that passes the per-turn tool environment through the invocation context instead of the process-level baseEnv
+  - hooks: `core/operation/operation.go` (24), `tools/terminal/bash.go` (24)
+  - tests and docs: `exts/scanner/testdata/prompt_main_system.golden`, `exts/scanner/testdata/prompt_scanner_system.golden`, `exts/skills/assets/runtime/arsenal.md`, `tools/terminal/bash_test.go`
+- **#8 externally scheduled AOP mailboxes** — the native file contracts of the same 2026-11-06 change
+  - hooks: `tools/files/tools.go` (2)
+- **#9 fail fast on quota-exhausted 429**
+  - hooks: `agent/provider/errors.go` (28, over budget), `agent/provider/types.go` (25, over budget), `agent/retry.go` (69, over budget)
+  - tests and docs: `agent/provider/errors_test.go`, `agent/retry_test.go`
+- **#10 OpenCode Go conversation routing**
+  - hooks: `agent/agent.go` (27), `agent/provider/openai.go` (42), `agent/task.go` (1)
+- **#11 scanner fixtures and Windows manifest alignment** — and the 2026-11-16 alignment with the rc10 hub/scan split
+  - tests and docs: `cmd/cyber-scan/manifest_test.go`, `exts/scanner/testdata/prompt_main_system.golden`, `exts/scanner/testdata/prompt_scanner_system.golden`
+- **#12 session-stable system prompt**
+  - hooks: `exts/prompt/defaults.go` (7)
+  - tests and docs: `agent/session/prompt_test.go`
+- **#14 isolate configuration-precedence tests**
+  - tests and docs: `pkg/config/loader_test.go`
+- **#15–#18 control-plane goal, recap off, external MCP, pluggable judges** — composition root
+  - hooks: `cmd/cyber-scan/config.go` (18), `cmd/cyber-scan/profile.go` (92, over budget)
+  - tests and docs: `cmd/cyber-scan/config_test.go`, `docs/configuration.md`, `docs/user/tools.md`
+- **#17 external MCP servers**
+  - hooks: `cmd/cyber-scan/extensions.go` (45, over budget), `cmd/cyber-scan/ioa_composition.go` (10)
+- **#20 both fork extension namespaces**
+  - hooks: `agent/session/protocol.go` (111, over budget)
+- **#22 the Hub becomes an embeddable library**
+  - hooks: `cmd/cyber-harness/main.go` (5), `pkg/web/host/host.go` (14)
+- **#23 the capture node fences, audits and ships evidence**
+  - hooks: `tools/resources/resources.go` (8)
+- **#24 the capture recipe: resources and engines compile out**
+  - hooks: `cmd/cyber-scan/discovery.go` (2), `cmd/cyber-scan/scanner_catalog.go` (2), `tools/proton/resources/template.go` (2), `tools/resources/template.go` (2), `tools/resources/templates_gen.go` (4)
+  - tests and docs: `cmd/cyber-scan/cli_recon_test.go`, `cmd/cyber-scan/cli_test.go`, `cmd/cyber-scan/imports_test.go`, `cmd/cyber-scan/modes_test.go`, `cmd/cyber-scan/task_lifecycle_test.go`, `tools/resources/resources_test.go`
+  - manifests: `cmd/audit/go.mod`, `cmd/audit/go.sum`, `go.mod`
+- **#25 the capture recipe announces itself in the hello**
+  - hooks: `cmd/cyber-scan/agent_transport.go` (2)
+- **#21–#37 scope rules, proxy seam, instance fence** — the proxy side of seam G2
+  - hooks: `cmd/cyber-scan/profile.go` (92, over budget), `tools/proxy/config.go` (14), `tools/proxy/hub.go` (7), `tools/proxy/hub_traffic.go` (9), `tools/proxy/mitm.go` (15)
+  - tests and docs: `tools/proxy/mitm_test.go`
+- **E3 round (2026-11-27, docs/19 appendix E)** — seams G1 and G4, the evidence switch, the judge block, SubmitReview (G3), the verdict sidecar hook, the Policy slot in the base composition
+  - hooks: `agent/session/dependencies.go` (3), `agent/session/protocol.go` (111, over budget), `agent/session/runtime.go` (49, over budget), `agent/session/session.go` (93, over budget), `cmd/cyber-scan/extensions.go` (45, over budget), `cmd/cyber-scan/profile.go` (92, over budget), `exts/guardrail/runtime.go` (9), `exts/observe/extension.go` (3), `exts/proxy/extension.go` (17), `pkg/config/options.go` (11), `pkg/harness/base.go` (11)
+  - tests and docs: `docs/configuration.md`, `exts/observe/extension_test.go`
+- **fence section migration (已决 15/19/20)**
+  - hooks: `cmd/cyber-scan/ioa_composition.go` (10), `pkg/config/resolved.go` (27), `pkg/config/sections.go` (14)
+- **#38 evaluator usage accounting**
+  - hooks: `agent/evaluator/evaluator.go` (51), `agent/evaluator/loop.go` (42), `agent/provider/anthropic.go` (3), `agent/provider/openai.go` (42)
+  - tests and docs: `agent/evaluator/loop_test.go`
+- **#39 aopws close frame**
+  - hooks: `pkg/aopws/stream.go` (96)
+  - tests and docs: `pkg/aopws/stream_test.go`
+- **#40 ioa send refuses its own session**
+  - hooks: `tools/ioa/commands.go` (19)
+  - tests and docs: `exts/ioa/client/assets/cyber/okf/runtime/ioa-send.md`, `tools/ioa/commands_test.go`
+- **#41 TLS version switch and POSIX drive paths**
+  - hooks: `core/tool/run_command.go` (28), `tools/curl/client.go` (32), `tools/curl/curl.go` (2), `tools/curl/parse.go` (16), `tools/terminal/bash.go` (24)
+  - tests and docs: `core/tool/run_command_test.go`, `tools/curl/client_test.go`
+- **#42 lint and formatting**
+  - hooks: `core/tool/run_command_windows.go` (2)
+  - tests and docs: `aop/mux_lifecycle_test.go`, `exts/scanner/prompt_cyber_test.go`, `exts/scanner/skills/skills_test.go`
+- **fork notes**
+  - tests and docs: `README.md`, `README_CN.md`
+- **dependencies** — the chainreactors modules resolve to the c1ayooo forks; the audit module follows patch 24
+  - manifests: `cmd/audit/go.mod`, `cmd/audit/go.sum`, `go.mod`, `go.sum`
+- **build convergence (docs/19 §7, P4)** — the engine/scan/scan-capture targets the shell forwards to, make resources, make check-fork
+  - manifests: `Makefile`
+
+`scripts/check-fork.sh` itself lives in a directory upstream ignores
+(`.gitignore` has `/scripts/`), so it is tracked by force-add and updated with
+`git add -u`. The negation the fork once added to `.gitignore` cannot re-include a
+file whose directory is excluded; it is removed, and `.gitignore` is upstream again.
+
 1. **`fix(session): deliver continued turn input to the inbox`**
    `agent/session/session.go`.
    A `Continue` turn called `agent.Continue` without pushing its new user
@@ -855,6 +950,63 @@ the 4zrcin checkout at `425e6175`.
     the disabled switch judges nothing; the guardrail judge records the
     global-allow sidecar before the project fence).
     Rollback: revert — infrastructure names queue pending assets again.
+
+38. **`fix(evaluator): count evaluator tokens in run usage`** (2026-11-20, follow-up 2026-11-21)
+    `agent/evaluator/evaluator.go`, `agent/evaluator/loop.go`, `agent/evaluator/loop_test.go`,
+    `agent/provider/openai.go`, `agent/provider/anthropic.go`.
+    The evaluator's model calls cost tokens that the turn's usage never
+    counted, so a control plane accounting per run underreported every
+    evaluated run. Evaluate/call now return usage; retries within one
+    evaluation add up, the failure path is accounted too, and finish
+    overwrites TotalUsage once. Two nil results stay nil: nothing invents a
+    0. The follow-up records `usage_missing` in the turn usage detail when
+    the evaluator's answer carries no usage, and a 64-bit fingerprint of
+    the answering model as `eval_model_hash` — a missing entry and a fix
+    that did not run looked identical. Observation only; the accounting
+    semantics are unchanged. The two provider adapters carry the matching
+    change. Tests: `go test ./agent/evaluator ./agent/provider -count=1`.
+    Rollback: revert — evaluator tokens leave the run usage again.
+
+39. **`feat(aopws): a close frame with a fixed reason before the connection closes`** (2026-11-20)
+    `pkg/aopws/stream.go`, `pkg/aopws/stream_test.go`.
+    The commit carries no body; this entry is read from the control plane's
+    contract (4zrcin docs/01 §7). A turn whose connection drops before
+    `turn_ended` fails, and the error has to say who closed it. The writer
+    now sends one close frame carrying a fixed enumerated reason before it
+    closes; the client keeps the code and the text instead of collapsing
+    them into EOF. One extra frame per connection teardown; no new fields,
+    nothing enters the run journal. The control plane marks the
+    host-closed case as implemented and awaiting a live confirmation.
+    Tests: `go test ./pkg/aopws -count=1`. Rollback: revert — a host-side
+    close reads as a transport error again.
+
+40. **`fix(ioa): ioa send refuses its own session; the direct send can be switched off`** (2026-11-22)
+    `tools/ioa/commands.go`, `tools/ioa/commands_test.go`,
+    `exts/ioa/client/assets/cyber/okf/runtime/ioa-send.md`.
+    A session could `ioa send` to itself. `send` now fails when the
+    recipient is the current session and asks for another one.
+    `CYBER_IOA_SEND_DISABLED=1` (environment or session tool env) turns the
+    direct send off, which is how the control plane routes communication
+    through its own ledger. The `ioa-send` document now states that the
+    first argument is the recipient and that the current session is the
+    sender. Tests: `go test ./tools/ioa -count=1`. Rollback: revert.
+
+41. **`fix(curl,bash): TLS version switch and POSIX drive paths`** (2026-11-20)
+    `core/tool/run_command.go`, `core/tool/run_command_test.go`,
+    `tools/curl/curl.go`, `tools/curl/parse.go`.
+    The built-in curl did not accept `--tlsv1`, `--tlsv1.0` … `--tlsv1.3`; it
+    now sets the minimum handshake version the way real curl does and still
+    rejects an unknown version. On Windows, bash maps `/c/...` to `C:\...`
+    only for the program name and leaves ordinary arguments alone.
+    `tools/curl/client.go` and `tools/curl/client_test.go` carry part of
+    this change and are listed with #3. Tests:
+    `go test ./core/tool ./tools/curl -count=1`. Rollback: revert.
+
+42. **`chore(lint): lint findings and formatting`** (2026-11-24)
+    `core/tool/run_command_windows.go`, `aop/mux_lifecycle_test.go`,
+    `exts/scanner/prompt_cyber_test.go`, `exts/scanner/skills/skills_test.go`.
+    A `#nosec G702` justification on the fixed `taskkill` fallback, and
+    spelling or alignment in three tests. No behavior. Rollback: revert.
 
 E3 revision (2026-11-27, entry at the bottom of this file) additionally
 touches `pkg/harness/base.go`, `pkg/harness/harness.go`,
