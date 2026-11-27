@@ -34,6 +34,7 @@ type anypbAny = anypb.Any
 
 func redlineFixture(t *testing.T) (*Extension, *guardrailext.Runtime, func() []redlineEvent) {
 	t.Helper()
+	installStores(t)
 	stream := events.New()
 	var mu sync.Mutex
 	var collected []redlineEvent
@@ -42,12 +43,7 @@ func redlineFixture(t *testing.T) (*Extension, *guardrailext.Runtime, func() []r
 		collected = append(collected, redlineEvent{SessionID: event.GetSessionId(), TurnID: event.GetTurnId(), Payload: event.GetExtension()})
 		mu.Unlock()
 	})
-	rt := guardrailext.NewRuntime(t.Context(), stream, 2*time.Second, guardrailext.ModeAuto)
-	t.Cleanup(func() {
-		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-		defer cancel()
-		_ = rt.Close(ctx)
-	})
+	rt := newApprovalRuntime(t, stream)
 	e := &Extension{stream: stream}
 	e.Bind(rt)
 	return e, rt, func() []redlineEvent {

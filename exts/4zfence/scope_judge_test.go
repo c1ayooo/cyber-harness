@@ -20,6 +20,7 @@ import (
 // scopeRuntime builds a runtime with no provider policy: scope rules must
 // judge even when no model judge is configured.
 func scopeRuntime(t *testing.T) (*ScopeJudge, *guardrailext.Runtime, func() []guardrailEvent) {
+	installStores(t)
 	t.Helper()
 	stream := events.New()
 	var mu sync.Mutex
@@ -29,12 +30,7 @@ func scopeRuntime(t *testing.T) (*ScopeJudge, *guardrailext.Runtime, func() []gu
 		collected = append(collected, guardrailEvent{SessionID: event.GetSessionId(), TurnID: event.GetTurnId(), Payload: event.GetExtension()})
 		mu.Unlock()
 	})
-	runtime := guardrailext.NewRuntime(t.Context(), stream, 2*time.Second, guardrailext.ModeAuto)
-	t.Cleanup(func() {
-		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-		defer cancel()
-		_ = runtime.Close(ctx)
-	})
+	runtime := newApprovalRuntime(t, stream)
 	e := &Extension{stream: stream}
 	e.Bind(runtime)
 	judge := NewScopeJudge(e)
