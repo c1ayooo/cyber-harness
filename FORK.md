@@ -1096,6 +1096,38 @@ Tests: `go build ./... && go vet ./...`; `go test ./tools/proxy/...
 identical; `go test ./pkg/internal/architecture/...` green.
 Rollback: revert — the fifteenth-version shape (types in scoperules, judge
 logic split across proxy and fence) is the immediately previous commit.
+## E3: the judge leaves guardrail; the tables lose their globals (2026-11-27)
+
+The E3 items 3 and 4 land as code (4zrcin docs/19, ticket 02-fence-internals):
+
+- `exts/guardrail` is upstream again except one registered hook:
+  `SubmitReview` (seam G3, ~10 lines in `runtime.go`) — a second judge hands
+  a call it judged `review` to this runtime's ordinary approval lifecycle.
+  `extension.go`, `jev.go`, `extension_test.go`, `jev_test.go` are upstream
+  byte-identical; `config_test.go` is restored; `NewRuntime`, `Emit`,
+  `ToolCommandText` and the pluggable policy machinery are gone from the
+  package. Rollback: `git checkout upstream/master -- exts/guardrail` minus
+  the hook.
+- The judge machinery moved to `exts/4zfence/policy` (JEV, LLM, hybrid,
+  usage reporting) and `exts/4zfence/judge.go` (scope filter, shadow,
+  allow_prefixes, mode routing). The fence extension is the sole judge; the
+  guardrail section stays the approval queue (`provider: none` in the 4z
+  product config). Constructor: `fence.New(fenceConfig, jevRules)` — the
+  composition must pass the fence section and the guardrail section's `jev`
+  block (pkg/harness/base.go and cmd/cyber-scan update with the composition
+  lane).
+- The session tables are extension-owned (`scoperules.Store`,
+  `globalfence.Store`): created, provided and installed at the fence's Load,
+  uninstalled and cleared at Close. The package functions remain as the read
+  seam for the readers that predate the contribution point
+  (`tools/proxy/scope_judge.go`, `exts/observe/sidecar.go`,
+  `tools/proxy/hub_traffic.go`); without a mounted store they judge and
+  record nothing. The rotation park (E2-2) moved into the store unchanged;
+  `SetForTest`/`DropForTest` are deleted and the tests register through
+  `SetRules` on a fresh store.
+
+Registered hooks after this change: `SubmitReview` in
+`exts/guardrail/runtime.go` only. `scripts/check-fork.sh` reports the rest.
 
 ## Superseded patches
 

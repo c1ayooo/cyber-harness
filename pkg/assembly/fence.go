@@ -14,13 +14,18 @@ import (
 // returned fence extension lets the same composition wire the proxy's scope
 // judge without a second lookup.
 //
+// The fence owns the judging (E3-3): its constructor takes the fence section
+// and the guardrail section's own jev block, which a jev or hybrid stage
+// screens with. The guardrail keeps upstream's single-argument constructor
+// and only runs the approval queue.
+//
 // Living here rather than in pkg/harness keeps the upstream base composition
 // free of product blocks: a host that skips Policy composes no judge at all.
 func Policy(guardrail guardrailext.Config, fence fenceconfig.Config) ([]extension.Extension, *fenceext.Extension) {
-	fenceExtension := fenceext.New()
+	fenceExtension := fenceext.New(fence, guardrail.Rules)
 	return []extension.Extension{
 		fenceExtension,
-		guardrailext.New(guardrail, fence),
+		guardrailext.New(guardrail),
 		extension.Func{LoadFunc: func(scope *extension.Scope) error {
 			runtime, err := extension.Use[*guardrailext.Runtime](scope)
 			if err != nil {

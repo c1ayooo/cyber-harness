@@ -65,8 +65,9 @@ func TestAcceptanceCorpus(t *testing.T) {
 
 	for _, sample := range corpus.ToolCalls {
 		t.Run(sample.Name, func(t *testing.T) {
+			installStores(t)
 			stream := events.New()
-			rt := guardrailext.NewRuntime(t.Context(), stream, 2*time.Second, guardrailext.ModeAuto)
+			rt := newApprovalRuntime(t, stream)
 			defer func() { _ = rt.Close(context.Background()) }()
 			e := &Extension{stream: stream}
 			e.Bind(rt)
@@ -143,8 +144,9 @@ func TestAcceptanceCorpus(t *testing.T) {
 
 	for _, sample := range corpus.HTTPRequests {
 		t.Run(sample.Name, func(t *testing.T) {
+			installStores(t)
 			stream := events.New()
-			rt := guardrailext.NewRuntime(t.Context(), stream, 2*time.Second, guardrailext.ModeAuto)
+			rt := newApprovalRuntime(t, stream)
 			defer func() { _ = rt.Close(context.Background()) }()
 			e := &Extension{stream: stream}
 			e.Bind(rt)

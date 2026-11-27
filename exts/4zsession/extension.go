@@ -1,8 +1,8 @@
 package zsession
 
 import (
-	"github.com/chainreactors/cyber/core/extension"
 	agentsession "github.com/chainreactors/cyber/agent/session"
+	"github.com/chainreactors/cyber/core/extension"
 )
 
 // InputDecorators is the extension-level contribution: the input-enrichment

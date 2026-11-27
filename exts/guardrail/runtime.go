@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"sort"
-	"strings"
 	"sync"
 	"time"
 
@@ -39,170 +38,40 @@ type pending struct {
 }
 
 type Runtime struct {
-	stream     *events.Stream
-	timeout    time.Duration
-	mode       Mode
-	policy     Policy
-	ctx        context.Context
-	cancel     context.CancelFunc
-	mu         sync.Mutex
-	closed     bool
-	pending    map[string]*pending
-	active     sync.WaitGroup
-	rejections map[[32]byte]int
-	// Admission options. They are installed before the runtime is published and
-	// read-only afterwards.
-	scope         map[string]struct{}
-	allowPrefixes []string
-	shadow        bool
-	// check/confirm are the function-level seams used by newRuntime. They are
-	// not consulted directly: newRuntime wraps them in a funcPolicy that reads
-	// them lazily, so replacing either function after construction still works.
+	stream         *events.Stream
+	timeout        time.Duration
+	mode           Mode
 	check, confirm checkFunc
-}
-
-// runtimeOptions are the generic admission settings shared by every provider.
-type runtimeOptions struct {
-	timeout       time.Duration
-	mode          Mode
-	scope         []string
-	allowPrefixes []string
-	shadow        bool
+	ctx            context.Context
+	cancel         context.CancelFunc
+	mu             sync.Mutex
+	closed         bool
+	pending        map[string]*pending
+	active         sync.WaitGroup
+	rejections     map[[32]byte]int
 }
 
 // newRuntime owns one tool admission policy and its pending reviews. Policies
-// compose through tool.before; there is no nested policy registry. This
-// constructor preserves the package's function-level test seam; concrete
-// providers use newRuntimeWithPolicy.
+// compose through tool.before; there is no nested policy registry.
 func newRuntime(parent context.Context, stream *events.Stream, timeout time.Duration, mode Mode, check, confirm checkFunc) *Runtime {
-	r := newRuntimeWithPolicy(parent, stream, runtimeOptions{timeout: timeout, mode: mode}, nil)
-	r.check, r.confirm = check, confirm
-	r.policy = funcPolicy{
-		check: func(ctx context.Context, ev toolhooks.CallEvent) (*Decision, error) {
-			if r.check == nil {
-				return nil, errNoPolicy
-			}
-			return r.check(ctx, ev)
-		},
-		confirm: func(ctx context.Context, ev toolhooks.CallEvent) (*Decision, error) {
-			if r.confirm == nil {
-				return nil, errNoConsequence
-			}
-			return r.confirm(ctx, ev)
-		},
-	}
-	return r
-}
-
-// NewRuntime is the constructor seam the fence's red-line tests use: a bare
-// approval runtime with no policy (docs/19 P1-4 — 4zfence composes with the
-// guardrail runtime's pending queue through SubmitReview).
-func NewRuntime(parent context.Context, stream *events.Stream, timeout time.Duration, mode Mode) *Runtime {
-	return newRuntime(parent, stream, timeout, mode, nil, nil)
-}
-
-// newRuntimeWithPolicy installs one Policy behind the admission boundary.
-func newRuntimeWithPolicy(parent context.Context, stream *events.Stream, options runtimeOptions, policy Policy) *Runtime {
-	timeout := options.timeout
 	if timeout <= 0 {
 		timeout = 5 * time.Minute
 	}
-	mode := options.mode
 	if mode == "" {
 		mode = ModeAuto
 	}
 	ctx, cancel := context.WithCancel(parent)
-	r := &Runtime{stream: stream, timeout: timeout, mode: mode, policy: policy, ctx: ctx, cancel: cancel, pending: make(map[string]*pending), rejections: make(map[[32]byte]int)}
-	r.configure(options.scope, options.allowPrefixes, options.shadow)
-	return r
-}
-
-// configure installs scope/shadow/allow_prefixes before admission starts. It
-// never runs concurrently with Admit.
-func (r *Runtime) configure(scope, allowPrefixes []string, shadow bool) {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	r.scope = nil
-	for _, name := range scope {
-		if name = strings.TrimSpace(name); name != "" {
-			if r.scope == nil {
-				r.scope = make(map[string]struct{})
-			}
-			r.scope[name] = struct{}{}
-		}
-	}
-	r.allowPrefixes = append([]string(nil), allowPrefixes...)
-	r.shadow = shadow
-}
-
-// inScope reports whether the invocation is subject to judgment. An empty
-// scope keeps the historical behavior: every tool call is checked.
-func (r *Runtime) inScope(name string) bool {
-	if len(r.scope) == 0 {
-		return true
-	}
-	_, ok := r.scope[name]
-	return ok
-}
-
-// allowedPrefix is the deterministic safe-mode bypass. It matches the tool's
-// command text only; it is not a semantic classifier.
-func (r *Runtime) allowedPrefix(ev toolhooks.CallEvent) bool {
-	if len(r.allowPrefixes) == 0 {
-		return false
-	}
-	text := strings.TrimSpace(toolCommandText(ev.Call))
-	if text == "" {
-		return false
-	}
-	for _, prefix := range r.allowPrefixes {
-		// Prefixes are literal, including any trailing space. The configuration
-		// validator rejects empty entries; trimming here would silently turn
-		// "ls " into a substring allowance for "lsof".
-		if prefix != "" && strings.HasPrefix(text, prefix) {
-			return true
-		}
-	}
-	return false
-}
-
-// toolCommandText extracts the command-ish text from a tool call's arguments.
-// It recognizes the documented bash/subagent command fields first, then falls
-// back to the raw argument string. Matching stays a literal prefix test.
-func toolCommandText(call *aop.ToolCall) string {
-	if call == nil {
-		return ""
-	}
-	raw := call.GetArguments().GetData()
-	var value any
-	if json.Unmarshal(raw, &value) == nil {
-		switch typed := value.(type) {
-		case string:
-			return typed
-		case map[string]any:
-			for _, key := range []string{"command", "cmd", "script", "input", "code"} {
-				if text, ok := typed[key].(string); ok && strings.TrimSpace(text) != "" {
-					return text
-				}
-			}
-		}
-	}
-	return string(raw)
+	return &Runtime{stream: stream, timeout: timeout, mode: mode, check: check, confirm: confirm, ctx: ctx, cancel: cancel, pending: make(map[string]*pending), rejections: make(map[[32]byte]int)}
 }
 
 // evaluate preserves the original call for each stage and never exposes provider
-// failures through the tool result. The hook boundary handles panics. Sentinel
-// errors that describe the policy shape (disabled policy, absent consequence
-// stage) pass through so Admit can distinguish them from provider failures.
+// failures through the tool result. The hook boundary handles panics.
 func evaluate(ctx context.Context, fn checkFunc, ev toolhooks.CallEvent) (*Decision, error) {
 	if err := ctx.Err(); err != nil {
 		return nil, err
 	}
 	d, err := fn(ctx, cloneCall(ev))
 	if err != nil {
-		if errors.Is(err, errNoPolicy) || errors.Is(err, errNoConsequence) {
-			return nil, err
-		}
 		return nil, errors.New("guardrail check failed")
 	}
 	if d == nil || d.Action < Action_ACTION_RECORD || d.Action > Action_ACTION_BLOCK {
@@ -225,7 +94,7 @@ func cloneCall(ev toolhooks.CallEvent) toolhooks.CallEvent {
 
 func (r *Runtime) Admit(ctx context.Context, ev toolhooks.CallEvent) (toolhooks.Admission, error) {
 	r.mu.Lock()
-	closed, mode, shadow, policy := r.closed, r.mode, r.shadow, r.policy
+	closed, mode := r.closed, r.mode
 	if !closed {
 		r.active.Add(1)
 	}
@@ -244,25 +113,14 @@ func (r *Runtime) Admit(ctx context.Context, ev toolhooks.CallEvent) (toolhooks.
 	if err := ctx.Err(); err != nil {
 		return denied("guardrail invocation canceled"), err
 	}
-	if policy == nil {
+	if r.check == nil {
 		return toolhooks.Admission{}, nil
 	}
 	ev = cloneCall(ev)
-	// Scope is a routing filter, not a judgment: an unmatched tool name is not
-	// sent to the provider and produces no policy event.
-	if !r.inScope(ev.Call.GetName()) {
-		return toolhooks.Admission{}, nil
-	}
-	risk, err := evaluate(ctx, policy.Check, ev)
-	if errors.Is(err, errNoPolicy) {
-		return toolhooks.Admission{}, nil
-	}
+	risk, err := evaluate(ctx, r.check, ev)
 	d := risk
-	if err == nil && risk.Action != Action_ACTION_RECORD && mode == ModeAuto {
-		consequence, confirmErr := evaluate(ctx, policy.Confirm, ev)
-		if !errors.Is(confirmErr, errNoConsequence) {
-			d, err = consequence, confirmErr
-		}
+	if err == nil && risk.Action != Action_ACTION_RECORD && mode == ModeAuto && r.confirm != nil {
+		d, err = evaluate(ctx, r.confirm, ev)
 	}
 	invalid := err != nil || d == nil
 	if invalid {
@@ -277,23 +135,10 @@ func (r *Runtime) Admit(ctx context.Context, ev toolhooks.CallEvent) (toolhooks.
 	} else {
 		r.emit(ctx, d, ev)
 	}
-	// Cancellation is never overridden. Shadow mode records the judgment and
-	// always lets the invocation through, including a broken-judgment fallback.
-	if ctx.Err() != nil {
+	// Failed judgments and cancellation cannot be overridden by a
+	// human decision; only a valid provider judgment can enter review.
+	if invalid || ctx.Err() != nil {
 		return denied(d.Reason), nil
-	}
-	if shadow {
-		return toolhooks.Admission{}, nil
-	}
-	// Failed judgments cannot be overridden by a human decision; only a valid
-	// provider judgment can enter review.
-	if invalid {
-		return denied(d.Reason), nil
-	}
-	// Safe mode's deterministic prefix allow list releases a judged call
-	// without a human, while still emitting the decision event above.
-	if mode == ModeSafe && r.allowedPrefix(ev) {
-		return toolhooks.Admission{}, nil
 	}
 	var admission toolhooks.Admission
 	if mode != ModeSafe && mode != ModeAuto {
@@ -382,29 +227,15 @@ func (r *Runtime) repeatedRejection(ctx context.Context, ev toolhooks.CallEvent)
 	return r.rejections[hash]
 }
 
-// ToolCommandText extracts the command-ish text from a tool call. Exported
-// for the fence admission hook (4zfence), which composes with this runtime's
-// journal and review lifecycle but cannot own the helper (import cycle).
-func ToolCommandText(call *aop.ToolCall) string { return toolCommandText(call) }
-
-// Emit publishes one admission decision event on the runtime's stream. The
-// fence admission hook (4zfence) uses it so fence rows keep the guardrail
-// journal shape the control plane already renders.
-func (r *Runtime) Emit(ctx context.Context, payload proto.Message, ev toolhooks.CallEvent) {
-	r.emit(ctx, payload, ev)
-}
-
 func denied(reason string) toolhooks.Admission {
 	return toolhooks.Admission{Deny: fmt.Errorf("%w: %s", operation.ErrDenied, reason)}
 }
 
 // SubmitReview hands a call the caller already judged `review` to this
-// runtime's ordinary approval lifecycle: the pending entry is registered,
-// the Review event is emitted, and the returned admission blocks until an
-// operator resolves it or it expires (fork seam G3, 4zrcin docs/19 P1-4 —
-// a second judge composes its own admission but must not rebuild the
+// runtime's ordinary approval lifecycle (registered fork hook, docs/19 seam
+// G3: a second judge composes its own admission but must not rebuild the
 // pending queue, the RPC surface and the console bindings that already
-// exist here).
+// exist here). Rollback: delete this method, the fence holds its own queue.
 func (r *Runtime) SubmitReview(ctx context.Context, ev toolhooks.CallEvent, d *Decision) toolhooks.Admission {
 	return r.review(ctx, ev, d)
 }

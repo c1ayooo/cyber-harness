@@ -1,7 +1,5 @@
 package guardrail
 
-import fenceconfig "github.com/chainreactors/cyber/exts/4zfence/config"
-
 import (
 	"bytes"
 	"context"
@@ -26,7 +24,7 @@ func TestExtensionInstallsBoundaryAndDirectApprovalAdapters(t *testing.T) {
 			stream := events.New()
 			registry := hooks.New()
 			var runtime *Runtime
-			set, err := extension.New(extension.Provided[*events.Stream](stream), extension.Provided[*hooks.Registry](registry), New(Config{Mode: ModeSafe, ReviewTimeout: "1s"}, fenceconfig.Config{}), extension.Func{LoadFunc: func(scope *extension.Scope) error {
+			set, err := extension.New(extension.Provided[*events.Stream](stream), extension.Provided[*hooks.Registry](registry), New(Config{Mode: ModeSafe, ReviewTimeout: "1s"}), extension.Func{LoadFunc: func(scope *extension.Scope) error {
 				var err error
 				runtime, err = extension.Use[*Runtime](scope)
 				return err
@@ -102,7 +100,7 @@ func TestExtensionInstallsBoundaryAndDirectApprovalAdapters(t *testing.T) {
 func TestCloseCancelsPendingReview(t *testing.T) {
 	stream := events.New()
 	registry := hooks.New()
-	e := New(Config{Mode: ModeSafe}, fenceconfig.Config{})
+	e := New(Config{Mode: ModeSafe})
 	set, _ := extension.New(extension.Provided[*events.Stream](stream), extension.Provided[*hooks.Registry](registry), e)
 	if err := set.Load(t.Context()); err != nil {
 		t.Fatal(err)
@@ -147,7 +145,7 @@ func TestInteractionModeConfiguration(t *testing.T) {
 			t.Fatal("invalid interaction mode accepted")
 		}
 	}
-	if _, err := (Config{JEV: JEVConfig{OnError: "record"}}).timeout(); err == nil {
+	if _, err := (Config{Rules: Rules{OnError: "record"}}).timeout(); err == nil {
 		t.Fatal("unavailable judgments cannot be configured as successful admission")
 	}
 }

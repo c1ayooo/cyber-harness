@@ -12,6 +12,7 @@ import (
 // extension namespaces (spec #1 工单3); an invalid payload is ignored without
 // opening a hole in the previous set.
 func TestTurnGlobalFenceRegistration(t *testing.T) {
+	installStores(t)
 	valid := `{"enabled_commands":true,"commands":[{"id":"gf-1","pattern":"rm -rf /","action":"deny"}],"enabled_domains":true,"domains":[{"id":"gf-10","host":"gov.cn"}]}`
 	for _, namespace := range []string{"tianwu", "4zrcin"} {
 		req := &aop.RunTurnRequest{SessionId: "sess-gf", Extensions: []*anypb.Any{{

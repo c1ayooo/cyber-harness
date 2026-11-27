@@ -8,9 +8,9 @@ import (
 	"testing"
 
 	aop "github.com/chainreactors/cyber/aop"
-	"github.com/chainreactors/cyber/aop/payloads"
 	filepb "github.com/chainreactors/cyber/aop/file"
 	operationpb "github.com/chainreactors/cyber/aop/operation"
+	"github.com/chainreactors/cyber/aop/payloads"
 	trafficpb "github.com/chainreactors/cyber/aop/traffic"
 	coreevents "github.com/chainreactors/cyber/core/events"
 	"github.com/chainreactors/cyber/core/extension"
@@ -19,11 +19,11 @@ import (
 	"github.com/chainreactors/cyber/core/telemetry"
 	coretool "github.com/chainreactors/cyber/core/tool"
 	toolhooks "github.com/chainreactors/cyber/core/tool/hooks"
+	"github.com/chainreactors/cyber/exts/4zfence/scoperules"
 	fileext "github.com/chainreactors/cyber/exts/files"
 	observe "github.com/chainreactors/cyber/exts/observe"
-	"github.com/chainreactors/cyber/exts/4zfence/scoperules"
-	"google.golang.org/protobuf/types/known/anypb"
 	"github.com/chainreactors/cyber/tools/files"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 func TestObservePublishesOneCorrelatedAOPStream(t *testing.T) {

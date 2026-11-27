@@ -94,10 +94,10 @@ func newAuditProfile(request profile.Request, workDir string, bashTimeout int, r
 	// same shape the base composition used to install implicitly. Built
 	// inline rather than through pkg/assembly: audit is its own module and
 	// must not link the scan engines that package also carries.
-	fenceBlock := fenceext.New()
+	fenceBlock := fenceext.New(fenceconfig.Config{}, guardrailext.Rules{})
 	policy := []extension.Extension{
 		fenceBlock,
-		guardrailext.New(guardrailext.Config{}, fenceconfig.Config{}),
+		guardrailext.New(guardrailext.Config{}),
 		extension.Func{LoadFunc: func(scope *extension.Scope) error {
 			runtime, err := extension.Use[*guardrailext.Runtime](scope)
 			if err != nil {

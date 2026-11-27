@@ -11,7 +11,6 @@ package fence
 
 import (
 	aop "github.com/chainreactors/cyber/aop"
-	guardrailext "github.com/chainreactors/cyber/exts/guardrail"
 	"github.com/chainreactors/cyber/tools/resources"
 )
 
@@ -20,7 +19,7 @@ import (
 // is "builtin.<id> (<desc>)"; the control plane recognizes the prefix and
 // renders the row with source=builtin (hub audit rows, P3).
 func BuiltinCommandReason(call *aop.ToolCall) string {
-	text := guardrailext.ToolCommandText(call)
+	text := commandText(call)
 	if text == "" {
 		return ""
 	}

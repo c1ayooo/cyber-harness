@@ -37,6 +37,7 @@ import (
 	toolhooks "github.com/chainreactors/cyber/core/tool/hooks"
 
 	"github.com/chainreactors/cyber/exts/4zfence/globalfence"
+	"github.com/chainreactors/cyber/exts/4zfence/policy"
 	"github.com/chainreactors/cyber/exts/4zfence/scoperules"
 	guardrailext "github.com/chainreactors/cyber/exts/guardrail"
 	cfg "github.com/chainreactors/cyber/pkg/config"
@@ -50,12 +51,28 @@ type Extension struct {
 	subs      []*hooks.Subscription
 	stream    *events.Stream
 	guardrail *guardrailext.Runtime
+	// The judge (docs/19 E3-3): the fence section's knobs and the policy they
+	// select; policy is nil for provider none.
+	fence    fenceconfig.Config
+	jevRules guardrailext.Rules
+	policy   policy.Policy
+	options  judgeOptions
+	// The tables (docs/19 E3-4): extension-owned stores, provided for
+	// well-behaved consumers and installed for the package-function read seam
+	// (the proxy judge and the observe sidecar). Close uninstalls and clears.
+	scopes  *scoperules.Store
+	globals *globalfence.Store
 }
 
 var _ extension.Extension = (*Extension)(nil)
 
-// New builds the fence extension.
-func New() *Extension { return &Extension{} }
+// New builds the fence extension. cfg is the fence section (the judge's
+// knobs); jevRules is the guardrail section's own `jev` block, which the
+// JEV stage of a jev or hybrid judge screens with — the approval queue and
+// the fence read the same operator config.
+func New(cfg fenceconfig.Config, jevRules guardrailext.Rules) *Extension {
+	return &Extension{fence: cfg.Defaults(), jevRules: jevRules}
+}
 
 // Load subscribes the session-lifecycle hooks.
 func (e *Extension) Load(scope *extension.Scope) error {
@@ -70,6 +87,29 @@ func (e *Extension) Load(scope *extension.Scope) error {
 	if err != nil {
 		return err
 	}
+	// The judge is built at load time: the provider comes from the fence
+	// section, and a jev or hybrid stage borrows the shared JEV client (only
+	// then is the client required — provider none and llm never need it).
+	policy, err := e.buildPolicy(scope, stream)
+	if err != nil {
+		return err
+	}
+	e.policy = policy
+	e.options = newJudgeOptions(e.fence)
+	// The session tables live in this extension's stores (docs/19 E3-4): they
+	// mount here, clear at Close, and never outlive the extension that owns
+	// them. The install backs the package-function read seam; the Provide is
+	// the contribution point for consumers that can borrow.
+	e.scopes = scoperules.NewStore()
+	e.globals = globalfence.NewStore()
+	if err := extension.Provide[*scoperules.Store](scope, e.scopes); err != nil {
+		return err
+	}
+	if err := extension.Provide[*globalfence.Store](scope, e.globals); err != nil {
+		return err
+	}
+	scoperules.Install(e.scopes)
+	globalfence.Install(e.globals)
 	// The fence admission must subscribe before the guardrail extension, so
 	// a red line denies before any policy concern; the composition orders the
 	// entries and binds the guardrail runtime afterwards (Bind).
@@ -88,7 +128,9 @@ func (e *Extension) Load(scope *extension.Scope) error {
 	return nil
 }
 
-// Close releases the hook subscriptions.
+// Close releases the hook subscriptions, uninstalls the stores and clears
+// them: no session's rules or parked sets survive the extension that owned
+// them (docs/19 E3-4).
 func (e *Extension) Close(_ context.Context) error {
 	e.mu.Lock()
 	defer e.mu.Unlock()
@@ -96,6 +138,9 @@ func (e *Extension) Close(_ context.Context) error {
 		sub.Close(context.Background())
 	}
 	e.subs = nil
+	scoperules.Uninstall()
+	globalfence.Uninstall()
+	e.scopes, e.globals = nil, nil
 	return nil
 }
 

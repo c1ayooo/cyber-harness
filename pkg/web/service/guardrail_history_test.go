@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	fenceconfig "github.com/chainreactors/cyber/exts/4zfence/config"
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
@@ -95,7 +94,7 @@ func TestGuardrailDecisionsSurviveTimelineRestart(t *testing.T) {
 				extension.Provided[*events.Stream](stream),
 				extension.Provided[*hooks.Registry](registry),
 				extension.Provided[*jevapi.Client](client),
-				guardrail.New(guardrail.Config{Provider: "jev", Mode: tc.mode, ReviewTimeout: timeout.String()}, fenceconfig.Config{}),
+				guardrail.New(guardrail.Config{Provider: "jev", Mode: tc.mode, ReviewTimeout: timeout.String()}),
 				extension.Func{LoadFunc: func(scope *extension.Scope) error {
 					var err error
 					runtime, err = extension.Use[*guardrail.Runtime](scope)

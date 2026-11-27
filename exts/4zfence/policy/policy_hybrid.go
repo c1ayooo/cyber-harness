@@ -1,4 +1,4 @@
-package guardrail
+package policy
 
 import (
 	"context"
@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	toolhooks "github.com/chainreactors/cyber/core/tool/hooks"
+	guardrail "github.com/chainreactors/cyber/exts/guardrail"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -14,7 +15,7 @@ import (
 // confidence) and keep it final instead of escalating it.
 type confidencePolicy interface {
 	Policy
-	CheckWithConfidence(context.Context, toolhooks.CallEvent) (*Decision, float64, error)
+	CheckWithConfidence(context.Context, toolhooks.CallEvent) (*guardrail.Decision, float64, error)
 }
 
 // hybridPolicy runs the cheap LLM judge first and spends a JEV review only for
@@ -36,7 +37,7 @@ func newHybridPolicy(llm, jev Policy) *hybridPolicy {
 // LLM are final, and only an explicit REVIEW is confirmed by JEV. The JEV
 // decision maps straight through: record permits execution, block denies it,
 // review reaches the human (or auto-mode rejection).
-func (h *hybridPolicy) Check(ctx context.Context, ev toolhooks.CallEvent) (*Decision, error) {
+func (h *hybridPolicy) Check(ctx context.Context, ev toolhooks.CallEvent) (*guardrail.Decision, error) {
 	llmDecision, confidence, err := hybridLLMDecision(h.llm, ctx, ev)
 	if err != nil {
 		return nil, err
@@ -47,7 +48,7 @@ func (h *hybridPolicy) Check(ctx context.Context, ev toolhooks.CallEvent) (*Deci
 	if confidence < 0 {
 		return llmDecision, nil
 	}
-	if llmDecision.Action != Action_ACTION_REVIEW {
+	if llmDecision.Action != guardrail.Action_ACTION_REVIEW {
 		return llmDecision, nil
 	}
 	reviewed, err := h.jev.Check(ctx, ev)
@@ -57,18 +58,18 @@ func (h *hybridPolicy) Check(ctx context.Context, ev toolhooks.CallEvent) (*Deci
 	if reviewed == nil {
 		return nil, errors.New("JEV review returned no decision")
 	}
-	out := proto.Clone(reviewed).(*Decision)
+	out := proto.Clone(reviewed).(*guardrail.Decision)
 	out.Reason = fmt.Sprintf("%s\nHybrid JEV review (explicit REVIEW): %s", llmDecision.Reason, reviewed.Reason)
 	return out, nil
 }
 
 // Confirm has no second stage: hybrid already escalated to JEV inside Check, so
 // auto mode keeps the combined verdict instead of calling the providers again.
-func (h *hybridPolicy) Confirm(context.Context, toolhooks.CallEvent) (*Decision, error) {
-	return nil, errNoConsequence
+func (h *hybridPolicy) Confirm(context.Context, toolhooks.CallEvent) (*guardrail.Decision, error) {
+	return nil, ErrNoConsequence
 }
 
-func hybridLLMDecision(llm Policy, ctx context.Context, ev toolhooks.CallEvent) (*Decision, float64, error) {
+func hybridLLMDecision(llm Policy, ctx context.Context, ev toolhooks.CallEvent) (*guardrail.Decision, float64, error) {
 	if policy, ok := llm.(confidencePolicy); ok {
 		return policy.CheckWithConfidence(ctx, ev)
 	}

@@ -1,4 +1,4 @@
-package guardrail
+package policy
 
 import fenceconfig "github.com/chainreactors/cyber/exts/4zfence/config"
 
@@ -16,6 +16,7 @@ import (
 
 	"github.com/chainreactors/cyber/aop"
 	toolhooks "github.com/chainreactors/cyber/core/tool/hooks"
+	guardrail "github.com/chainreactors/cyber/exts/guardrail"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -50,18 +51,18 @@ func TestLLMVerdictParsing(t *testing.T) {
 	for _, test := range []struct {
 		name       string
 		content    string
-		want       Action
+		want       guardrail.Action
 		confidence float64
 		reason     string
 	}{
-		{name: "bare", content: "ALLOW", want: Action_ACTION_RECORD, confidence: 1},
-		{name: "whitespace_case", content: "  review  \n", want: Action_ACTION_REVIEW, confidence: 1},
-		{name: "fenced_block", content: "```\nBLOCK: wipe the database\n```", want: Action_ACTION_BLOCK, confidence: 1, reason: "wipe the database"},
-		{name: "extra_text", content: "I think the answer is:\nREVIEW: modifies system config", want: Action_ACTION_REVIEW, confidence: 1, reason: "modifies system config"},
-		{name: "json", content: `{"action":"BLOCK","reason":"destroys data","confidence":0.95}`, want: Action_ACTION_BLOCK, confidence: 0.95, reason: "destroys data"},
-		{name: "json_string_confidence", content: `{"decision":"allow","confidence":"0.4"}`, want: Action_ACTION_RECORD, confidence: 0.4},
-		{name: "text_confidence", content: "ALLOW (confidence: 0.65)", want: Action_ACTION_RECORD, confidence: 0.65},
-		{name: "lower_json", content: `{"verdict":"review","explanation":"uncertain"}`, want: Action_ACTION_REVIEW, confidence: 1, reason: "uncertain"},
+		{name: "bare", content: "ALLOW", want: guardrail.Action_ACTION_RECORD, confidence: 1},
+		{name: "whitespace_case", content: "  review  \n", want: guardrail.Action_ACTION_REVIEW, confidence: 1},
+		{name: "fenced_block", content: "```\nBLOCK: wipe the database\n```", want: guardrail.Action_ACTION_BLOCK, confidence: 1, reason: "wipe the database"},
+		{name: "extra_text", content: "I think the answer is:\nREVIEW: modifies system config", want: guardrail.Action_ACTION_REVIEW, confidence: 1, reason: "modifies system config"},
+		{name: "json", content: `{"action":"BLOCK","reason":"destroys data","confidence":0.95}`, want: guardrail.Action_ACTION_BLOCK, confidence: 0.95, reason: "destroys data"},
+		{name: "json_string_confidence", content: `{"decision":"allow","confidence":"0.4"}`, want: guardrail.Action_ACTION_RECORD, confidence: 0.4},
+		{name: "text_confidence", content: "ALLOW (confidence: 0.65)", want: guardrail.Action_ACTION_RECORD, confidence: 0.65},
+		{name: "lower_json", content: `{"verdict":"review","explanation":"uncertain"}`, want: guardrail.Action_ACTION_REVIEW, confidence: 1, reason: "uncertain"},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			verdict, err := parseLLMVerdict(test.content)
@@ -131,7 +132,7 @@ func TestLLMJudgeRequestShape(t *testing.T) {
 	policy := testLLMPolicy(server.URL+"/v1", "review", time.Second)
 	policy.config.APIKey = "fixture-key"
 	for _, stage := range []string{"screen", "consequence"} {
-		var decision *Decision
+		var decision *guardrail.Decision
 		var err error
 		if stage == "screen" {
 			decision, err = policy.Check(t.Context(), call())
@@ -141,7 +142,7 @@ func TestLLMJudgeRequestShape(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if decision.Action != Action_ACTION_RECORD || !strings.Contains(decision.Reason, "LLM fixture-judge") {
+		if decision.Action != guardrail.Action_ACTION_RECORD || !strings.Contains(decision.Reason, "LLM fixture-judge") {
 			t.Fatalf("%s decision=%+v", stage, decision)
 		}
 	}
@@ -161,20 +162,20 @@ func TestLLMDecisionUncertaintyMapsToAllow(t *testing.T) {
 	for _, test := range []struct {
 		name   string
 		answer string
-		want   Action
+		want   guardrail.Action
 	}{
-		{name: "plain_allow", answer: "ALLOW", want: Action_ACTION_RECORD},
-		{name: "plain_block", answer: "BLOCK: wipe the database", want: Action_ACTION_BLOCK},
-		{name: "fenced_block", answer: "```\nBLOCK: wipe the database\n```", want: Action_ACTION_BLOCK},
-		{name: "json_block_high_confidence", answer: `{"action":"BLOCK","reason":"clear wipe","confidence":0.95}`, want: Action_ACTION_BLOCK},
-		{name: "json_block_without_confidence", answer: `{"action":"BLOCK","reason":"clear wipe"}`, want: Action_ACTION_BLOCK},
-		{name: "json_block_low_confidence", answer: `{"action":"BLOCK","reason":"maybe","confidence":0.2}`, want: Action_ACTION_RECORD},
-		{name: "json_review_high_confidence", answer: `{"action":"REVIEW","reason":"uncertain","confidence":0.9}`, want: Action_ACTION_REVIEW},
-		{name: "json_review_low_confidence", answer: `{"action":"REVIEW","reason":"uncertain","confidence":0.2}`, want: Action_ACTION_RECORD},
-		{name: "json_review_without_confidence", answer: `{"action":"REVIEW","reason":"uncertain"}`, want: Action_ACTION_RECORD},
-		{name: "plain_review", answer: "REVIEW", want: Action_ACTION_RECORD},
-		{name: "json_allow_low_confidence", answer: `{"action":"ALLOW","confidence":0.1}`, want: Action_ACTION_RECORD},
-		{name: "plain_allow_text_confidence_low", answer: "ALLOW (confidence: 0.2)", want: Action_ACTION_RECORD},
+		{name: "plain_allow", answer: "ALLOW", want: guardrail.Action_ACTION_RECORD},
+		{name: "plain_block", answer: "BLOCK: wipe the database", want: guardrail.Action_ACTION_BLOCK},
+		{name: "fenced_block", answer: "```\nBLOCK: wipe the database\n```", want: guardrail.Action_ACTION_BLOCK},
+		{name: "json_block_high_confidence", answer: `{"action":"BLOCK","reason":"clear wipe","confidence":0.95}`, want: guardrail.Action_ACTION_BLOCK},
+		{name: "json_block_without_confidence", answer: `{"action":"BLOCK","reason":"clear wipe"}`, want: guardrail.Action_ACTION_BLOCK},
+		{name: "json_block_low_confidence", answer: `{"action":"BLOCK","reason":"maybe","confidence":0.2}`, want: guardrail.Action_ACTION_RECORD},
+		{name: "json_review_high_confidence", answer: `{"action":"REVIEW","reason":"uncertain","confidence":0.9}`, want: guardrail.Action_ACTION_REVIEW},
+		{name: "json_review_low_confidence", answer: `{"action":"REVIEW","reason":"uncertain","confidence":0.2}`, want: guardrail.Action_ACTION_RECORD},
+		{name: "json_review_without_confidence", answer: `{"action":"REVIEW","reason":"uncertain"}`, want: guardrail.Action_ACTION_RECORD},
+		{name: "plain_review", answer: "REVIEW", want: guardrail.Action_ACTION_RECORD},
+		{name: "json_allow_low_confidence", answer: `{"action":"ALLOW","confidence":0.1}`, want: guardrail.Action_ACTION_RECORD},
+		{name: "plain_allow_text_confidence_low", answer: "ALLOW (confidence: 0.2)", want: guardrail.Action_ACTION_RECORD},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
@@ -189,7 +190,7 @@ func TestLLMDecisionUncertaintyMapsToAllow(t *testing.T) {
 			if decision.Action != test.want {
 				t.Fatalf("answer %q -> decision=%+v want=%v", test.answer, decision, test.want)
 			}
-			if (test.want == Action_ACTION_RECORD && test.answer != "ALLOW") && !strings.Contains(decision.Reason, "treated as ALLOW") && !strings.Contains(decision.Reason, "no clear harm") {
+			if (test.want == guardrail.Action_ACTION_RECORD && test.answer != "ALLOW") && !strings.Contains(decision.Reason, "treated as ALLOW") && !strings.Contains(decision.Reason, "no clear harm") {
 				t.Fatalf("uncertain mapping reason = %q", decision.Reason)
 			}
 		})
@@ -212,7 +213,7 @@ func TestLLMConsequenceStageUsesConsequencePrompt(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if decision.Action != Action_ACTION_RECORD {
+	if decision.Action != guardrail.Action_ACTION_RECORD {
 		t.Fatalf("decision=%+v", decision)
 	}
 	if len(stages) != 1 || !strings.Contains(stages[0], "consequence judge") {
@@ -241,15 +242,15 @@ func TestLLMFailuresApplyOnError(t *testing.T) {
 		name     string
 		endpoint string
 		timeout  time.Duration
-		want     Action
+		want     guardrail.Action
 	}{
-		{name: "timeout_allow", endpoint: failing.URL, timeout: 20 * time.Millisecond, want: Action_ACTION_RECORD},
-		{name: "timeout_review", endpoint: failing.URL, timeout: 20 * time.Millisecond, want: Action_ACTION_REVIEW},
-		{name: "timeout_block", endpoint: failing.URL, timeout: 20 * time.Millisecond, want: Action_ACTION_BLOCK},
-		{name: "status_review", endpoint: breakServer.URL, timeout: time.Second, want: Action_ACTION_REVIEW},
-		{name: "garbage_review", endpoint: garbage.URL, timeout: time.Second, want: Action_ACTION_REVIEW},
+		{name: "timeout_allow", endpoint: failing.URL, timeout: 20 * time.Millisecond, want: guardrail.Action_ACTION_RECORD},
+		{name: "timeout_review", endpoint: failing.URL, timeout: 20 * time.Millisecond, want: guardrail.Action_ACTION_REVIEW},
+		{name: "timeout_block", endpoint: failing.URL, timeout: 20 * time.Millisecond, want: guardrail.Action_ACTION_BLOCK},
+		{name: "status_review", endpoint: breakServer.URL, timeout: time.Second, want: guardrail.Action_ACTION_REVIEW},
+		{name: "garbage_review", endpoint: garbage.URL, timeout: time.Second, want: guardrail.Action_ACTION_REVIEW},
 	} {
-		fallback := map[Action]string{Action_ACTION_RECORD: "allow", Action_ACTION_REVIEW: "review", Action_ACTION_BLOCK: "block"}[test.want]
+		fallback := map[guardrail.Action]string{guardrail.Action_ACTION_RECORD: "allow", guardrail.Action_ACTION_REVIEW: "review", guardrail.Action_ACTION_BLOCK: "block"}[test.want]
 		t.Run(test.name, func(t *testing.T) {
 			policy := testLLMPolicy(test.endpoint, fallback, test.timeout)
 			decision, err := policy.Check(t.Context(), call())
@@ -305,7 +306,7 @@ func TestLLMConcurrencyIsBounded(t *testing.T) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			if decision, err := policy.Check(t.Context(), call()); err != nil || decision.Action != Action_ACTION_RECORD {
+			if decision, err := policy.Check(t.Context(), call()); err != nil || decision.Action != guardrail.Action_ACTION_RECORD {
 				failures.Add(1)
 			}
 		}()
@@ -333,7 +334,7 @@ func TestLLMRedirectDoesNotForwardCredentials(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if decision.Action != Action_ACTION_REVIEW || targetCalls.Load() != 0 {
+	if decision.Action != guardrail.Action_ACTION_REVIEW || targetCalls.Load() != 0 {
 		t.Fatalf("redirect decision=%+v target calls=%d", decision, targetCalls.Load())
 	}
 }
@@ -351,7 +352,7 @@ func TestLLMRejectsOversizedJudgmentInput(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if decision.Action != Action_ACTION_REVIEW || requests.Load() != 0 {
+	if decision.Action != guardrail.Action_ACTION_REVIEW || requests.Load() != 0 {
 		t.Fatalf("oversized input decision=%+v requests=%d", decision, requests.Load())
 	}
 }
@@ -366,7 +367,7 @@ func TestLLMCheckWithConfidence(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if decision.Action != Action_ACTION_RECORD || confidence != 0.55 {
+	if decision.Action != guardrail.Action_ACTION_RECORD || confidence != 0.55 {
 		t.Fatalf("decision=%+v confidence=%v", decision, confidence)
 	}
 }
@@ -381,7 +382,7 @@ func TestLLMOnErrorFallbackConfidenceIsNegative(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if decision.Action != Action_ACTION_REVIEW || confidence >= 0 {
+	if decision.Action != guardrail.Action_ACTION_REVIEW || confidence >= 0 {
 		t.Fatalf("fallback decision=%+v confidence=%v", decision, confidence)
 	}
 }

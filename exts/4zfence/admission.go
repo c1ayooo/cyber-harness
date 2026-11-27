@@ -46,14 +46,23 @@ func (e *Extension) admit(ctx context.Context, ev toolhooks.CallEvent) (toolhook
 	}
 	// The instance fence: only command-like calls are judged (fork patch 35) —
 	// a pattern is a statement about commands, and a write tool whose content
-	// quotes "rm -rf /" is a document, not one.
-	if !commandLikeCall(ev.Call) {
-		return toolhooks.Admission{}, nil
+	// quotes "rm -rf /" is a document, not one. Other calls skip the red lines
+	// but still reach the policy judge (docs/19 E3-3).
+	if commandLikeCall(ev.Call) {
+		rule, hit := globalfence.JudgeCommand(operation.InvocationFromContext(ctx).SessionID, commandText(ev.Call))
+		if hit {
+			return e.redLine(ctx, ev, rule)
+		}
 	}
-	rule, hit := globalfence.JudgeCommand(operation.InvocationFromContext(ctx).SessionID, guardrailext.ToolCommandText(ev.Call))
-	if !hit {
-		return toolhooks.Admission{}, nil
-	}
+	return e.judgeStage(ctx, ev)
+}
+
+// redLine enforces one instance-fence row: a deny refuses here, a review
+// holds on the ordinary approval lifecycle. The operator decides this exact
+// invocation, not a model judge. The bound guardrail runtime owns the
+// pending queue; without it the hold cannot happen, so the fence fails
+// closed.
+func (e *Extension) redLine(ctx context.Context, ev toolhooks.CallEvent, rule globalfence.CommandRule) (toolhooks.Admission, error) {
 	reason := "global." + rule.ID
 	if rule.Desc != "" {
 		reason += "（" + rule.Desc + "）"
@@ -77,6 +86,13 @@ func (e *Extension) admit(ctx context.Context, ev toolhooks.CallEvent) (toolhook
 		return admission, nil
 	}
 	return denied(reason), nil
+}
+
+// The policy judge (docs/19 E3-3) runs at the end of admit, after the
+// guaranteed audit and the red lines: a red line denies — or holds — before
+// any model judge sees the invocation.
+func (e *Extension) judgeStage(ctx context.Context, ev toolhooks.CallEvent) (toolhooks.Admission, error) {
+	return e.judge(ctx, ev, e.options)
 }
 
 // denied builds the admission denial the guardrail journal already uses.

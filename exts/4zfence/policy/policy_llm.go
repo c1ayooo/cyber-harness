@@ -1,4 +1,4 @@
-package guardrail
+package policy
 
 import fenceconfig "github.com/chainreactors/cyber/exts/4zfence/config"
 
@@ -18,6 +18,7 @@ import (
 
 	"github.com/chainreactors/cyber/aop"
 	toolhooks "github.com/chainreactors/cyber/core/tool/hooks"
+	guardrail "github.com/chainreactors/cyber/exts/guardrail"
 )
 
 const (
@@ -101,13 +102,13 @@ func newLLMPolicy(config fenceconfig.LLMConfig, onError string, timeout time.Dur
 }
 
 // Check is the first-stage judgment.
-func (p *llmPolicy) Check(ctx context.Context, ev toolhooks.CallEvent) (*Decision, error) {
+func (p *llmPolicy) Check(ctx context.Context, ev toolhooks.CallEvent) (*guardrail.Decision, error) {
 	decision, _, err := p.judge(ctx, ev, false)
 	return decision, err
 }
 
 // Confirm is the consequence judgment used only by auto mode.
-func (p *llmPolicy) Confirm(ctx context.Context, ev toolhooks.CallEvent) (*Decision, error) {
+func (p *llmPolicy) Confirm(ctx context.Context, ev toolhooks.CallEvent) (*guardrail.Decision, error) {
 	decision, _, err := p.judge(ctx, ev, true)
 	return decision, err
 }
@@ -116,11 +117,11 @@ func (p *llmPolicy) Confirm(ctx context.Context, ev toolhooks.CallEvent) (*Decis
 // when it answered in JSON (or an explicit confidence clause), 1 for a plain
 // answer without one, and negative when the answer came from the on_error
 // fallback (which hybrid keeps final).
-func (p *llmPolicy) CheckWithConfidence(ctx context.Context, ev toolhooks.CallEvent) (*Decision, float64, error) {
+func (p *llmPolicy) CheckWithConfidence(ctx context.Context, ev toolhooks.CallEvent) (*guardrail.Decision, float64, error) {
 	return p.judge(ctx, ev, false)
 }
 
-func (p *llmPolicy) judge(ctx context.Context, ev toolhooks.CallEvent, consequence bool) (*Decision, float64, error) {
+func (p *llmPolicy) judge(ctx context.Context, ev toolhooks.CallEvent, consequence bool) (*guardrail.Decision, float64, error) {
 	parent := ctx
 	started := time.Now()
 	decision, confidence, err := p.complete(ctx, ev, consequence)
@@ -139,7 +140,7 @@ func (p *llmPolicy) judge(ctx context.Context, ev toolhooks.CallEvent, consequen
 	return decision, confidence, nil
 }
 
-func (p *llmPolicy) complete(ctx context.Context, ev toolhooks.CallEvent, consequence bool) (*Decision, float64, error) {
+func (p *llmPolicy) complete(ctx context.Context, ev toolhooks.CallEvent, consequence bool) (*guardrail.Decision, float64, error) {
 	state, err := llmJudgeState(ev)
 	if err != nil {
 		return nil, 0, err
@@ -189,7 +190,7 @@ func llmJudgeState(ev toolhooks.CallEvent) (string, error) {
 	if len(ev.Call.GetArguments().GetData()) > maxLLMJudgeInput {
 		return "", errors.New("tool arguments exceed judgment limit")
 	}
-	call := SanitizeCall(ev.Call)
+	call := guardrail.SanitizeCall(ev.Call)
 	var arguments any = string(call.GetArguments().GetData())
 	if json.Valid(call.GetArguments().GetData()) {
 		arguments = json.RawMessage(call.GetArguments().GetData())
@@ -418,7 +419,7 @@ func llmContentText(raw json.RawMessage) string {
 // ALLOW/BLOCK; REVIEW is kept for compatibility with abnormal model output and
 // confidenceKnown records whether the model actually stated a confidence.
 type llmVerdict struct {
-	action          Action
+	action          guardrail.Action
 	confidence      float64
 	confidenceKnown bool
 	reason          string
@@ -521,20 +522,20 @@ func parseLLMVerdictText(text string) (llmVerdict, bool) {
 	return llmVerdict{action: action, confidence: confidence, confidenceKnown: confidenceKnown, reason: strings.TrimSpace(reason)}, true
 }
 
-func verdictAction(text string) (Action, bool) {
+func verdictAction(text string) (guardrail.Action, bool) {
 	word := strings.ToUpper(strings.TrimSpace(text))
 	if index := llmVerdictWord.FindStringIndex(word); index != nil {
 		word = word[index[0]:index[1]]
 	}
 	switch word {
 	case "ALLOW":
-		return Action_ACTION_RECORD, true
+		return guardrail.Action_ACTION_RECORD, true
 	case "REVIEW":
-		return Action_ACTION_REVIEW, true
+		return guardrail.Action_ACTION_REVIEW, true
 	case "BLOCK":
-		return Action_ACTION_BLOCK, true
+		return guardrail.Action_ACTION_BLOCK, true
 	default:
-		return Action_ACTION_UNSPECIFIED, false
+		return guardrail.Action_ACTION_UNSPECIFIED, false
 	}
 }
 
@@ -561,14 +562,14 @@ func clampConfidence(value float64) float64 {
 //
 // Provider failures never reach this function; they are mapped by on_error
 // (default review), so a transport failure is not silently allowed.
-func (v llmVerdict) decision(model string) *Decision {
+func (v llmVerdict) decision(model string) *guardrail.Decision {
 	action := v.action
 	uncertain := v.confidenceKnown && v.confidence < llmConfidenceThreshold
-	if !v.confidenceKnown && action == Action_ACTION_REVIEW {
+	if !v.confidenceKnown && action == guardrail.Action_ACTION_REVIEW {
 		uncertain = true
 	}
 	if uncertain {
-		action = Action_ACTION_RECORD
+		action = guardrail.Action_ACTION_RECORD
 	}
 	reason := strings.TrimSpace(v.reason)
 	if action != v.action {
@@ -583,36 +584,36 @@ func (v llmVerdict) decision(model string) *Decision {
 		}
 	} else if reason == "" {
 		switch action {
-		case Action_ACTION_RECORD:
+		case guardrail.Action_ACTION_RECORD:
 			reason = "no clear harm established"
-		case Action_ACTION_REVIEW:
+		case guardrail.Action_ACTION_REVIEW:
 			reason = "unexpected review verdict"
 		default:
 			reason = "judged harmful"
 		}
 	}
-	return &Decision{Action: action, Reason: fmt.Sprintf("LLM %s: %s", model, reason)}
+	return &guardrail.Decision{Action: action, Reason: fmt.Sprintf("LLM %s: %s", model, reason)}
 }
 
 // fallback maps a provider failure to the configured on_error action. The
 // reason is a fixed category; provider errors, URLs, bodies and credentials
 // never reach the decision or the model.
-func (p *llmPolicy) fallback(err error) *Decision {
+func (p *llmPolicy) fallback(err error) *guardrail.Decision {
 	category := "request failed"
 	if errors.Is(err, context.DeadlineExceeded) || strings.Contains(strings.ToLower(err.Error()), "timeout") {
 		category = "timeout"
 	}
 	slog.Warn("guardrail LLM judge failed; applying on_error", "model", p.config.Model, "on_error", p.onError, "category", category)
-	return &Decision{Action: fallbackAction(p.onError), Reason: fmt.Sprintf("LLM judge unavailable (%s); on_error=%s", category, p.onError)}
+	return &guardrail.Decision{Action: fallbackAction(p.onError), Reason: fmt.Sprintf("LLM judge unavailable (%s); on_error=%s", category, p.onError)}
 }
 
-func fallbackAction(onError string) Action {
+func fallbackAction(onError string) guardrail.Action {
 	switch onError {
 	case "allow":
-		return Action_ACTION_RECORD
+		return guardrail.Action_ACTION_RECORD
 	case "block":
-		return Action_ACTION_BLOCK
+		return guardrail.Action_ACTION_BLOCK
 	default:
-		return Action_ACTION_REVIEW
+		return guardrail.Action_ACTION_REVIEW
 	}
 }

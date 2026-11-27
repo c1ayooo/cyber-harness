@@ -14,9 +14,24 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
+// installStores mounts fresh scope and fence stores for one test — the real
+// production path is the fence extension's Load; the uninstall rides the
+// extension's Close. Tests get the same semantics without constructing the
+// whole extension.
+func installStores(t *testing.T) {
+	t.Helper()
+	scoperules.Install(scoperules.NewStore())
+	globalfence.Install(globalfence.NewStore())
+	t.Cleanup(func() {
+		scoperules.Uninstall()
+		globalfence.Uninstall()
+	})
+}
+
 // The scope-rule set registers for the session the turn belongs to, in both
 // namespaces; an invalid set is ignored without touching the previous one.
 func TestTurnScopeRulesRegistration(t *testing.T) {
+	installStores(t)
 	valid := `{"enabled":true,"default_action":"record","rules":[{"id":"sr-1","action":"review","method":"*","host":"*"}]}`
 	for _, namespace := range []string{"tianwu", "4zrcin"} {
 		req := &aop.RunTurnRequest{SessionId: "sess-scope", Extensions: []*anypb.Any{{
@@ -62,6 +77,7 @@ func mustJSON(t *testing.T, value any) []byte {
 // verifies the oldest session of its own still judges (nothing evicted),
 // then drops every id it registered to leave capacity for later tests.
 func TestTurnScopeRulesRefusesAtCapacity(t *testing.T) {
+	installStores(t)
 	valid := `{"enabled":true,"default_action":"record","rules":[{"id":"sr-cap","action":"block","method":"*","host":"cap.test"}]}`
 	register := func(id string) error {
 		return turnScopeRules(&aop.RunTurnRequest{SessionId: id, Extensions: []*anypb.Any{{
@@ -113,9 +129,13 @@ func TestTurnScopeRulesRefusesAtCapacity(t *testing.T) {
 // rather than starting the child unfenced — and every close drops them, so
 // the tables hold only live sessions.
 func TestFenceLifecycleHandlers(t *testing.T) {
-	parent := &scoperules.Set{Enabled: true, DefaultAction: scoperules.ActionRecord}
-	scoperules.SetForTest("fence-parent", parent)
-	globalfence.SetForTest("fence-parent", &globalfence.Set{EnabledDomains: true, Domains: []globalfence.DomainRule{{ID: "gf-x", Host: "x.test"}}})
+	installStores(t)
+	if err := scoperules.SetRules("fence-parent", []byte(`{"enabled":true,"default_action":"record","rules":[{"id":"sr-x","action":"block","method":"*","host":"x.test","path_prefix":"/"}]}`)); err != nil {
+		t.Fatal(err)
+	}
+	if err := globalfence.SetRules("fence-parent", []byte(`{"enabled_domains":true,"domains":[{"id":"gf-x","host":"x.test"}]}`)); err != nil {
+		t.Fatal(err)
+	}
 
 	child := agenthooks.SessionEvent{SessionID: "fence-child", ParentID: "fence-parent"}
 	if _, err := inheritOnOpen(t.Context(), child); err != nil {
@@ -151,8 +171,8 @@ func TestFenceLifecycleHandlers(t *testing.T) {
 		t.Fatalf("second drop: %v", err)
 	}
 
-	scoperules.DropForTest("fence-parent")
-	globalfence.DropForTest("fence-parent")
+	scoperules.DropSession("fence-parent")
+	globalfence.DropSession("fence-parent")
 }
 
 // Session.rotate closes the old session before it opens the continuation
@@ -161,8 +181,13 @@ func TestFenceLifecycleHandlers(t *testing.T) {
 // /compact and resume each run one turn with the child unfenced (docs/19
 // appendix E2-2, fork fix 已决 18). Non-rotation closes still drop.
 func TestFenceRotationCloseParksForContinuation(t *testing.T) {
-	scoperules.SetForTest("rot-parent", &scoperules.Set{Enabled: true, DefaultAction: scoperules.ActionRecord, Rules: []scoperules.Rule{{ID: "sr-r", Action: scoperules.ActionBlock, Method: "*", Host: "blocked.test", PathPrefix: "/"}}})
-	globalfence.SetForTest("rot-parent", &globalfence.Set{EnabledDomains: true, Domains: []globalfence.DomainRule{{ID: "gf-r", Host: "gov.cn"}}})
+	installStores(t)
+	if err := scoperules.SetRules("rot-parent", []byte(`{"enabled":true,"default_action":"record","rules":[{"id":"sr-r","action":"block","method":"*","host":"blocked.test","path_prefix":"/"}]}`)); err != nil {
+		t.Fatal(err)
+	}
+	if err := globalfence.SetRules("rot-parent", []byte(`{"enabled_domains":true,"domains":[{"id":"gf-r","host":"gov.cn"}]}`)); err != nil {
+		t.Fatal(err)
+	}
 
 	// The rotate order, reproduced: SessionEnd for the old id first...
 	if _, err := dropOnClose(t.Context(), agenthooks.SessionEvent{SessionID: "rot-parent", Reason: string(agentsession.SessionCloseCleared)}); err != nil {
@@ -206,8 +231,8 @@ func TestFenceRotationCloseParksForContinuation(t *testing.T) {
 		t.Fatal("a completed close leaked its registrations into the park")
 	}
 
-	scoperules.DropForTest("rot-child")
-	globalfence.DropForTest("rot-child")
-	scoperules.DropForTest("rot-after")
-	globalfence.DropForTest("rot-after")
+	scoperules.DropSession("rot-child")
+	globalfence.DropSession("rot-child")
+	scoperules.DropSession("rot-after")
+	globalfence.DropSession("rot-after")
 }
