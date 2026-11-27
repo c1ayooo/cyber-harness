@@ -292,7 +292,7 @@ func (e *Extension) fileAccess(ctx context.Context, event toolhooks.FileEvent) (
 }
 
 func (e *Extension) flowCompleted(ctx context.Context, event toolhooks.FlowEvent) (struct{}, error) {
-	// ProxyHub gives this boundary an owned, hydrated copy after FlowStore commit.
+	// Hub gives this boundary an owned, hydrated copy after FlowStore commit.
 	// A judged request additionally carries its scope-rule verdict as the
 	// control plane's TrafficVerdict sidecar; the registry keys by flow id and
 	// this take consumes it exactly once.

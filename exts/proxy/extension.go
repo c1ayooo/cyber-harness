@@ -50,9 +50,9 @@ func (e *Extension) Load(scope *extension.Scope) error {
 	if err != nil {
 		return err
 	}
-	resource.ProxyHub.SetControlPlaneHost(e.config.ControlPlaneHost)
+	resource.Hub.SetControlPlaneHost(e.config.ControlPlaneHost)
 	e.resource = resource
-	hub := resource.ProxyHub
+	hub := resource.Hub
 	// The scope judge is the guardrail runtime when one is installed (it loads
 	// ahead of this extension). An embedder without guardrail keeps a judgeless
 	// hub: the proxy stays a pure capture/routing relay.

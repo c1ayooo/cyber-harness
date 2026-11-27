@@ -41,7 +41,7 @@ func TestParseRejectsInvalidSets(t *testing.T) {
 		"path without slash": `{"enabled":true,"default_action":"record","rules":[{"id":"x","action":"record","host":"a.com","path_prefix":"api"}]}`,
 		// manyRules closes the array itself; appending another "]" here would
 		// fail on JSON syntax instead of the row cap (the old case did).
-		"too many rows":      `{"enabled":true,"default_action":"record","rules":[` + manyRules(maxRules+1),
+		"too many rows": `{"enabled":true,"default_action":"record","rules":[` + manyRules(maxRules+1),
 	} {
 		t.Run(name, func(t *testing.T) {
 			if _, err := Parse([]byte(raw)); err == nil {

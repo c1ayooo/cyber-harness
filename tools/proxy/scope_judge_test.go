@@ -78,7 +78,7 @@ func scopeCallArguments(req ScopeRequest) (arguments struct {
 
 // attributedClient builds a client whose requests carry an egress correlation
 // lease attributed to a session — the same path real tool calls take.
-func attributedClient(t *testing.T, hub *ProxyHub, sessionID, callID string) *http.Client {
+func attributedClient(t *testing.T, hub *Hub, sessionID, callID string) *http.Client {
 	t.Helper()
 	ctx := operation.ContextWithInvocation(t.Context(), operation.Invocation{SessionID: sessionID, CallID: callID})
 	ctx, cancel := operation.Begin(ctx, "test", "http")
@@ -96,7 +96,7 @@ func attributedClient(t *testing.T, hub *ProxyHub, sessionID, callID string) *ht
 
 // plainClient reaches the hub without any correlation lease: the host's own
 // unattributed plumbing.
-func plainClient(t *testing.T, hub *ProxyHub) *http.Client {
+func plainClient(t *testing.T, hub *Hub) *http.Client {
 	t.Helper()
 	parsed, err := url.Parse(hub.ProxyURL())
 	if err != nil {
@@ -178,7 +178,7 @@ func TestScopeJudgeRecordForwardsAndCaptures(t *testing.T) {
 	// host a rule would block.
 	getThrough(t, plainClient(t, hub), "http://blocked.test/")
 	time.Sleep(100 * time.Millisecond)
-	for _, flow := range hub.store.Query(QueryOpts{}) {
+	for _, flow := range hub.store.Query(Filter{}) {
 		if verdict, ok := scoperules.TakeVerdict(flow.GetId()); ok {
 			t.Fatalf("unattributed request judged: %+v", verdict)
 		}
@@ -320,7 +320,7 @@ func TestScopeJudgeControlPlaneIsPlatformPlumbing(t *testing.T) {
 	}
 	// Uncaptured: nothing in the flow store, no verdict sidecar.
 	time.Sleep(200 * time.Millisecond)
-	for _, flow := range hub.store.Query(QueryOpts{}) {
+	for _, flow := range hub.store.Query(Filter{}) {
 		t.Fatalf("control-plane call captured: %+v", flow)
 	}
 	// A different session whose control plane is elsewhere still judges this

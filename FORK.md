@@ -856,6 +856,40 @@ the 4zrcin checkout at `425e6175`.
     global-allow sidecar before the project fence).
     Rollback: revert — infrastructure names queue pending assets again.
 
+## Upstream merge 2026-11-27 (#205 gateway, #208 passive)
+
+Merged `upstream/master` (`86c5acea`) into `tianwu/fixes`. Decisions taken
+where the merge could not take both sides:
+
+- **Guardrail keeps the fork shape.** #205 renamed `JEVConfig`→`Rules`,
+  `jevPolicy`→`policy`, `newJEVPolicy`→`newPolicy` and moved the JEV endpoint
+  to the gateway model. The fork's pluggable-judge work (patches 18, 21,
+  29-31, 33-37) is internally consistent on the old names, and this package
+  is scheduled to move to the `exts/4zfence` brick (4zrcin docs/19 §C), so
+  the rename is deferred until that move. `exts/guardrail/config_test.go`
+  (upstream's, tests the `Rules` shape) is dropped with this merge; the
+  upstream test returns with the brick extraction.
+- **MCP wiring stays (patch 17 survives, adapted).** #205 removed the scan
+  product's MCP composition and renamed `tools/mcp.ServerConfig`→`Config`
+  with a top-level service-name config shape. The fork keeps its operator
+  section (`exts/mcp/config.go`, the historical `mcpServers` key) because
+  #205 left no scan-side composition to adopt; the section now decodes into
+  the renamed map type and `mcpext.New` receives the map directly.
+- **Proxy seam re-homed on the renamed `Hub` type.** #205 renamed
+  `ProxyHub`→`Hub`. The fork's `ScopeJudge`/`SetScopeJudge`/
+  `SetControlPlaneHost` additions and the verdict-carrying `ingestFiles`
+  signature are kept on the new name.
+- **Gateway bindings cross the recipe boundary as data.** #205 composes the
+  passive gateway binding inside `extensions()`, which would link the
+  passive/discovery packages into the capture recipe. `engineExtensions`
+  (the full/capture twins) now also returns `[]gateway.Kind`; the capture
+  twin returns nil, preserving the capture binary's link boundary.
+- **Renamed APIs updated at call sites:** `FlowStore.QueryOpts`→`Filter`,
+  `terminal.BashExecOptions`→`terminal.Options` (fork-added tests).
+- Incoming upstream files were normalized to the fork module path
+  (`github.com/c1ayooo/cyber`) so this merge commits buildable; the module
+  path revert itself is tracked separately (4zrcin docs/19 P0).
+
 ## Superseded patches
 
 These commits were on `tianwu/fixes` and are intentionally **not** carried after

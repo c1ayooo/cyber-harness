@@ -10,14 +10,14 @@ import (
 	"github.com/c1ayooo/cyber/tools/passive"
 )
 
-func discoveryExtensions(config appConfig) []extension.Extension {
-	return []extension.Extension{katanaext.New(), passiveext.New(passive.ReconOptions{
-		FofaKey:      config.Recon.FofaKey,
+func discoveryExtensions(config appConfig) ([]extension.Extension, *passiveext.Extension) {
+	feature := passiveext.New(passive.Config{
 		HunterAPIKey: config.Recon.HunterAPIKey,
-		IngressProxy: config.Recon.Proxy,
+		Proxy:        config.Recon.Proxy,
 		Limit:        intValue(config.Recon.Limit),
 		Credentials:  config.ReconCredentials,
-	})}
+	})
+	return []extension.Extension{katanaext.New(), feature}, feature
 }
 
 func discoveryNames() []string { return []string{"katana", "passive"} }
@@ -26,9 +26,9 @@ func discoveryUsage(name string) (string, bool) {
 	switch name {
 	case "katana":
 		return katana.Usage(), true
-	case "passive":
-		return passive.Usage(), true
 	}
+	// passive has no static help: its sources come from the host configuration,
+	// so `cyber-scan passive -h` is answered by the loaded command.
 	return "", false
 }
 

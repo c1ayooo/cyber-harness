@@ -10,6 +10,7 @@ import (
 
 	"github.com/c1ayooo/cyber/agent/provider"
 	types "github.com/c1ayooo/cyber/core/types"
+	"github.com/c1ayooo/cyber/exts/gateway"
 	cfg "github.com/c1ayooo/cyber/pkg/config"
 	webservice "github.com/c1ayooo/cyber/pkg/web/service"
 	"google.golang.org/protobuf/proto"
@@ -26,10 +27,17 @@ type ConfigCodec struct {
 	PreserveValues func(cfg.Values, cfg.Values)
 }
 
-// SharedConfigCodec exposes shared settings. Product extension sections stay
-// in the source file and are resolved by the independent execution nodes.
+// SharedConfigCodec exposes shared settings and forwards opaque gateway
+// configuration. Concrete service schemas belong to the execution nodes.
 func SharedConfigCodec() ConfigCodec {
 	sections := cfg.NewSections()
+	services, err := gateway.Section()
+	if err != nil {
+		panic(err)
+	}
+	if _, err := sections.Add(services); err != nil {
+		panic(err)
+	}
 	sections.Seal()
 	return ConfigCodec{
 		Sections: sections,
@@ -103,7 +111,7 @@ func (s *FileConfigStore) stored() (*cfg.Snapshot, bool, *types.DistributeConfig
 	if err != nil {
 		return nil, false, nil, err
 	}
-	value, err := s.Codec.ParseDocument(snapshot.RuntimeDocument(s.Codec.Sections))
+	value, err := s.Codec.ParseDocument(cfg.CloneDocument(snapshot.Document))
 	if err != nil {
 		return nil, false, nil, err
 	}
@@ -220,7 +228,7 @@ func (s *FileConfigStore) PrepareDistributeConfig(ctx context.Context, incoming 
 	if err != nil {
 		return nil, err
 	}
-	merged, err := s.Codec.ParseDocument(candidate.RuntimeDocument(s.Codec.Sections))
+	merged, err := s.Codec.ParseDocument(cfg.CloneDocument(candidate.Document))
 	if err != nil {
 		return nil, err
 	}

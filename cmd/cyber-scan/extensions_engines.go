@@ -4,23 +4,29 @@ package main
 
 // The full recipe's engine block (docs/04 §3.3): scanner, proton and the
 // discovery pair. This is the default build; the capture recipe compiles
-// extensions_capture.go instead and none of these packages are linked.
+// extensions_capture.go instead and none of these packages are linked. The
+// second return carries the passive extension's gateway bindings: the gateway
+// extension composes outside the recipe boundary, so its passive service has
+// to cross it as data, not as a linked reference.
 
 import (
 	"github.com/c1ayooo/cyber/core/extension"
+	"github.com/c1ayooo/cyber/exts/gateway"
 	protonext "github.com/c1ayooo/cyber/exts/proton"
 	scannerext "github.com/c1ayooo/cyber/exts/scanner"
 	"github.com/c1ayooo/cyber/tools/katana"
 )
 
-func engineExtensions(config appConfig, workDir string) []extension.Extension {
+func engineExtensions(config appConfig, workDir string) ([]extension.Extension, []gateway.Kind) {
 	if config.SkipEngines {
-		return nil
+		return nil, nil
 	}
 	config.Scanner.Crawler = katana.Crawl
+	discovery, feature := discoveryExtensions(config)
 	extensions := []extension.Extension{
 		scannerext.New(config.Scanner, workDir),
 		protonext.New(protonext.Config{Directory: workDir}),
 	}
-	return append(extensions, discoveryExtensions(config)...)
+	extensions = append(extensions, discovery...)
+	return extensions, feature.Gateway(config.Recon.Service)
 }

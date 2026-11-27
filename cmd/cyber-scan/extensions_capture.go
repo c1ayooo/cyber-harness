@@ -10,8 +10,11 @@ package main
 // with the embedded template bundle (-tags emptyresources). The runtime
 // SkipEngines switch loses its meaning here: there are no engines to skip.
 
-import "github.com/c1ayooo/cyber/core/extension"
+import (
+	"github.com/c1ayooo/cyber/core/extension"
+	"github.com/c1ayooo/cyber/exts/gateway"
+)
 
-func engineExtensions(appConfig, string) []extension.Extension {
-	return nil
+func engineExtensions(appConfig, string) ([]extension.Extension, []gateway.Kind) {
+	return nil, nil
 }

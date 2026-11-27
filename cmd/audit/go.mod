@@ -4,7 +4,7 @@ go 1.26.0
 
 require (
 	github.com/c1ayooo/cyber v0.0.0
-	github.com/c1ayooo/cyber/aop v0.0.0-20260818112202-76d90a72b2c5
+	github.com/c1ayooo/cyber/aop v0.0.0
 	github.com/chainreactors/crtm v0.0.3-0.20260924103954-9432523918ae
 	github.com/gorilla/websocket v1.5.3
 	github.com/jessevdk/go-flags v1.6.1

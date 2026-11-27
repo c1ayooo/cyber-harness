@@ -20,7 +20,7 @@ import (
 // canonical flow id before any hook consumer can observe the flow, so the
 // observe extension can attach it as the TrafficVerdict sidecar without a
 // race.
-func (h *ProxyHub) ingestFiles(flow Flow, files [2]*os.File, verdict *scoperules.Verdict) {
+func (h *Hub) ingestFiles(flow Flow, files [2]*os.File, verdict *scoperules.Verdict) {
 	if h.store == nil {
 		return
 	}
