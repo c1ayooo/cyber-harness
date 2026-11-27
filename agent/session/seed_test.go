@@ -10,6 +10,7 @@ import (
 
 	"github.com/chainreactors/cyber/agent"
 	"github.com/chainreactors/cyber/aop"
+	"github.com/chainreactors/cyber/aop/payloads"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
@@ -32,7 +33,7 @@ func seedRequest(t *testing.T, url string, files []CaseSeedFile) *aop.RunTurnReq
 }
 
 func TestTurnCaseSeedDecodesBothNamespaces(t *testing.T) {
-	for _, url := range caseSeedExtensionURLs {
+	for _, url := range payloads.CaseSeedURLs {
 		req := seedRequest(t, url, []CaseSeedFile{{Path: ".zrcin/context.json", Mode: 0o640, Data: []byte("{}")}})
 		files, err := turnCaseSeed(req)
 		if err != nil {
@@ -46,7 +47,7 @@ func TestTurnCaseSeedDecodesBothNamespaces(t *testing.T) {
 		t.Fatalf("a request without the extension = %v %v", files, err)
 	}
 	// A malformed payload must fail the turn, not silently drop the inputs.
-	bad := &aop.RunTurnRequest{Extensions: []*anypb.Any{{TypeUrl: caseSeedExtensionURLs[1], Value: []byte("{nope")}}}
+	bad := &aop.RunTurnRequest{Extensions: []*anypb.Any{{TypeUrl: payloads.CaseSeedURLs[1], Value: []byte("{nope")}}}
 	if _, err := turnCaseSeed(bad); err == nil {
 		t.Fatal("a malformed seed decoded")
 	}

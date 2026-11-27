@@ -2,8 +2,6 @@ package session
 
 import (
 	"context"
-	"encoding/base64"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -11,6 +9,7 @@ import (
 	"strings"
 
 	aop "github.com/chainreactors/cyber/aop"
+	"github.com/chainreactors/cyber/aop/payloads"
 	"github.com/chainreactors/cyber/core/egress"
 	"github.com/chainreactors/cyber/core/globalfence"
 	"github.com/chainreactors/cyber/core/scoperules"
@@ -32,15 +31,6 @@ import (
 // URL while this file still matched only the old one — the host silently
 // ignored WorkDir/ToolEnv/RunGoal again. Both spellings are accepted for the
 // same payload; the old URL keeps pre-rename control planes working.
-const workDirExtensionURL = "type.googleapis.com/tianwu.WorkDir"
-
-// forkWorkDirExtensionURLs lists every type URL the WorkDir payload has been
-// published under, oldest first.
-var forkWorkDirExtensionURLs = []string{
-	"type.googleapis.com/tianwu.WorkDir",
-	"type.googleapis.com/4zrcin.WorkDir",
-}
-
 // extensionWithURL returns the first extension whose type URL matches one of
 // the given fork URLs. Fork payloads have carried two namespaces across the
 // tianwu → 4zrcin rename; matching by list keeps both generations working.
@@ -58,76 +48,33 @@ func extensionWithURL(extensions []*anypb.Any, urls []string) *anypb.Any {
 	return nil
 }
 
-type workDirExtension struct {
-	WorkDir    string `json:"work_dir"`
-	SingleTask bool   `json:"single_task,omitempty"`
-}
-
 // sessionWorkDir returns the workspace a control plane attached to this open
 // request. Empty means "use the agent's own working directory", which keeps old
 // control planes working.
-func sessionWorkspace(req *aop.OpenSessionRequest) workDirExtension {
+func sessionWorkspace(req *aop.OpenSessionRequest) payloads.WorkDirPayload {
 	if req == nil {
-		return workDirExtension{}
+		return payloads.WorkDirPayload{}
 	}
-	if extension := extensionWithURL(req.GetExtensions(), forkWorkDirExtensionURLs); extension != nil {
-		var value workDirExtension
-		if err := json.Unmarshal(extension.GetValue(), &value); err != nil {
-			return workDirExtension{}
-		}
+	if value, ok := payloads.ParseWorkDir(payloads.ExtensionWithURL(req.GetExtensions(), payloads.WorkDirURLs)); ok {
 		value.WorkDir = strings.TrimSpace(value.WorkDir)
 		if value.WorkDir != "" || value.SingleTask {
 			return value
 		}
 	}
-	return workDirExtension{}
+	return payloads.WorkDirPayload{}
 }
 
 // runGoalExtensionURLs lists every type URL the RunGoal payload has been
 // published under (see the WorkDir namespace note above).
-var runGoalExtensionURLs = []string{
-	"type.googleapis.com/tianwu.RunGoal",
-	"type.googleapis.com/4zrcin.RunGoal",
-}
 
-type runGoalExtension struct {
-	Goal string `json:"goal"`
-	// EvalRounds is kept raw so a producer that models the round budget as a
-	// JSON number still delivers the goal instead of failing the whole value.
-	EvalRounds json.RawMessage `json:"eval_rounds"`
-}
-
-// evalRoundsText normalizes the optional pacing spec: a string is taken as-is,
-// a number is its decimal form, and null/invalid is empty.
-func evalRoundsText(raw json.RawMessage) string {
-	if len(raw) == 0 {
-		return ""
-	}
-	var text string
-	if err := json.Unmarshal(raw, &text); err == nil {
-		return strings.TrimSpace(text)
-	}
-	var number json.Number
-	if err := json.Unmarshal(raw, &number); err == nil {
-		return number.String()
-	}
-	return ""
-}
-
-// turnRunGoal returns the goal a control plane attached to this run request.
-// Empty means "derive the goal from the input message", which keeps old control
-// planes working.
 func turnRunGoal(req *aop.RunTurnRequest) (goal, rounds string) {
 	if req == nil {
 		return "", ""
 	}
-	if extension := extensionWithURL(req.GetExtensions(), runGoalExtensionURLs); extension != nil {
-		var value runGoalExtension
-		if err := json.Unmarshal(extension.GetValue(), &value); err == nil {
-			goal, rounds = strings.TrimSpace(value.Goal), evalRoundsText(value.EvalRounds)
-			if goal != "" || rounds != "" {
-				return goal, rounds
-			}
+	if payload, ok := payloads.ParseRunGoal(payloads.ExtensionWithURL(req.GetExtensions(), payloads.RunGoalURLs)); ok {
+		goal, rounds = strings.TrimSpace(payload.Goal), payloads.EvalRoundsText(payload.EvalRounds)
+		if goal != "" || rounds != "" {
+			return goal, rounds
 		}
 	}
 	return "", ""
@@ -141,11 +88,8 @@ func turnWorkDir(req *aop.RunTurnRequest) string {
 	if req == nil {
 		return ""
 	}
-	if extension := extensionWithURL(req.GetExtensions(), forkWorkDirExtensionURLs); extension != nil {
-		var value workDirExtension
-		if err := json.Unmarshal(extension.GetValue(), &value); err == nil {
-			return strings.TrimSpace(value.WorkDir)
-		}
+	if payload, ok := payloads.ParseWorkDir(payloads.ExtensionWithURL(req.GetExtensions(), payloads.WorkDirURLs)); ok {
+		return strings.TrimSpace(payload.WorkDir)
 	}
 	return ""
 }
@@ -154,25 +98,11 @@ func turnWorkDir(req *aop.RunTurnRequest) string {
 // published under (same fork namespace generations as WorkDir). The payload is
 // {"files":[{"path":".zrcin/context.json","mode":420,"data":"<base64>"}]};
 // paths are relative to the turn's workspace.
-var caseSeedExtensionURLs = []string{
-	"type.googleapis.com/tianwu.CaseSeed",
-	"type.googleapis.com/4zrcin.CaseSeed",
-}
 
 // CaseSeedFile is one file of a turn seed (fork patch 26).
-type CaseSeedFile struct {
-	Path string
-	Mode uint32
-	Data []byte
-}
-
-type caseSeedExtension struct {
-	Files []struct {
-		Path string `json:"path"`
-		Mode uint32 `json:"mode"`
-		Data string `json:"data"`
-	} `json:"files"`
-}
+// CaseSeedFile is the payload contract's seed file (aop/payloads): one file
+// the control plane materializes in the workspace before the turn runs.
+type CaseSeedFile = payloads.CaseSeedFile
 
 // turnCaseSeed decodes the files a control plane sends with this turn. A
 // malformed payload is an error: a control plane that believes it delivered
@@ -182,40 +112,16 @@ func turnCaseSeed(req *aop.RunTurnRequest) ([]CaseSeedFile, error) {
 	if req == nil {
 		return nil, nil
 	}
-	extension := extensionWithURL(req.GetExtensions(), caseSeedExtensionURLs)
-	if extension == nil {
-		return nil, nil
-	}
-	var value caseSeedExtension
-	if err := json.Unmarshal(extension.GetValue(), &value); err != nil {
-		return nil, fmt.Errorf("case seed payload: %w", err)
-	}
-	files := make([]CaseSeedFile, 0, len(value.Files))
-	for i, file := range value.Files {
-		data, err := base64.StdEncoding.DecodeString(file.Data)
-		if err != nil {
-			return nil, fmt.Errorf("case seed file %d data: %w", i, err)
-		}
-		files = append(files, CaseSeedFile{Path: file.Path, Mode: file.Mode, Data: data})
-	}
-	return files, nil
+	return payloads.ParseCaseSeed(payloads.ExtensionWithURL(req.GetExtensions(), payloads.CaseSeedURLs))
 }
 
 // toolEnvExtensionURLs lists every type URL the ToolEnv payload has been
 // published under (see the WorkDir namespace note above).
-var toolEnvExtensionURLs = []string{
-	"type.googleapis.com/tianwu.ToolEnv",
-	"type.googleapis.com/4zrcin.ToolEnv",
-}
 
 // scopeRulesExtensionURLs is the control plane's per-turn test-range rule set
 // (manifest scope_rules JSON). The proxy's scope judge reads what this
 // registers; a set that fails to parse is logged and ignored — the request
 // pipeline stays record-only rather than judging on garbage.
-var scopeRulesExtensionURLs = []string{
-	"type.googleapis.com/tianwu.ScopeRules",
-	"type.googleapis.com/4zrcin.ScopeRules",
-}
 
 // turnScopeRules registers the test-range rule set a control plane attached to
 // this turn. The set rides every turn (disabled drafts included) so the proxy
@@ -228,7 +134,7 @@ func turnScopeRules(req *aop.RunTurnRequest) error {
 	if req == nil {
 		return nil
 	}
-	extension := extensionWithURL(req.GetExtensions(), scopeRulesExtensionURLs)
+	extension := payloads.ExtensionWithURL(req.GetExtensions(), payloads.ScopeRulesURLs)
 	if extension == nil {
 		return nil
 	}
@@ -246,10 +152,6 @@ func turnScopeRules(req *aop.RunTurnRequest) error {
 // never reached, on every project the instance drives — judged before the
 // project fence, so a project allowlisting a denied domain still cannot reach
 // it. Same per-turn carriage and both-namespace recognition as ScopeRules.
-var globalFenceExtensionURLs = []string{
-	"type.googleapis.com/tianwu.GlobalFence",
-	"type.googleapis.com/4zrcin.GlobalFence",
-}
 
 // turnGlobalFence registers the instance fence for this turn's session. An
 // invalid payload is logged and ignored; the previous set stays in force
@@ -260,7 +162,7 @@ func turnGlobalFence(req *aop.RunTurnRequest) error {
 	if req == nil {
 		return nil
 	}
-	extension := extensionWithURL(req.GetExtensions(), globalFenceExtensionURLs)
+	extension := payloads.ExtensionWithURL(req.GetExtensions(), payloads.GlobalFenceURLs)
 	if extension == nil {
 		return nil
 	}
@@ -278,24 +180,6 @@ func turnGlobalFence(req *aop.RunTurnRequest) error {
 // plus the normalized dial url). The proxy hub reads what this registers; an
 // unparsable endpoint is logged and cleared — the session falls back to the
 // node default chain rather than routing on garbage.
-var egressProxyExtensionURLs = []string{
-	"type.googleapis.com/tianwu.EgressProxy",
-	"type.googleapis.com/4zrcin.EgressProxy",
-}
-
-// egressProxyPayload mirrors the manifest's "proxy" shape. url is the control
-// plane's normalized dial URL (computed at every save, so it is authoritative);
-// the field derivation below only serves control planes older than the url
-// field, and the default-port table matches internal/project's DialURL.
-type egressProxyPayload struct {
-	Enabled  bool   `json:"enabled"`
-	Scheme   string `json:"scheme"`
-	Host     string `json:"host"`
-	Port     int    `json:"port,omitempty"`
-	Username string `json:"username,omitempty"`
-	Password string `json:"password,omitempty"`
-	URL      string `json:"url,omitempty"`
-}
 
 // turnEgressProxy binds this turn's session to the project proxy a control
 // plane attached. The binding rides every turn — a disabled draft included —
@@ -312,14 +196,14 @@ func turnEgressProxy(req *aop.RunTurnRequest) {
 	if req == nil {
 		return
 	}
-	extension := extensionWithURL(req.GetExtensions(), egressProxyExtensionURLs)
+	extension := payloads.ExtensionWithURL(req.GetExtensions(), payloads.EgressProxyURLs)
 	if extension == nil {
 		return
 	}
 	sessionID := req.GetSessionId()
-	var payload egressProxyPayload
-	if err := json.Unmarshal(extension.GetValue(), &payload); err != nil {
-		log.Printf("aop: ignore invalid egress proxy for session %s: %v", sessionID, err)
+	payload, ok := payloads.ParseEgressProxy(extension)
+	if !ok {
+		log.Printf("aop: ignore invalid egress proxy for session %s", sessionID)
 		egress.ClearSessionRoute(sessionID)
 		return
 	}
@@ -370,21 +254,8 @@ func turnToolEnv(req *aop.RunTurnRequest) []string {
 	if req == nil {
 		return nil
 	}
-	if extension := extensionWithURL(req.GetExtensions(), toolEnvExtensionURLs); extension != nil {
-		var value toolEnvExtension
-		if err := json.Unmarshal(extension.GetValue(), &value); err != nil {
-			return nil
-		}
-		if len(value.Env) == 0 {
-			return nil
-		}
-		env := make([]string, 0, len(value.Env))
-		for key, val := range value.Env {
-			if key != "" {
-				env = append(env, key+"="+val)
-			}
-		}
-		return env
+	if pairs, ok := payloads.ParseToolEnv(payloads.ExtensionWithURL(req.GetExtensions(), payloads.ToolEnvURLs)); ok {
+		return pairs
 	}
 	return nil
 }

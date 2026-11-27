@@ -8,13 +8,14 @@ import (
 	"github.com/chainreactors/cyber/agent"
 	"github.com/chainreactors/cyber/agent/inbox"
 	aop "github.com/chainreactors/cyber/aop"
+	"github.com/chainreactors/cyber/aop/payloads"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
 func TestAOPManagedMailboxWaitsForExplicitTurnAndPreservesPolicyOnRotation(t *testing.T) {
 	provider := &runtimeSemanticProvider{}
 	rt := newBareRuntime(t, nil, provider)
-	response := rt.OpenAOPSession(&aop.OpenSessionRequest{SessionId: "managed", Extensions: []*anypb.Any{{TypeUrl: workDirExtensionURL, Value: []byte(`{"single_task":true}`)}}})
+	response := rt.OpenAOPSession(&aop.OpenSessionRequest{SessionId: "managed", Extensions: []*anypb.Any{{TypeUrl: payloads.WorkDirExtensionURL, Value: []byte(`{"single_task":true}`)}}})
 	if response.GetAccepted() == nil {
 		t.Fatalf("open: %v", response.GetRejected())
 	}

@@ -14,7 +14,9 @@ package scoperules
 import (
 	"context"
 	"encoding/json"
+
 	"fmt"
+	payloads "github.com/chainreactors/cyber/aop/payloads"
 	"net"
 	"net/netip"
 	"net/url"
@@ -61,23 +63,10 @@ type Set struct {
 	Rules         []Rule `json:"rules"`
 }
 
-// Verdict is one judged request.
-type Verdict struct {
-	Action string `json:"action"`
-	RuleID string `json:"rule_id,omitempty"`
-	Reason string `json:"reason,omitempty"`
-	Shadow bool   `json:"shadow,omitempty"`
-	// DefaultMissed marks a fallback verdict (no rule row matched, fork patch
-	// 30): the control plane routes it to the asset-pending flow instead of
-	// reading it as a verdict the operator wrote by hand. Absent on a hit, so
-	// old control planes ignore the field entirely.
-	DefaultMissed bool `json:"default_missed,omitempty"`
-	// Passive marks a static subresource a page pulled by itself
-	// (Sec-Fetch-Dest script/style/image/font, fork patch 34): an out-of-range
-	// passive request is forwarded and recorded instead of queuing a pending
-	// asset. Absent on every deliberate request.
-	Passive bool `json:"passive,omitempty"`
-}
+// Verdict is one judged request — the payload contract's wire shape
+// (aop/payloads.TrafficVerdict) aliased in, so the fence's verdicts and the
+// control plane's sidecar decoder cannot drift.
+type Verdict = payloads.TrafficVerdict
 
 // maxRules mirrors the control plane's rule-table cap (project MaxScopeRules,
 // raised to 512 with the allowlist fence): the two sides must accept the same

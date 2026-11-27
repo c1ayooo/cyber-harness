@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	aop "github.com/chainreactors/cyber/aop"
+	"github.com/chainreactors/cyber/aop/payloads"
 	"github.com/chainreactors/cyber/core/scoperules"
 	"google.golang.org/protobuf/types/known/anypb"
 )
@@ -24,16 +25,16 @@ func TestForkExtensionsAcceptBothNamespaces(t *testing.T) {
 	for _, namespace := range []string{"tianwu", "4zrcin"} {
 		t.Run(namespace, func(t *testing.T) {
 			if got := turnWorkDir(newRequest("type.googleapis.com/"+namespace+".WorkDir",
-				mustJSON(t, workDirExtension{WorkDir: "/tmp/case"}))); got != "/tmp/case" {
+				mustJSON(t, payloads.WorkDirPayload{WorkDir: "/tmp/case"}))); got != "/tmp/case" {
 				t.Fatalf("WorkDir = %q", got)
 			}
 			goal, rounds := turnRunGoal(newRequest("type.googleapis.com/"+namespace+".RunGoal",
-				mustJSON(t, runGoalExtension{Goal: "g", EvalRounds: json.RawMessage(`"2x"`)})))
+				mustJSON(t, payloads.RunGoalPayload{Goal: "g", EvalRounds: json.RawMessage(`"2x"`)})))
 			if goal != "g" || rounds != "2x" {
 				t.Fatalf("RunGoal = %q/%q", goal, rounds)
 			}
 			if env := turnToolEnv(newRequest("type.googleapis.com/"+namespace+".ToolEnv",
-				mustJSON(t, toolEnvExtension{Env: map[string]string{"K": "V"}}))); len(env) != 1 || env[0] != "K=V" {
+				mustJSON(t, payloads.ToolEnvPayload{Env: map[string]string{"K": "V"}}))); len(env) != 1 || env[0] != "K=V" {
 				t.Fatalf("ToolEnv = %v", env)
 			}
 		})
