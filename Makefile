@@ -110,7 +110,7 @@ endif
 RECORD_PREFIX := $(if $(CYBER_RECORD_PREFIX),$(CYBER_RECORD_PREFIX),$(PROJECT_ROOT)/.cache/native/record/$(RECORD_PLATFORM)_$(RECORD_ARCH))
 RECORD_BUILD_ENV := CGO_LDFLAGS="-L$(RECORD_PREFIX)/lib $(RECORD_EXTRA_LDFLAGS)"
 
-.PHONY: help prepare frontend proto-gen standard agent full record record-native web-build web-run web all clean harness harness-llm check-architecture embed-resources ldflags
+.PHONY: help prepare frontend proto-gen standard agent full record record-native web-build web-run web all clean harness harness-llm check-architecture check-fork embed-resources ldflags
 
 help:
 	@echo "cyber-scan build targets:"
@@ -153,6 +153,12 @@ harness-llm-subagent:
 
 check-architecture:
 	$(GO) test -count=1 ./core/extension ./core/registry ./exts
+
+# Red line 1's machine check (docs/19 §1): upstream-file changes must be
+# registered in FORK.md and stay within the hook budget. Report mode until
+# the E3/E4 overages close; make check-fork STRICT=1 enforces.
+check-fork:
+	./scripts/check-fork.sh $(if $(STRICT),--strict,)
 
 prepare:
 	mkdir -p "$(BIN_DIR)"
