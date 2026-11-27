@@ -153,50 +153,49 @@ guardrail:
 
 `jev` 提供共享凭据、模型和请求超时，`jev.mode` 控制 Reflex 加速；Guardrail 独立选择策略，将 `jev.mode` 设为 `off` 后仍可执行工具检查。`guardrail.provider` 默认 `none`，仅配置凭据不会启用策略。规则直接放在 `guardrail` 下。
 
-### 裁判来源
+| 配置项（`guardrail` 下） | 默认值 | 含义 |
+| --- | --- | --- |
+| `provider` | `none` | `jev` 启用 JEV 检查，`none` 关闭策略；`llm`/`hybrid` 只在 `fence` 节配置，`fence.provider` 设置时覆盖这里的值 |
+| `mode` | `auto` | 自动判断后果；`safe` 等待人工审批 |
+| `review_timeout` | `5m` | 人工审批最长等待时间，须为正的 duration |
+| `level` | `standard` | 风险预设：`permissive`、`standard`、`strict` |
+| `on_error` | `block` | 首次检查失败时使用 `review` 或 `block` 判断；后果判断失败始终拒绝 |
+| `criteria` | 对应 level 的预设 | 按 `record`、`review`、`block` 覆盖首次检查标准，值须为非空文本 |
 
-| `provider` | 判定方式 | 额外依赖 |
+### 判定方与 fence 节
+
+判定旋钮（谁判定、怎么判定、判定失败怎么办）全部在顶层 `fence` 节；`guardrail` 节只保留审批队列自己的配置。`fence.provider` 未设置时沿用 `guardrail.provider` 的 `none`/`jev` 缺省，设置了就覆盖。
+
+| `fence.provider` | 判定方式 | 额外依赖 |
 | --- | --- | --- |
 | `none`（默认） | 不判定，所有调用直接执行 | 无 |
-| `jev` | JEV 两阶段判定：首判；`auto` 模式对被标记调用再做后果复核 | `extensions.jev` 的凭据（`TYPESAFE_API_KEY` 或 `jev.api_key`） |
-| `llm` | OpenAI 兼容 `/chat/completions` 裁判；`auto` 模式对被标记调用再做一次后果判定 | `guardrail.llm.base_url`、`guardrail.llm.model`，可选 `api_key` |
-| `hybrid` | 小模型先判；仅**明确的 `REVIEW`**（高置信异常输出）才交 JEV 复核（JEV `record`→执行、`block`→拒绝、仍 `review`→人工）；低置信/不确定的 LLM 结果按 `ALLOW` 直接放行，不触发 JEV | LLM 与 JEV 两套配置；JEV 凭据仍由 `extensions.jev` 提供 |
+| `jev` | JEV 两阶段判定：首判；`auto` 模式对被标记调用再做后果复核 | `jev` 节的凭据（`TYPESAFE_API_KEY` 或 `jev.api_key`） |
+| `llm` | OpenAI 兼容 `/chat/completions` 裁判；`auto` 模式对被标记调用再做一次后果判定 | `fence.llm.base_url`、`fence.llm.model`，可选 `api_key` |
+| `hybrid` | 小模型先判；仅**明确的 `REVIEW`**（高置信异常输出）才交 JEV 复核（JEV `record`→执行、`block`→拒绝、仍 `review`→人工）；低置信/不确定的 LLM 结果按 `ALLOW` 直接放行，不触发 JEV | LLM 与 JEV 两套配置；JEV 凭据仍由 `jev` 节提供 |
 
 `provider=llm` 不加载 JEV 客户端，也不需要 JEV 凭据；`provider=hybrid` 必须同时具备 LLM 配置与 JEV 凭据。**JEV 采用 harness 原生实现，本 fork 未修改其判定与两阶段逻辑**；自定义扩展集中在 LLM 审批裁判（`policy_llm.go`），hybrid 仅通过既有 `Policy` 接口调用 JEV。
 
+```yaml
+guardrail:
+  mode: safe                # 审批模式（auto/safe）与人工审批超时仍在 guardrail 节
+fence:
+  provider: hybrid
+  scope: [bash, subagent]           # 只判定这些工具；空=全部
+  allow_prefixes: ["ls ", "cat "]   # 仅 guardrail.mode=safe 生效
+  on_error: review                  # allow | review（默认）| block
+  timeout: 3s
+  concurrency: 8
+  llm:
+    base_url: https://gateway.example/v1
+    model: judge-small
+    api_key: ""
+    temperature: 0
+    max_tokens: 128
+```
+
+旧配置把判定键写在 `guardrail` 节的写法仍被识别，读取时自动迁到 `fence` 节，保存时落盘为 `fence` 节。
+
 LLM 裁判请求固定 `temperature: 0`、`max_tokens: 128`、非流式；系统提示词只要求输出 `ALLOW` 或 `BLOCK: 理由` 两档，并带有强 `ALLOW` 偏置：**默认允许；无法从调用本身确定后果时一律 `ALLOW`（record）**；只有明确会破坏可用性、数据完整性或系统配置且难以恢复时才 `BLOCK`。提示词不再要求 `REVIEW`，只读敏感文件（含渗透场景读取 `/etc/shadow`）不算 `block`。解析仍兼容 `REVIEW`（属于异常模型输出）以及大小写、代码围栏、额外文本、JSON 形式（含可选 `confidence`）。
-
-```yaml
-extensions:
-  guardrail:
-    provider: llm
-    mode: auto
-    on_error: review        # allow | review（默认）| block
-    timeout: 3s
-    concurrency: 8
-    llm:
-      base_url: https://gateway.example/v1
-      model: judge-small
-      api_key: ""
-      temperature: 0
-      max_tokens: 128
-```
-
-```yaml
-extensions:
-  guardrail:
-    provider: hybrid
-    mode: safe
-    scope: [bash, subagent]      # 只判定这些工具；空=全部
-    allow_prefixes: ["ls ", "cat "]  # 仅 safe 模式生效
-    on_error: review
-    llm:
-      base_url: https://gateway.example/v1
-      model: judge-small
-    jev:
-      level: standard
-      on_error: block
-```
 
 ### LLM 判定语义（没把握就允许）
 
@@ -213,27 +212,22 @@ extensions:
 
 ### 配置项
 
-| 配置项（`extensions.guardrail` 下） | 默认值 | 含义 |
+| 配置项（`fence` 下） | 默认值 | 含义 |
 | --- | --- | --- |
-| `provider` | `none` | `none`、`jev`、`llm` 或 `hybrid`，见上表 |
-| `mode` | `auto` | 自动判断后果；`safe` 等待人工审批 |
-| `review_timeout` | `5m` | 人工审批最长等待时间，须为正的 duration |
+| `provider` | 空（沿用 `guardrail.provider`） | `none`、`jev`、`llm` 或 `hybrid`，见上表；设置时覆盖 `guardrail.provider` |
 | `scope` | 空（全部工具） | 只判定列出的工具名；空表示全部判定。见下方绕过面说明 |
-| `allow_prefixes` | 空 | 仅 `mode=safe` 生效；命令文本按字面前缀命中时直接放行，不进入人工审批 |
-| `on_error` | `review` | 仅 llm/hybrid：裁判**调用失败**（超时/网络/非 200/无法解析）时 `allow` 放行、`review` 进入人工判定、`block` 拒绝；模型“判断不确定”按 `ALLOW`，不算失败 |
+| `allow_prefixes` | 空 | 仅 `guardrail.mode=safe` 生效；命令文本按字面前缀命中时直接放行，不进入人工审批 |
+| `on_error` | `review`（llm/hybrid） | 仅 llm/hybrid：裁判**调用失败**（超时/网络/非 200/无法解析）时 `allow` 放行、`review` 进入人工判定、`block` 拒绝；模型“判断不确定”按 `ALLOW`，不算失败 |
 | `timeout` | `3s` | LLM 单次请求超时，须为正的 duration |
 | `concurrency` | `8` | LLM 最大并发请求数（1–1024），超出者按 `on_error` 处理 |
 | `shadow` | `false` | 只判定并记录 AOP 决策事件，永远放行；用于灰度统计 |
-| `jev.level` | `standard` | 风险预设：`permissive`、`standard`、`strict` |
-| `jev.on_error` | `block` | 首次检查失败时使用 `review` 或 `block` 判断；后果判断失败始终拒绝 |
-| `jev.criteria` | 对应 level 的预设 | 按 `record`、`review`、`block` 覆盖首次检查标准，值须为非空文本 |
 | `llm.base_url` | 必填 | OpenAI 兼容端点；可写完整 `/chat/completions` 端点，否则自动补路径 |
 | `llm.model` | 必填 | 裁判模型名 |
 | `llm.api_key` | 空 | 可选 Bearer token；本地网关可不填 |
 | `llm.temperature` | `0` | 采样温度（0–2） |
 | `llm.max_tokens` | `128` | 输出上限（1–4096） |
 
-所有新增字段在配置解析时校验，非法值会以中文原因让启动失败；例如 `allow_prefixes` 必须配合 `mode=safe`，`on_error` 只能用于 llm/hybrid。
+所有判定字段在配置解析时校验，非法值会以中文原因让启动失败；例如 `allow_prefixes` 必须配合 `guardrail.mode=safe`，`on_error` 只能用于 llm/hybrid。
 
 `standard` 将本地分析和授权的低频探测归为 `record`，目标修改、高强度或未知影响归为 `review`，明确破坏、泄露或伤害归为 `block`；`strict` 对主动探测要求复核，对目标修改或未知影响使用 `block`。实际处理由 `mode` 决定，首次风险标准不会预先决定第二阶段的后果判断。
 
