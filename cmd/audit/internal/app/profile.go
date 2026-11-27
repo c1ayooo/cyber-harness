@@ -19,9 +19,6 @@ import (
 	"github.com/chainreactors/cyber/core/extension"
 	"github.com/chainreactors/cyber/core/namespaces"
 	"github.com/chainreactors/cyber/core/proc"
-	fenceext "github.com/chainreactors/cyber/exts/4zfence"
-	fenceconfig "github.com/chainreactors/cyber/exts/4zfence/config"
-	zsession "github.com/chainreactors/cyber/exts/4zsession"
 	loopext "github.com/chainreactors/cyber/exts/agent"
 	arsenalext "github.com/chainreactors/cyber/exts/arsenal"
 	guardrailext "github.com/chainreactors/cyber/exts/guardrail"
@@ -63,8 +60,6 @@ func newAuditProfile(request profile.Request, workDir string, bashTimeout int, r
 	sessionConfig := *request.Session
 	sessionConfig.NodeName = cfg.ResolveNodeName(option.NodeName)
 	sessionConfig = sessionext.ConfigFromOption(&option, sessionConfig)
-	sessionConfig.TurnDecorators = append(sessionConfig.TurnDecorators, fenceext.TurnDecorators()...)
-	sessionConfig.TurnDecorators = append(sessionConfig.TurnDecorators, zsession.TurnDecorators()...)
 	loop := loopext.New(sessionConfig.Loop)
 	var rgConfig, exclusions string
 	if report != nil {
@@ -89,28 +84,12 @@ func newAuditProfile(request profile.Request, workDir string, bashTimeout int, r
 		environment["RIPGREP_CONFIG_PATH"] = rgConfig
 	}
 
-	// The judge block is the product's own composition decision (docs/19
-	// E3-2): this profile judges with zero-config guardrail + fence, the
-	// same shape the base composition used to install implicitly. Built
-	// inline rather than through pkg/assembly: audit is its own module and
-	// must not link the scan engines that package also carries.
-	fenceBlock := fenceext.New(fenceconfig.Config{}, guardrailext.Rules{})
-	policy := []extension.Extension{
-		fenceBlock,
-		guardrailext.New(guardrailext.Config{}),
-		extension.Func{LoadFunc: func(scope *extension.Scope) error {
-			runtime, err := extension.Use[*guardrailext.Runtime](scope)
-			if err != nil {
-				return err
-			}
-			fenceBlock.Bind(runtime)
-			return nil
-		}},
-	}
 	// This build routes nothing, so it publishes the disabled endpoint and
-	// links no proxy at all.
+	// links no proxy at all. It judges with the guardrail alone, zero-config:
+	// the judge block is the product root's decision (docs/19 E3-2), and the
+	// 4z fence must stay out of this build's dependency closure.
 	values, err := harness.BaseExtensions(harness.BaseConfig{
-		Policy:     policy,
+		Policy:     []extension.Extension{guardrailext.New(guardrailext.Config{})},
 		Directory:  workDir,
 		SkillPaths: cfg.LocalSkillPaths(option.Skills),
 		Terminal:   terminalext.Config{Timeout: bashTimeout, Environment: environment},

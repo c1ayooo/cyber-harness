@@ -9,16 +9,12 @@ import (
 	agentsession "github.com/chainreactors/cyber/agent/session"
 	"github.com/chainreactors/cyber/core/extension"
 	"github.com/chainreactors/cyber/core/telemetry"
-	fenceext "github.com/chainreactors/cyber/exts/4zfence"
-	fenceconfig "github.com/chainreactors/cyber/exts/4zfence/config"
-	zsession "github.com/chainreactors/cyber/exts/4zsession"
 	loopext "github.com/chainreactors/cyber/exts/agent"
 	guardrailext "github.com/chainreactors/cyber/exts/guardrail"
 	sessionext "github.com/chainreactors/cyber/exts/session"
 	subagentext "github.com/chainreactors/cyber/exts/subagent"
 	terminalext "github.com/chainreactors/cyber/exts/terminal"
 	tuiext "github.com/chainreactors/cyber/exts/tui"
-	"github.com/chainreactors/cyber/pkg/assembly"
 	cfg "github.com/chainreactors/cyber/pkg/config"
 	consoleapi "github.com/chainreactors/cyber/pkg/console/api"
 	harness "github.com/chainreactors/cyber/pkg/harness"
@@ -35,18 +31,14 @@ func newAgentProfile(option cfg.Option, logger telemetry.Logger, workDir string,
 		NodeName:         cfg.ResolveNodeName(option.NodeName),
 		PrimarySessionID: "main", Loop: agent.StandardLoop{},
 	})
-	sessionConfig.TurnDecorators = append(sessionConfig.TurnDecorators, fenceext.TurnDecorators()...)
-	sessionConfig.TurnDecorators = append(sessionConfig.TurnDecorators, zsession.TurnDecorators()...)
 	loop := loopext.New(sessionConfig.Loop)
 
 	// This build routes nothing, so it publishes the disabled endpoint and
-	// links no proxy at all.
-	// The judge block is the product's own composition decision (docs/19
-	// E3-2): this profile judges with zero-config guardrail + fence, the
-	// same shape the base composition used to install implicitly.
-	policy, _ := assembly.Policy(guardrailext.Config{}, fenceconfig.Config{})
+	// links no proxy at all. It judges with the guardrail alone, zero-config:
+	// the judge block is the product root's decision (docs/19 E3-2), and the
+	// 4z fence must stay out of this build's dependency closure.
 	values, err := harness.BaseExtensions(harness.BaseConfig{
-		Policy:     policy,
+		Policy:     []extension.Extension{guardrailext.New(guardrailext.Config{})},
 		Directory:  workDir,
 		SkillPaths: cfg.LocalSkillPaths(option.Skills),
 		Terminal:   terminalext.Config{Timeout: bashTimeout},
