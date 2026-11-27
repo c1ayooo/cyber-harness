@@ -382,8 +382,9 @@ func Uninstall() { installed.Store(nil) }
 
 func current() *Store { return installed.Load() }
 
-// Clear forgets every session set, parked set and verdict: Close uninstalls
-// and clears, so no state outlives the extension that owned the store.
+// Clear forgets every session set and parked set: Close uninstalls and
+// clears, so no state outlives the extension that owned the store. The
+// flow-verdict registry is not cleared here — it belongs to the proxy seam.
 func (s *Store) Clear() {
 	s.storeMu.Lock()
 	s.storeSets = map[string]*Set{}
@@ -393,10 +394,6 @@ func (s *Store) Clear() {
 	s.parkSets = map[string]*Set{}
 	s.parkOrder = nil
 	s.parkMu.Unlock()
-	s.verdictMu.Lock()
-	s.verdictByFlow = map[string]Verdict{}
-	s.verdictOrder = nil
-	s.verdictMu.Unlock()
 }
 
 // ErrCapacity reports that the per-session table is full. The caller must
