@@ -1066,12 +1066,14 @@ docs/19 E3-1/E3-2/E3-5/E3-6/E5, revising the fifteenth version's shape:
   no product block — `BaseConfig.Policy` is the product's decision, nil
   composes none — and `pkg/assembly/fence.go`'s `Policy` builds fence →
   guardrail → bind for the scan composition. `cmd/cyber-scan/extensions.go`,
-  `cmd/cyber-scan/profile.go`, `cmd/cyber-scan/mcp_test.go`, and
-  `cmd/agent/profile.go` wire it; `cmd/audit/internal/app/profile.go` builds
-  the trio inline because audit is its own module and must not link the scan
-  engines `pkg/assembly` carries. `pkg/harness/harness.go` no longer
-  auto-appends the fence/session decorators, so an embedder using
-  `harness.New` without Policy fences nothing.
+  `cmd/cyber-scan/profile.go` and `cmd/cyber-scan/mcp_test.go` wire it. The
+  minimal agent and audit, upstream products the 4zrcin shell does not ship,
+  compose the guardrail alone, zero-config: given the fence, `cmd/agent`
+  linked `exts/scanner` and `tools/proxy` and audit linked `tools/resources`,
+  failing both builds' dependency boundaries.
+  `pkg/harness/harness.go` no longer auto-appends the fence/session
+  decorators, so an embedder using `harness.New` without Policy fences
+  nothing.
 - **Explicit judge wiring** (E3-6): `exts/proxy/extension.go` takes
   `ScopeJudge` and `RequestExemption` on its config instead of looking the
   fence up and swallowing the miss. Absence is an explicit judgeless relay —
@@ -1124,7 +1126,10 @@ The E3 items 3 and 4 land as code (4zrcin docs/19, ticket 02-fence-internals):
   `tools/proxy/hub_traffic.go`); without a mounted store they judge and
   record nothing. The rotation park (E2-2) moved into the store unchanged;
   `SetForTest`/`DropForTest` are deleted and the tests register through
-  `SetRules` on a fresh store.
+  `SetRules` on a fresh store. At the merge with the proxy-seam revision the
+  flow-verdict registry stays with the proxy seam (`tools/proxy`, aliased in
+  `scoperules/judge.go`): the store-level registry this lane added had no
+  production caller once both landed, and was dropped.
 
 Registered hooks after this change: `SubmitReview` in
 `exts/guardrail/runtime.go` only. `scripts/check-fork.sh` reports the rest.
