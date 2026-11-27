@@ -836,6 +836,26 @@ the 4zrcin checkout at `425e6175`.
     Rollback: revert — the executor's own calls are judged like target
     traffic again.
 
+37. **`feat(globalfence): the default-allow list — infrastructure the operator always permits`** (2026-11-27)
+    `core/globalfence/{globalfence.go,globalfence_test.go}`,
+    `exts/guardrail/{scoperules.go,scoperules_test.go}`.
+    The fence's order is deny → project → fallback, which made every
+    infrastructure name the executor legitimately reaches — DNS/DoH
+    endpoints, passive intel sources like crt.sh — queue a pending asset per
+    project, per spelling, forever. The instance fence gains an allow
+    domain list (`enabled_allow_domains` / `allow_domains`, same host
+    shapes as the deny list): judged after the deny list and before the
+    project fence, a hit is recorded and forwarded with the
+    `global.allow:<id>` sidecar — no Decision event, no pending asset, no
+    hold. The deny list still wins when both name the host: a red line is a
+    statement about the target range and outranks infrastructure. Child
+    sessions inherit the allow list with the rest of the fence.
+    Tests: `go test ./core/globalfence ./core/scoperules ./exts/guardrail ./tools/proxy ./agent/session -count=1`
+    (allow hit + subdomain coverage; deny outranks allow on the same name;
+    the disabled switch judges nothing; the guardrail judge records the
+    global-allow sidecar before the project fence).
+    Rollback: revert — infrastructure names queue pending assets again.
+
 ## Superseded patches
 
 These commits were on `tianwu/fixes` and are intentionally **not** carried after

@@ -45,7 +45,13 @@ func (r *Runtime) JudgeScopeRequest(req proxy.ScopeRequest) proxy.ScopeDecision 
 	// The instance fence wins before the project fence (spec #1 工单3): a
 	// denied domain refuses even when a project row allowlists it. Domain
 	// hits are rare enough that the audit row is worth its journal line, and
-	// the sidecar names the global entry so the traffic view shows it.
+	// the sidecar names the global entry so the traffic view shows it. The
+	// default-allow list (fork patch 37) sits between them: infrastructure
+	// the operator always permits is recorded and forwarded before the
+	// project fence can queue it as a pending asset.
+	if rule, hit := globalfence.AllowDomainHit(req.Invocation.SessionID, requestHost(rawURL)); hit {
+		return r.allowGlobal(req, rule, scopeRequestFlowID(req.Call))
+	}
 	if rule, hit := globalfence.DomainHit(req.Invocation.SessionID, requestHost(rawURL)); hit {
 		return r.refuseGlobal(req, rule, scopeRequestFlowID(req.Call))
 	}
@@ -94,6 +100,20 @@ func (r *Runtime) JudgeScopeRequest(req proxy.ScopeRequest) proxy.ScopeDecision 
 		Verdict: &verdict, Hold: func(context.Context) bool { return approved }}
 }
 
+// allowGlobal records an instance-fence allowance: infrastructure the
+// operator always permits (DNS/DoH endpoints, passive intel sources) is
+// forwarded and recorded with the global-allow sidecar so the traffic view
+// reads it as the operator's own standing, not a project asset. No Decision
+// event: unlike a refusal this is not worth a journal line per request — the
+// sidecar and the fence audit carry it.
+func (r *Runtime) allowGlobal(req proxy.ScopeRequest, rule globalfence.DomainRule, flowID string) proxy.ScopeDecision {
+	verdict := scoperules.Verdict{Action: scoperules.ActionRecord,
+		RuleID: "global.allow:" + rule.ID, Reason: "基础设施放行 " + rule.ID}
+	scoperules.RecordVerdict(flowID, verdict)
+	return proxy.ScopeDecision{Judged: true, Action: scoperules.ActionRecord, RuleID: verdict.RuleID, Reason: verdict.Reason,
+		Verdict: &verdict}
+}
+
 // refuseGlobal refuses one request (or tunnel) for an instance-fence domain
 // hit: the synthetic 403 is the proxy's business — here we publish the audit
 // Decision and record the sidecar verdict naming the global entry, so the
@@ -121,6 +141,9 @@ func (r *Runtime) JudgeScopeConnect(req proxy.ScopeRequest) proxy.ScopeDecision 
 		return proxy.ScopeDecision{}
 	}
 	rawURL := scopeRequestURL(req.Call)
+	if rule, hit := globalfence.AllowDomainHit(req.Invocation.SessionID, scoperules.RequestHost(rawURL)); hit {
+		return r.allowGlobal(req, rule, scopeRequestFlowID(req.Call))
+	}
 	if rule, hit := globalfence.DomainHit(req.Invocation.SessionID, scoperules.RequestHost(rawURL)); hit {
 		return r.refuseGlobal(req, rule, scopeRequestFlowID(req.Call))
 	}

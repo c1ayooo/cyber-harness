@@ -126,3 +126,46 @@ func TestInheritSessionRules(t *testing.T) {
 		t.Fatal("unknown parent fenced the child domain")
 	}
 }
+
+// The default-allow list sits between the deny list and the project fence
+// (fork patch 37): infrastructure the operator always permits is exempt from
+// both, and a deny red line on the same name still wins.
+func TestAllowDomainHit(t *testing.T) {
+	if err := SetRules("sess-allow", []byte(`{
+		"enabled_domains": true,
+		"domains": [{"id": "gf-deny", "host": "gov.cn"}],
+		"enabled_allow_domains": true,
+		"allow_domains": [{"id": "gf-allow", "host": "dns.alidns.com"}]
+	}`)); err != nil {
+		t.Fatal(err)
+	}
+	if _, hit := AllowDomainHit("sess-allow", "dns.alidns.com"); !hit {
+		t.Fatal("allow list did not match")
+	}
+	if _, hit := AllowDomainHit("sess-allow", "sub.dns.alidns.com"); !hit {
+		t.Fatal("allow list did not cover the subdomain")
+	}
+	// An unlisted host matches neither list.
+	if _, hit := AllowDomainHit("sess-allow", "target.example"); hit {
+		t.Fatal("allow list matched an unlisted host")
+	}
+	// The deny list outranks the allow list when both name the host.
+	if err := SetRules("sess-both", []byte(`{
+		"enabled_domains": true,
+		"domains": [{"id": "gf-deny", "host": "dns.alidns.com"}],
+		"enabled_allow_domains": true,
+		"allow_domains": [{"id": "gf-allow", "host": "dns.alidns.com"}]
+	}`)); err != nil {
+		t.Fatal(err)
+	}
+	if _, hit := DomainHit("sess-both", "dns.alidns.com"); !hit {
+		t.Fatal("deny list lost to the allow list")
+	}
+	// A disabled allow switch judges nothing.
+	if err := SetRules("sess-off", []byte(`{"enabled_allow_domains": false, "allow_domains": [{"id": "gf-a", "host": "dns.alidns.com"}]}`)); err != nil {
+		t.Fatal(err)
+	}
+	if _, hit := AllowDomainHit("sess-off", "dns.alidns.com"); hit {
+		t.Fatal("disabled allow list matched")
+	}
+}

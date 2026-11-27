@@ -61,6 +61,14 @@ type Set struct {
 	Commands        []CommandRule `json:"commands,omitempty"`
 	EnabledDomains  bool          `json:"enabled_domains"`
 	Domains         []DomainRule  `json:"domains,omitempty"`
+	// EnabledAllowDomains gates the default-allow list (fork patch 37):
+	// infrastructure names — DNS/DoH endpoints, passive intel sources — the
+	// executor may always reach, on every project the instance drives. The
+	// deny list still wins: a red line refuses even when the name is on this
+	// list, because the fence's promise is about the target range, not about
+	// the operator's own infrastructure.
+	EnabledAllowDomains bool         `json:"enabled_allow_domains"`
+	AllowDomains        []DomainRule `json:"allow_domains,omitempty"`
 }
 
 // Parse decodes and validates one instance fence. Every pattern must compile
@@ -196,6 +204,25 @@ func DomainHit(sessionID, host string) (DomainRule, bool) {
 		return DomainRule{}, false
 	}
 	for _, rule := range set.Domains {
+		if scoperules.HostMatches(rule.Host, host) {
+			return rule, true
+		}
+	}
+	return DomainRule{}, false
+}
+
+// AllowDomainHit reports whether the host names an entry on the instance's
+// default-allow list (fork patch 37): infrastructure the executor may always
+// reach. Checked after the deny list — a red line wins — and before the
+// project fence, so one instance-level decision covers every project.
+func AllowDomainHit(sessionID, host string) (DomainRule, bool) {
+	storeMu.RLock()
+	set := storeSets[sessionID]
+	storeMu.RUnlock()
+	if set == nil || !set.EnabledAllowDomains || host == "" {
+		return DomainRule{}, false
+	}
+	for _, rule := range set.AllowDomains {
 		if scoperules.HostMatches(rule.Host, host) {
 			return rule, true
 		}
