@@ -137,7 +137,6 @@ help:
 	@echo "  EMBED=1               Generate and embed resources instead of loading them"
 	@echo "  ARSENAL_EMBED=1       Embed tools selected by ARSENAL_CONFIG"
 	@echo "  BIN_DIR=path          Binary output directory (default: $(BIN_DIR))"
-	@echo "  OUT=path              Output directory for engine/scan/scan-capture (default: $(OUT))"
 	@echo "  TAGS=tags             Tag string the 4zrcin shell forwards (see docs/19 §7)"
 	@echo "  WEB_ADDR=host:port    Web listen address (default: $(WEB_ADDR))"
 	@echo "  WEB_TOKEN=token       Optional fixed Web access token"
@@ -239,22 +238,21 @@ all: standard agent full
 # The 4zrcin shell forwards its `harness`/`scan-capture` targets here
 # (docs/19 §7 build convergence): the recipes are the shell Makefile's old
 # ones copied verbatim — same tag strings, same output file names — with the
-# output directory (OUT) and tag string (TAGS) handed in by the caller.
-OUT ?= bin
+# output directory (BIN_DIR) and tag string (TAGS) handed in by the caller.
 TARGET_OS := $(shell $(GO) env GOOS)
 TAGS ?= forceposix emptytemplates noembed osusergo full sqlite $(if $(filter windows,$(TARGET_OS)),,netgo)
 
 engine:
-	$(GO) build -tags "$(TAGS)" -o "$(OUT)/cyber-harness$(EXE)" ./cmd/cyber-harness
-	@echo "Built harness edition: $(OUT)/cyber-harness$(EXE)"
+	$(GO) build -tags "$(TAGS)" -o "$(BIN_DIR)/cyber-harness$(EXE)" ./cmd/cyber-harness
+	@echo "Built harness edition: $(BIN_DIR)/cyber-harness$(EXE)"
 
 scan:
-	$(GO) build -tags "$(filter-out full,$(TAGS))" -o "$(OUT)/cyber-scan$(EXE)" ./cmd/cyber-scan
-	@echo "Built scan edition: $(OUT)/cyber-scan$(EXE)"
+	$(GO) build -tags "$(filter-out full,$(TAGS))" -o "$(BIN_DIR)/cyber-scan$(EXE)" ./cmd/cyber-scan
+	@echo "Built scan edition: $(BIN_DIR)/cyber-scan$(EXE)"
 
 scan-capture:
-	$(GO) build -tags "$(filter-out full,$(TAGS)) emptyresources captureonly" -o "$(OUT)/cyber-scan-capture$(EXE)" ./cmd/cyber-scan
-	@echo "Built scan-capture edition: $(OUT)/cyber-scan-capture$(EXE)"
+	$(GO) build -tags "$(filter-out full,$(TAGS)) emptyresources captureonly" -o "$(BIN_DIR)/cyber-scan-capture$(EXE)" ./cmd/cyber-scan
+	@echo "Built scan-capture edition: $(BIN_DIR)/cyber-scan-capture$(EXE)"
 
 clean:
-	rm -f "$(STANDARD_BIN)" "$(FULL_BIN)" "$(RECORD_BIN)" "$(AGENT_BIN)"
+	rm -f "$(STANDARD_BIN)" "$(FULL_BIN)" "$(RECORD_BIN)" "$(AGENT_BIN)" "$(BIN_DIR)/cyber-scan-capture$(EXE)"
