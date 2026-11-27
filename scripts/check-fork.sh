@@ -45,7 +45,7 @@ is_manifest() {
 }
 
 fail=0
-hook_ok=0 hook_over=0 test_unreg=0 manifest_unreg=0
+hook_ok=0 hook_over=0 hook_unreg=0 test_unreg=0 manifest_unreg=0
 printf '%-8s %-8s %-6s %s\n' added deleted status path
 while IFS=$'\t' read -r added deleted path; do
   [[ "$path" == *.pb.go ]] && continue
@@ -67,23 +67,25 @@ while IFS=$'\t' read -r added deleted path; do
     fi
   else
     if grep -qxFe "$path" <<<"$registered"; then
-      state="hook ok"
-      (( hook_ok++ ))
       if (( added > BUDGET )); then
         state="hook OVER BUDGET (${added} > ${BUDGET})"
         (( hook_over++ ))
         (( STRICT )) && fail=1
+      else
+        state="hook ok"
+        (( hook_ok++ ))
       fi
     else
       state="hook UNREGISTERED"
+      (( hook_unreg++ ))
       (( STRICT )) && fail=1
     fi
   fi
   printf '%-8s %-8s %-6s %s\n' "$added" "$deleted" M "$path  [$state]"
 done < <(git diff --numstat "$UPSTREAM...HEAD" --diff-filter=M | sort -rn)
 
-printf 'hooks ok: %d | hooks over budget: %d | tests/docs unregistered: %d | manifests unregistered: %d\n' \
-  "$hook_ok" "$hook_over" "$test_unreg" "$manifest_unreg"
+printf 'hooks ok: %d | hooks over budget: %d | hooks unregistered: %d | tests/docs unregistered: %d | manifests unregistered: %d\n' \
+  "$hook_ok" "$hook_over" "$hook_unreg" "$test_unreg" "$manifest_unreg"
 
 if (( STRICT )); then
   exit "$fail"
