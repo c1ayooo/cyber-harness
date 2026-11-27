@@ -1188,6 +1188,19 @@ configuration checks, the focused suites are:
 go test ./agent/provider ./pkg/config
 ```
 
+A full `go test ./...` also shows failures that predate the current work
+and depend on the machine, not on the code:
+
+- `cmd/harness`: `TestUserOrderLabFixtureContract` and
+  `TestUserIOALongTaskRuntimeSmoke` shell out to `python`; a machine with
+  only `python3` fails both.
+- `tools/arsenal`: the `TestE2E_*` suite downloads tools from GitHub
+  releases and fails without that network path.
+- `tools/curl`: `TestOutputToMissingScratchDirectory` and
+  `TestCookieJarToMissingScratchDirectory` fail on Linux since b5a7c19d —
+  the absolute `/tmp` output path is written where it says instead of the
+  session scratch directory. Open.
+
 ## Build and deploy
 
 Use the [4zrcin build scripts](https://github.com/kksty/tianwu#从源码构建与启动)
