@@ -6,6 +6,7 @@ import (
 
 	"github.com/chainreactors/cyber/core/resource"
 	fenceext "github.com/chainreactors/cyber/exts/4zfence"
+	fenceconfig "github.com/chainreactors/cyber/exts/4zfence/config"
 	"github.com/chainreactors/cyber/exts/gateway"
 	guardrailext "github.com/chainreactors/cyber/exts/guardrail"
 	ioaclient "github.com/chainreactors/cyber/exts/ioa/client"
@@ -33,6 +34,11 @@ var defaultSections = sync.OnceValue(func() *cfg.Sections { return declareResour
 func declareResources(cli *hostcli.Registry, agentOptions *cfg.AgentOptions) *cfg.Sections {
 	resources := resource.New()
 	sections := cfg.NewSections()
+	// The fence section's judge keys used to live in the guardrail section
+	// (docs/19 已决 19): recognize the legacy spelling on every read.
+	sections.DocumentMigration = func(document map[string]any) {
+		fenceconfig.MigrateDocument(document)
+	}
 	localCLI := cli == nil
 	if cli == nil {
 		cli = hostcli.New(flags.NewParser(&cliOptions{}, flags.None))
