@@ -7,7 +7,7 @@ import (
 	"github.com/chainreactors/cyber/core/extension"
 	"github.com/chainreactors/cyber/core/hooks"
 	coretool "github.com/chainreactors/cyber/core/tool"
-	guardrailext "github.com/chainreactors/cyber/exts/guardrail"
+	fenceext "github.com/chainreactors/cyber/exts/4zfence"
 	cfg "github.com/chainreactors/cyber/pkg/config"
 	proxytool "github.com/chainreactors/cyber/tools/proxy"
 )
@@ -53,11 +53,12 @@ func (e *Extension) Load(scope *extension.Scope) error {
 	resource.Hub.SetControlPlaneHost(e.config.ControlPlaneHost)
 	e.resource = resource
 	hub := resource.Hub
-	// The scope judge is the guardrail runtime when one is installed (it loads
-	// ahead of this extension). An embedder without guardrail keeps a judgeless
-	// hub: the proxy stays a pure capture/routing relay.
-	if runtime, judgeErr := extension.Use[*guardrailext.Runtime](scope); judgeErr == nil {
-		hub.SetScopeJudge(runtime)
+	// The scope judge is the fence's (it loads in the base composition,
+	// ahead of this extension, and owns request judging; docs/19 P1-4). An
+	// embedder without the fence keeps a judgeless hub: the proxy stays a
+	// pure capture/routing relay.
+	if fence, judgeErr := extension.Use[*fenceext.Extension](scope); judgeErr == nil {
+		hub.SetScopeJudge(fenceext.NewScopeJudge(fence))
 	}
 
 	binding, err := proxytool.TrafficNamespace(hub)
