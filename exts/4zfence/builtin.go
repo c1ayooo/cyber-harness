@@ -1,4 +1,4 @@
-package guardrail
+package fence
 
 // The guaranteed audit (fork patch 23b, docs/04): a built-in corpus of
 // destructive and exfiltration command patterns is audited unconditionally —
@@ -10,11 +10,8 @@ package guardrail
 // stripped, because the audit duty is not a capability.
 
 import (
-	"context"
-
-	toolhooks "github.com/chainreactors/cyber/core/tool/hooks"
-
 	aop "github.com/chainreactors/cyber/aop"
+	guardrailext "github.com/chainreactors/cyber/exts/guardrail"
 	"github.com/chainreactors/cyber/tools/resources"
 )
 
@@ -23,7 +20,7 @@ import (
 // is "builtin.<id> (<desc>)"; the control plane recognizes the prefix and
 // renders the row with source=builtin (hub audit rows, P3).
 func BuiltinCommandReason(call *aop.ToolCall) string {
-	text := toolCommandText(call)
+	text := guardrailext.ToolCommandText(call)
 	if text == "" {
 		return ""
 	}
@@ -33,15 +30,4 @@ func BuiltinCommandReason(call *aop.ToolCall) string {
 		}
 	}
 	return ""
-}
-
-// emitBuiltinAudit publishes one Decision (record, builtin reason) for a call
-// that matched the corpus. It runs before any policy work: the guaranteed row
-// must appear even when the runtime has no policy at all, and it must not be
-// affected by on_error fallbacks or provider availability. The call proceeds
-// through the normal policy flow afterwards — the built-in corpus audits, it
-// does not judge.
-func (r *Runtime) emitBuiltinAudit(ctx context.Context, ev toolhooks.CallEvent, reason string) {
-	d := &Decision{Action: Action_ACTION_RECORD, Reason: reason}
-	r.emit(ctx, d, ev)
 }

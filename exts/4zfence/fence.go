@@ -31,14 +31,20 @@ import (
 	"github.com/chainreactors/cyber/core/events"
 	"github.com/chainreactors/cyber/core/extension"
 	"github.com/chainreactors/cyber/core/hooks"
+	toolhooks "github.com/chainreactors/cyber/core/tool/hooks"
 	"github.com/chainreactors/cyber/exts/4zfence/globalfence"
 	"github.com/chainreactors/cyber/exts/4zfence/scoperules"
+	guardrailext "github.com/chainreactors/cyber/exts/guardrail"
 )
 
-// Extension keeps the fence tables to live sessions via the session hooks.
+// Extension keeps the fence tables to live sessions via the session hooks,
+// and owns the fence's tool admission (the guaranteed audit and the instance
+// red lines, admission.go).
 type Extension struct {
-	mu   sync.Mutex
-	subs []*hooks.Subscription
+	mu        sync.Mutex
+	subs      []*hooks.Subscription
+	stream    *events.Stream
+	guardrail *guardrailext.Runtime
 }
 
 var _ extension.Extension = (*Extension)(nil)
@@ -55,13 +61,22 @@ func (e *Extension) Load(scope *extension.Scope) error {
 	if err != nil {
 		return err
 	}
-	if _, err := extension.Use[*events.Stream](scope); err != nil {
+	stream, err := extension.Use[*events.Stream](scope)
+	if err != nil {
 		return err
 	}
+	// The fence admission must subscribe before the guardrail extension, so
+	// a red line denies before any policy concern; the composition orders the
+	// entries and binds the guardrail runtime afterwards (Bind).
 	const source = "4zfence"
 	e.mu.Lock()
 	defer e.mu.Unlock()
+	e.stream = stream
+	if err := extension.Provide[*Extension](scope, e); err != nil {
+		return err
+	}
 	e.subs = append(e.subs,
+		toolhooks.Before.On(registry, source, e.admit),
 		agenthooks.SessionStart.On(registry, source, inheritOnOpen),
 		agenthooks.SessionEnd.On(registry, source, dropOnClose),
 	)

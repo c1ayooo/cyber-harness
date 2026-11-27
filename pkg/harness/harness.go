@@ -80,7 +80,7 @@ func New(config Config) (*Harness, error) {
 		// enriches the turn input.
 		session.TurnDecorators = append(session.TurnDecorators, fenceext.TurnDecorators()...)
 		session.TurnDecorators = append(session.TurnDecorators, zsession.TurnDecorators()...)
-		entries = append(entries, fenceext.New(), loopext.New(session.Loop), sessionext.New(session), subagentext.NewTools())
+		entries = append(entries, loopext.New(session.Loop), sessionext.New(session), subagentext.NewTools())
 	}
 	// The final consumer reads the capabilities assembled by the graph. This
 	// keeps ownership in the extensions while giving an embedded host a small,

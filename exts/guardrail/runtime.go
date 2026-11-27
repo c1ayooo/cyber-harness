@@ -14,7 +14,6 @@ import (
 	"github.com/chainreactors/cyber/aop"
 	operationpb "github.com/chainreactors/cyber/aop/operation"
 	"github.com/chainreactors/cyber/core/events"
-	"github.com/chainreactors/cyber/exts/4zfence/globalfence"
 	"github.com/chainreactors/cyber/core/operation"
 	toolhooks "github.com/chainreactors/cyber/core/tool/hooks"
 	"google.golang.org/protobuf/proto"
@@ -93,6 +92,13 @@ func newRuntime(parent context.Context, stream *events.Stream, timeout time.Dura
 		},
 	}
 	return r
+}
+
+// NewRuntime is the constructor seam the fence's red-line tests use: a bare
+// approval runtime with no policy (docs/19 P1-4 — 4zfence composes with the
+// guardrail runtime's pending queue through SubmitReview).
+func NewRuntime(parent context.Context, stream *events.Stream, timeout time.Duration, mode Mode) *Runtime {
+	return newRuntime(parent, stream, timeout, mode, nil, nil)
 }
 
 // newRuntimeWithPolicy installs one Policy behind the admission boundary.
@@ -184,33 +190,6 @@ func toolCommandText(call *aop.ToolCall) string {
 	return string(raw)
 }
 
-// commandLikeCall reports whether a tool call IS a command — its arguments
-// are a bare command string, or an object carrying one of the documented
-// command fields (fork patch 35). Everything else is a different shape of
-// work: a write tool whose content quotes a blocked command is a document,
-// and judging its text would hold every report that mentions one.
-func commandLikeCall(call *aop.ToolCall) bool {
-	if call == nil {
-		return false
-	}
-	raw := call.GetArguments().GetData()
-	var value any
-	if json.Unmarshal(raw, &value) != nil {
-		return false
-	}
-	switch typed := value.(type) {
-	case string:
-		return strings.TrimSpace(typed) != ""
-	case map[string]any:
-		for _, key := range []string{"command", "cmd", "script", "input", "code"} {
-			if text, ok := typed[key].(string); ok && strings.TrimSpace(text) != "" {
-				return true
-			}
-		}
-	}
-	return false
-}
-
 // evaluate preserves the original call for each stage and never exposes provider
 // failures through the tool result. The hook boundary handles panics. Sentinel
 // errors that describe the policy shape (disabled policy, absent consequence
@@ -264,38 +243,6 @@ func (r *Runtime) Admit(ctx context.Context, ev toolhooks.CallEvent) (toolhooks.
 	}
 	if err := ctx.Err(); err != nil {
 		return denied("guardrail invocation canceled"), err
-	}
-	// The guaranteed audit (fork patch 23b) runs before every policy concern:
-	// no policy, no scope, no mode and no provider state can suppress it. It
-	// only records — the call continues through the normal flow below.
-	if reason := BuiltinCommandReason(ev.Call); reason != "" {
-		r.emitBuiltinAudit(ctx, ev, reason)
-	}
-	// The instance fence (spec #1 工单3) judges after the guaranteed audit and
-	// before every policy concern: a red line denies even when no provider is
-	// configured, and a review red line holds the call on the ordinary
-	// approval lifecycle — the operator decides this exact invocation, not a
-	// model judge. The reason carries the global.<id> prefix the control
-	// plane badges. Only command-like calls are judged (fork patch 35): a
-	// pattern is a statement about commands, and a write tool whose content
-	// quotes "rm -rf /" is a document, not one — judging it would hold every
-	// report that mentions a blocked command.
-	if commandLikeCall(ev.Call) {
-		if rule, hit := globalfence.JudgeCommand(operation.InvocationFromContext(ctx).SessionID, toolCommandText(ev.Call)); hit {
-			reason := "global." + rule.ID
-			if rule.Desc != "" {
-				reason += "（" + rule.Desc + "）"
-			}
-			decision := &Decision{Action: Action_ACTION_BLOCK, Reason: reason}
-			if rule.Action == globalfence.ActionDeny {
-				r.emit(ctx, decision, ev)
-				return denied(reason), nil
-			}
-			if admission := r.review(ctx, ev, decision); admission.Deny == nil {
-				return admission, nil
-			}
-			return denied(reason), nil
-		}
 	}
 	if policy == nil {
 		return toolhooks.Admission{}, nil
@@ -433,6 +380,18 @@ func (r *Runtime) repeatedRejection(ctx context.Context, ev toolhooks.CallEvent)
 	}
 	r.rejections[hash]++
 	return r.rejections[hash]
+}
+
+// ToolCommandText extracts the command-ish text from a tool call. Exported
+// for the fence admission hook (4zfence), which composes with this runtime's
+// journal and review lifecycle but cannot own the helper (import cycle).
+func ToolCommandText(call *aop.ToolCall) string { return toolCommandText(call) }
+
+// Emit publishes one admission decision event on the runtime's stream. The
+// fence admission hook (4zfence) uses it so fence rows keep the guardrail
+// journal shape the control plane already renders.
+func (r *Runtime) Emit(ctx context.Context, payload proto.Message, ev toolhooks.CallEvent) {
+	r.emit(ctx, payload, ev)
 }
 
 func denied(reason string) toolhooks.Admission {

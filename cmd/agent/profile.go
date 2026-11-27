@@ -54,7 +54,6 @@ func newAgentProfile(option cfg.Option, logger telemetry.Logger, workDir string,
 
 	p := &agentProfile{}
 	values = append(values,
-		fenceext.New(),
 		loop,
 		subagentext.New(), sessionext.New(sessionConfig), subagentext.NewTools(),
 		tuiext.New(),

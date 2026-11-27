@@ -6,8 +6,8 @@ import (
 	"time"
 
 	aop "github.com/chainreactors/cyber/aop"
-	"github.com/chainreactors/cyber/exts/4zfence/globalfence"
 	"github.com/chainreactors/cyber/core/operation"
+	"github.com/chainreactors/cyber/exts/4zfence/globalfence"
 	"github.com/chainreactors/cyber/exts/4zfence/scoperules"
 	"github.com/chainreactors/cyber/tools/proxy"
 	"google.golang.org/protobuf/proto"

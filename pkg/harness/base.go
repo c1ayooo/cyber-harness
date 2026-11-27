@@ -12,6 +12,7 @@ import (
 	"github.com/chainreactors/cyber/core/hooks"
 	"github.com/chainreactors/cyber/core/telemetry"
 	coretool "github.com/chainreactors/cyber/core/tool"
+	fenceext "github.com/chainreactors/cyber/exts/4zfence"
 	fileext "github.com/chainreactors/cyber/exts/files"
 	guardrailext "github.com/chainreactors/cyber/exts/guardrail"
 	promptext "github.com/chainreactors/cyber/exts/prompt"
@@ -69,7 +70,23 @@ func BaseExtensions(c BaseConfig) ([]extension.Extension, error) {
 		extension.Provided[telemetry.Logger](c.Logger),
 		coretool.NewCommandRegistry(),
 		coretool.NewToolRegistry(),
+		// The fence loads ahead of the guardrail so its tool.before admission
+		// (audit + red lines) is consulted first; the bind hook afterwards
+		// hands it the guardrail runtime for the approval lifecycle.
+		fenceext.New(),
 		guardrailext.New(c.Guardrail),
+		extension.Func{LoadFunc: func(scope *extension.Scope) error {
+			runtime, err := extension.Use[*guardrailext.Runtime](scope)
+			if err != nil {
+				return err
+			}
+			fence, err := extension.Use[*fenceext.Extension](scope)
+			if err != nil {
+				return err
+			}
+			fence.Bind(runtime)
+			return nil
+		}},
 		library,
 		promptext.New(),
 		egressProvider,
