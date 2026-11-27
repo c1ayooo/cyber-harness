@@ -140,11 +140,10 @@ func buildCyberScanProfile(config config) (*cyberScanProfile, error) {
 	// overrides the guardrail section's when it names a judge.
 	fenceConfig := fenceconfig.Config{}
 	if fenceValue, fenceErr := cfg.Get[*fenceconfig.Config](resolved, fenceconfig.ConfigKey); fenceErr == nil && fenceValue != nil {
-		if fenceValue.Provider != "" {
-			guardrailValue.Provider = fenceValue.Provider
-		}
 		fenceConfig = *fenceValue
-		fenceConfig.Provider = guardrailValue.Provider
+		if fenceConfig.Provider == "" {
+			fenceConfig.Provider = string(guardrailValue.Provider)
+		}
 	}
 
 	graph, err := extensions(config.Base, loop, workDir, proxyExtension, guardrailValue, fenceConfig)
@@ -158,7 +157,11 @@ func buildCyberScanProfile(config config) (*cyberScanProfile, error) {
 	values := []extension.Extension{nodeext.New()}
 	// The LLM-only judge has no JEV dependency. JEV and hybrid need the shared
 	// client because hybrid escalates low-confidence/review judgments to JEV.
-	guardrailNeedsJEV := guardrailValue.Provider == "jev" || guardrailValue.Provider == "hybrid"
+	effectiveProvider := fenceConfig.Provider
+	if effectiveProvider == "" {
+		effectiveProvider = string(guardrailValue.Provider)
+	}
+	guardrailNeedsJEV := effectiveProvider == "jev" || effectiveProvider == "hybrid"
 	if guardrailNeedsJEV || (jevConfig.Mode != "" && jevConfig.Mode != "off") {
 		if strings.TrimSpace(jevConfig.APIKey) == "" {
 			return nil, fmt.Errorf("JEV requires jev.api_key or TYPESAFE_API_KEY")

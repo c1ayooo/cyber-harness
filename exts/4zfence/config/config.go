@@ -204,6 +204,32 @@ var legacyKeys = []string{"on_error", "shadow", "scope", "allow_prefixes", "time
 // legacy guardrail section carrying one migrates its provider key too.
 var legacyProviders = map[string]bool{"llm": true, "hybrid": true}
 
+// MigrateSections is MigrateDocument for a section-keyed map (pkg/config's
+// Values): the guardrail and fence sections side by side.
+func MigrateSections(sections map[string]map[string]any) (bool, string) {
+	if sections == nil {
+		return false, ""
+	}
+	document := map[string]any{}
+	for key, section := range sections {
+		if section != nil {
+			document[key] = section
+		}
+	}
+	moved, note := MigrateDocument(document)
+	if moved {
+		for key := range sections {
+			delete(sections, key)
+		}
+		for key, value := range document {
+			if section, ok := value.(map[string]any); ok {
+				sections[key] = section
+			}
+		}
+	}
+	return moved, note
+}
+
 // MigrateDocument moves the judge keys from a document's legacy guardrail
 // section into the fence section, in memory only — an operator's file is
 // never rewritten at startup (已决 19). The save path (the shell's settings

@@ -23,15 +23,20 @@ func TestGuardrailProviderConfigurationEnumeration(t *testing.T) {
 		}
 	}
 	for _, provider := range []string{"llm", "hybrid"} {
-		if _, err := defaultSections().ResolveValues(cfg.Values{"guardrail": {"provider": provider, "llm": guardrailLLMSection()}}, nil, lookup); err != nil {
+		if _, err := defaultSections().ResolveValues(cfg.Values{"fence": {"provider": provider, "llm": guardrailLLMSection()}}, nil, lookup); err != nil {
 			t.Fatalf("provider %q rejected: %v", provider, err)
 		}
+	}
+	// The legacy spelling (judge keys inside the guardrail section) still
+	// reads: the read path migrates it in memory (已决 19).
+	if _, err := defaultSections().ResolveValues(cfg.Values{"guardrail": {"provider": "llm", "llm": guardrailLLMSection()}}, nil, lookup); err != nil {
+		t.Fatalf("legacy llm spelling rejected: %v", err)
 	}
 	_, err := defaultSections().ResolveValues(cfg.Values{"guardrail": {"provider": "off"}}, nil, lookup)
 	if err == nil || !strings.Contains(err.Error(), "provider") {
 		t.Fatalf("invalid provider accepted or unclear: %v", err)
 	}
-	_, err = defaultSections().ResolveValues(cfg.Values{"guardrail": {"allow_prefixes": []any{"ls "}}}, nil, lookup)
+	_, err = defaultSections().ResolveValues(cfg.Values{"fence": {"allow_prefixes": []any{"ls "}}}, nil, lookup)
 	if err == nil || !strings.Contains(err.Error(), "allow_prefixes") {
 		t.Fatalf("allow_prefixes outside safe mode accepted or unclear: %v", err)
 	}
@@ -66,8 +71,8 @@ func TestGuardrailProviderControlsJEVClient(t *testing.T) {
 		{
 			name: "llm_without_jev_credentials",
 			fields: cfg.Values{
-				"guardrail": {"provider": "llm", "llm": guardrailLLMSection()},
-				"jev":       {"mode": "off"},
+				"fence": {"provider": "llm", "llm": guardrailLLMSection()},
+				"jev":   {"mode": "off"},
 			},
 		},
 		{
@@ -81,16 +86,16 @@ func TestGuardrailProviderControlsJEVClient(t *testing.T) {
 		{
 			name: "hybrid_requires_credentials",
 			fields: cfg.Values{
-				"guardrail": {"provider": "hybrid", "llm": guardrailLLMSection()},
-				"jev":       {"mode": "off"},
+				"fence": {"provider": "hybrid", "llm": guardrailLLMSection()},
+				"jev":   {"mode": "off"},
 			},
 			wantErr: "JEV requires",
 		},
 		{
 			name: "hybrid_with_credentials",
 			fields: cfg.Values{
-				"guardrail": {"provider": "hybrid", "llm": guardrailLLMSection()},
-				"jev":       {"mode": "off", "api_key": "fixture-key", "directory": t.TempDir()},
+				"fence": {"provider": "hybrid", "llm": guardrailLLMSection()},
+				"jev":   {"mode": "off", "api_key": "fixture-key", "directory": t.TempDir()},
 			},
 		},
 	} {

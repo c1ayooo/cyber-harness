@@ -1,5 +1,7 @@
 package config
 
+import fenceconfig "github.com/chainreactors/cyber/exts/4zfence/config"
+
 import (
 	"fmt"
 )
@@ -49,6 +51,11 @@ func Get[T any](r *Resolved, key string) (T, error) {
 // Every declared section is validated, including sections omitted by the user.
 func (r *Sections) ResolveValues(file, cli Values, lookup func(string) (string, bool)) (*Resolved, error) {
 	r.Seal()
+	// The fence section's judge keys used to live in the guardrail section
+	// (docs/19 已决 19): recognize the legacy spelling on this path too, so
+	// the Web settings and the hub's distributed values read old documents.
+	fenceconfig.MigrateSections(file)
+	fenceconfig.MigrateSections(cli)
 	result := &Resolved{cli: CloneValues(cli), values: Values{}, typed: map[string]any{}, sources: map[string]string{}}
 	for _, input := range []Values{file, cli} {
 		for key := range input {
