@@ -1,0 +1,32 @@
+[
+  {
+    "name": "command deny red line blocks",
+    "command_hit": true,
+    "rule_id": "g1"
+  },
+  {
+    "name": "command pattern is anchored enough to miss other spelling"
+  },
+  {
+    "name": "command review red line hits",
+    "command_hit": true,
+    "rule_id": "g2"
+  },
+  {
+    "name": "disabled command list judges nothing"
+  },
+  {
+    "name": "domain deny row covers subdomains",
+    "deny_hit": true
+  },
+  {
+    "name": "domain deny row misses other tld"
+  },
+  {
+    "name": "disabled domain list judges nothing"
+  },
+  {
+    "name": "default-allow list passes infrastructure",
+    "allow_hit": true
+  }
+]

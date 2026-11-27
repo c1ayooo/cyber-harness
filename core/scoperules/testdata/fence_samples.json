@@ -1,0 +1,99 @@
+[
+  {
+    "name": "exact host hit blocks",
+    "set": "{\"enabled\":true,\"default_action\":\"record\",\"rules\":[{\"id\":\"r1\",\"action\":\"block\",\"method\":\"*\",\"host\":\"api.example.com\"}]}",
+    "get": "https://api.example.com/v1/x",
+    "want": "block",
+    "rule": "r1"
+  },
+  {
+    "name": "subdomain covered by exact row",
+    "set": "{\"enabled\":true,\"default_action\":\"record\",\"rules\":[{\"id\":\"r1\",\"action\":\"block\",\"method\":\"*\",\"host\":\"api.example.com\"}]}",
+    "get": "https://v1.api.example.com/x",
+    "want": "block",
+    "rule": "r1"
+  },
+  {
+    "name": "star wildcard row",
+    "set": "{\"enabled\":true,\"default_action\":\"record\",\"rules\":[{\"id\":\"r2\",\"action\":\"review\",\"method\":\"*\",\"host\":\"*.internal.test\"}]}",
+    "get": "https://db.internal.test/x",
+    "want": "review",
+    "rule": "r2"
+  },
+  {
+    "name": "dot legacy wildcard row",
+    "set": "{\"enabled\":true,\"default_action\":\"record\",\"rules\":[{\"id\":\"r2\",\"action\":\"review\",\"method\":\"*\",\"host\":\".internal.test\"}]}",
+    "get": "https://db.internal.test/x",
+    "want": "review",
+    "rule": "r2"
+  },
+  {
+    "name": "path prefix narrows the row",
+    "set": "{\"enabled\":true,\"default_action\":\"record\",\"rules\":[{\"id\":\"r3\",\"action\":\"block\",\"method\":\"*\",\"host\":\"api.example.com\",\"path_prefix\":\"/admin\"}]}",
+    "get": "https://api.example.com/admin/keys",
+    "want": "block",
+    "rule": "r3"
+  },
+  {
+    "name": "outside the path prefix falls to default",
+    "set": "{\"enabled\":true,\"default_action\":\"record\",\"rules\":[{\"id\":\"r3\",\"action\":\"block\",\"method\":\"*\",\"host\":\"api.example.com\",\"path_prefix\":\"/admin\"}]}",
+    "get": "https://api.example.com/v1/x",
+    "want": "record",
+    "default_missed": true
+  },
+  {
+    "name": "method mismatch falls to default",
+    "set": "{\"enabled\":true,\"default_action\":\"record\",\"rules\":[{\"id\":\"r4\",\"action\":\"block\",\"method\":\"POST\",\"host\":\"api.example.com\"}]}",
+    "get": "https://api.example.com/v1/x",
+    "want": "record",
+    "default_missed": true
+  },
+  {
+    "name": "first hit wins",
+    "set": "{\"enabled\":true,\"default_action\":\"record\",\"rules\":[{\"id\":\"r5\",\"action\":\"block\",\"method\":\"*\",\"host\":\"api.example.com\"},{\"id\":\"r6\",\"action\":\"review\",\"method\":\"*\",\"host\":\"api.example.com\"}]}",
+    "get": "https://api.example.com/x",
+    "want": "block",
+    "rule": "r5"
+  },
+  {
+    "name": "disabled set judges nothing",
+    "set": "{\"enabled\":false,\"default_action\":\"block\",\"rules\":[{\"id\":\"r7\",\"action\":\"block\",\"method\":\"*\",\"host\":\"*\"}]}",
+    "get": "https://any.test/x",
+    "want": ""
+  },
+  {
+    "name": "out of range is the default action",
+    "set": "{\"enabled\":true,\"default_action\":\"record\",\"rules\":[{\"id\":\"r8\",\"action\":\"block\",\"method\":\"*\",\"host\":\"in.range\"}]}",
+    "get": "https://out.range/x",
+    "want": "record",
+    "default_missed": true
+  },
+  {
+    "name": "default missed marks the fallback verdict",
+    "set": "{\"enabled\":true,\"default_action\":\"review\",\"rules\":[{\"id\":\"r9\",\"action\":\"block\",\"method\":\"*\",\"host\":\"in.range\"}]}",
+    "get": "https://out.range/x",
+    "want": "review",
+    "default_missed": true
+  },
+  {
+    "name": "deny red line outranks default allow",
+    "set": "{\"enabled\":true,\"default_action\":\"record\",\"rules\":[{\"id\":\"r10\",\"action\":\"block\",\"method\":\"*\",\"host\":\"denied.range\"},{\"id\":\"r11\",\"action\":\"review\",\"method\":\"*\",\"host\":\"*.range\"}]}",
+    "get": "https://denied.range/x",
+    "want": "block",
+    "rule": "r10"
+  },
+  {
+    "name": "suffix-only domain does not match",
+    "set": "{\"enabled\":true,\"default_action\":\"record\",\"rules\":[{\"id\":\"r12\",\"action\":\"block\",\"method\":\"*\",\"host\":\"example.com\"}]}",
+    "get": "https://notexample.com/x",
+    "want": "record",
+    "default_missed": true
+  },
+  {
+    "name": "http and https both hit",
+    "set": "{\"enabled\":true,\"default_action\":\"record\",\"rules\":[{\"id\":\"r13\",\"action\":\"block\",\"method\":\"*\",\"host\":\"web.test\"}]}",
+    "get": "http://web.test/x",
+    "want": "block",
+    "rule": "r13"
+  }
+]

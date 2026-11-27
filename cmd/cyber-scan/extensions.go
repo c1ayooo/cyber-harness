@@ -19,6 +19,7 @@ import (
 	searchext "github.com/chainreactors/cyber/exts/search"
 	subagentext "github.com/chainreactors/cyber/exts/subagent"
 	terminalext "github.com/chainreactors/cyber/exts/terminal"
+	"github.com/chainreactors/cyber/pkg/assembly"
 	cfg "github.com/chainreactors/cyber/pkg/config"
 	harness "github.com/chainreactors/cyber/pkg/harness"
 	"github.com/chainreactors/cyber/tools/scan"
@@ -52,7 +53,12 @@ func extensions(config appConfig, loop agent.Loop, workDir string, proxy *proxye
 	if err != nil {
 		return nil, err
 	}
-	engines, passiveBindings := engineExtensions(config, workDir)
+	engines, passiveBindings := assembly.Engines(assembly.EnginesInput{
+		SkipEngines:      config.SkipEngines,
+		Scanner:          config.Scanner,
+		Recon:            config.Recon,
+		ReconCredentials: config.ReconCredentials,
+	}, workDir)
 	search := searchext.New(searchext.Options{TavilyKeys: config.TavilyKeys})
 	bindings := append([]gateway.Kind{proxy.Gateway(config.ProxyService)}, search.Gateway()...)
 	bindings = append(bindings, passiveBindings...)

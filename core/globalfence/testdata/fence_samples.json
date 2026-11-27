@@ -1,0 +1,70 @@
+[
+  {
+    "name": "command deny red line blocks",
+    "set": "{\"enabled_commands\":true,\"commands\":[{\"id\":\"g1\",\"pattern\":\"rm\\\\s+-rf\\\\s+/\",\"desc\":\"递归强删根目录\",\"action\":\"deny\"}]}",
+    "command": "rm -rf /",
+    "command_hit": true,
+    "rule_id": "g1",
+    "deny_hit": false,
+    "allow_hit": false
+  },
+  {
+    "name": "command pattern is anchored enough to miss other spelling",
+    "set": "{\"enabled_commands\":true,\"commands\":[{\"id\":\"g1\",\"pattern\":\"rm\\\\s+-rf\\\\s+/\",\"action\":\"deny\"}]}",
+    "command": "rm -rf ./build",
+    "command_hit": false,
+    "deny_hit": false,
+    "allow_hit": false
+  },
+  {
+    "name": "command review red line hits",
+    "set": "{\"enabled_commands\":true,\"commands\":[{\"id\":\"g2\",\"pattern\":\"^curl\\\\b\",\"action\":\"review\"}]}",
+    "command": "curl https://exfil.test/up",
+    "command_hit": true,
+    "rule_id": "g2",
+    "deny_hit": false,
+    "allow_hit": false
+  },
+  {
+    "name": "disabled command list judges nothing",
+    "set": "{\"enabled_commands\":false,\"commands\":[{\"id\":\"g1\",\"pattern\":\"^curl\\\\b\",\"action\":\"deny\"}]}",
+    "command": "curl https://x.test/",
+    "command_hit": false,
+    "deny_hit": false,
+    "allow_hit": false
+  },
+  {
+    "name": "domain deny row covers subdomains",
+    "set": "{\"enabled_domains\":true,\"domains\":[{\"id\":\"g10\",\"host\":\"gov.cn\"}]}",
+    "host": "www.gov.cn",
+    "rule_id": "g10",
+    "command_hit": false,
+    "deny_hit": true,
+    "allow_hit": false
+  },
+  {
+    "name": "domain deny row misses other tld",
+    "set": "{\"enabled_domains\":true,\"domains\":[{\"id\":\"g10\",\"host\":\"gov.cn\"}]}",
+    "host": "gov.cn.evil.test",
+    "command_hit": false,
+    "deny_hit": false,
+    "allow_hit": false
+  },
+  {
+    "name": "disabled domain list judges nothing",
+    "set": "{\"enabled_domains\":false,\"domains\":[{\"id\":\"g10\",\"host\":\"gov.cn\"}]}",
+    "host": "gov.cn",
+    "command_hit": false,
+    "deny_hit": false,
+    "allow_hit": false
+  },
+  {
+    "name": "default-allow list passes infrastructure",
+    "set": "{\"enabled_allow_domains\":true,\"allow_domains\":[{\"id\":\"g20\",\"host\":\"dns.google\"}],\"enabled_domains\":true,\"domains\":[{\"id\":\"g21\",\"host\":\"blocked.test\"}]}",
+    "host": "dns.google",
+    "rule_id": "g20",
+    "command_hit": false,
+    "deny_hit": false,
+    "allow_hit": true
+  }
+]
