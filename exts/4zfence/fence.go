@@ -57,9 +57,10 @@ type Extension struct {
 	jevRules guardrailext.Rules
 	policy   policy.Policy
 	options  judgeOptions
-	// The tables (docs/19 E3-4): extension-owned stores, provided for
-	// well-behaved consumers and installed for the package-function read seam
-	// (the proxy judge and the observe sidecar). Close uninstalls and clears.
+	// The tables (docs/19 E3-4): extension-owned stores, created at Load,
+	// provided for consumers that can borrow, and reached by the fence's own
+	// entry points — the turn decorators, the session hooks and the scope
+	// judge — through stores(). Close clears them.
 	scopes  *scoperules.Store
 	globals *globalfence.Store
 
@@ -102,9 +103,9 @@ func (e *Extension) Load(scope *extension.Scope) error {
 	e.policy = policy
 	e.options = newJudgeOptions(e.fence)
 	// The session tables live in this extension's stores (docs/19 E3-4): they
-	// mount here, clear at Close, and never outlive the extension that owns
-	// them. The install backs the package-function read seam; the Provide is
-	// the contribution point for consumers that can borrow.
+	// are created here, cleared at Close, and never outlive the extension
+	// that owns them. The Provide is the contribution point for consumers
+	// that can borrow them.
 	e.scopes = scoperules.NewStore()
 	e.globals = globalfence.NewStore()
 	if err := extension.Provide[*scoperules.Store](scope, e.scopes); err != nil {
@@ -113,8 +114,6 @@ func (e *Extension) Load(scope *extension.Scope) error {
 	if err := extension.Provide[*globalfence.Store](scope, e.globals); err != nil {
 		return err
 	}
-	scoperules.Install(e.scopes)
-	globalfence.Install(e.globals)
 	// The fence admission must subscribe before the guardrail extension, so
 	// a red line denies before any policy concern; the composition orders the
 	// entries and binds the guardrail runtime afterwards (Bind).
@@ -127,15 +126,14 @@ func (e *Extension) Load(scope *extension.Scope) error {
 	}
 	e.subs = append(e.subs,
 		toolhooks.Before.On(registry, source, e.admit),
-		agenthooks.SessionStart.On(registry, source, inheritOnOpen),
-		agenthooks.SessionEnd.On(registry, source, dropOnClose),
+		agenthooks.SessionStart.On(registry, source, e.inheritOnOpen),
+		agenthooks.SessionEnd.On(registry, source, e.dropOnClose),
 	)
 	return nil
 }
 
-// Close releases the hook subscriptions, uninstalls the stores and clears
-// them: no session's rules or parked sets survive the extension that owned
-// them (docs/19 E3-4).
+// Close releases the hook subscriptions and clears the stores: no session's
+// rules or parked sets survive the extension that owned them (docs/19 E3-4).
 func (e *Extension) Close(_ context.Context) error {
 	e.mu.Lock()
 	defer e.mu.Unlock()
@@ -149,11 +147,27 @@ func (e *Extension) Close(_ context.Context) error {
 	if e.globals != nil {
 		e.globals.Clear()
 	}
-	scoperules.Uninstall()
-	globalfence.Uninstall()
 	e.scopes, e.globals = nil, nil
 	return nil
 }
+
+// stores returns the session tables. Both are nil before Load and after
+// Close: the fence then judges nothing, and an entry point that has to
+// register reports ErrNotLoaded instead of letting the registration go
+// nowhere.
+func (e *Extension) stores() (*scoperules.Store, *globalfence.Store) {
+	if e == nil {
+		return nil, nil
+	}
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	return e.scopes, e.globals
+}
+
+// ErrNotLoaded is returned by the entry points that must register or copy
+// rules when the extension holds no store: a registration that silently went
+// nowhere would run the session unfenced.
+var ErrNotLoaded = errors.New("fence extension is not loaded: no session tables to register with")
 
 // Declare registers the fence's configuration section (the judge knobs;
 // docs/19 已决 15). The section's struct and validation are fenceconfig's —
@@ -170,23 +184,29 @@ func Declare(resources *resource.Registry) error {
 
 // TurnDecorators returns the fence's turn decorators in application order:
 // the scope rules and the instance fence register first (the proxy judges
-// this turn's requests against them), then the egress binding.
-func TurnDecorators() []agentsession.RunTurnDecorator {
-	return []agentsession.RunTurnDecorator{fenceRulesDecorator, egressProxyDecorator}
+// this turn's requests against them), then the egress binding. They are bound
+// to this extension, so they register with its own tables (docs/19 E3-4).
+func (e *Extension) TurnDecorators() []agentsession.RunTurnDecorator {
+	return []agentsession.RunTurnDecorator{e.fenceRulesDecorator, egressProxyDecorator}
 }
 
 // inheritOnOpen copies the parent's fence registrations to the child session
 // at open time. The SessionStart hook is FailClosed, so an inheritance failure
-// (a full table) fails the open instead of starting the child unfenced; a
-// root session (no parent) inherits nothing.
-func inheritOnOpen(_ context.Context, ev agenthooks.SessionEvent) (struct{}, error) {
+// (a full table, or no tables because the extension is not loaded) fails the
+// open instead of starting the child unfenced; a root session (no parent)
+// inherits nothing.
+func (e *Extension) inheritOnOpen(_ context.Context, ev agenthooks.SessionEvent) (struct{}, error) {
 	if ev.ParentID == "" {
 		return struct{}{}, nil
 	}
-	if err := scoperules.InheritSessionRules(ev.ParentID, ev.SessionID); err != nil {
+	scopes, globals := e.stores()
+	if scopes == nil || globals == nil {
+		return struct{}{}, ErrNotLoaded
+	}
+	if err := scopes.InheritSessionRules(ev.ParentID, ev.SessionID); err != nil {
 		return struct{}{}, err
 	}
-	if err := globalfence.InheritSessionRules(ev.ParentID, ev.SessionID); err != nil {
+	if err := globals.InheritSessionRules(ev.ParentID, ev.SessionID); err != nil {
 		return struct{}{}, err
 	}
 	return struct{}{}, nil
@@ -208,27 +228,31 @@ var rotatingReasons = map[string]bool{
 // binding when the session closes, so the tables hold only live sessions and
 // capacity is never exhausted by stale ids (fork fix P1-0). A rotation close
 // parks the registrations for the continuation's inheritance instead.
-// Unknown ids are a no-op.
-func dropOnClose(_ context.Context, ev agenthooks.SessionEvent) (struct{}, error) {
+// Unknown ids are a no-op; so is a close after the extension's own.
+func (e *Extension) dropOnClose(_ context.Context, ev agenthooks.SessionEvent) (struct{}, error) {
 	egress.ClearSessionRoute(ev.SessionID)
-	if rotatingReasons[ev.Reason] {
-		scoperules.ParkSession(ev.SessionID)
-		globalfence.ParkSession(ev.SessionID)
+	scopes, globals := e.stores()
+	if scopes == nil || globals == nil {
 		return struct{}{}, nil
 	}
-	scoperules.DropSession(ev.SessionID)
-	globalfence.DropSession(ev.SessionID)
+	if rotatingReasons[ev.Reason] {
+		scopes.ParkSession(ev.SessionID)
+		globals.ParkSession(ev.SessionID)
+		return struct{}{}, nil
+	}
+	scopes.DropSession(ev.SessionID)
+	globals.DropSession(ev.SessionID)
 	return struct{}{}, nil
 }
 
 // fenceRulesDecorator registers the project scope rules and the instance
 // fence for the turn's session. A full table rejects the turn: an unfenced
 // run is never acceptable.
-func fenceRulesDecorator(req *aop.RunTurnRequest, _ *agentsession.RunInput) error {
-	if err := turnScopeRules(req); err != nil {
+func (e *Extension) fenceRulesDecorator(req *aop.RunTurnRequest, _ *agentsession.RunInput) error {
+	if err := e.turnScopeRules(req); err != nil {
 		return err
 	}
-	return turnGlobalFence(req)
+	return e.turnGlobalFence(req)
 }
 
 // egressProxyDecorator binds the session's outbound calls to the project
@@ -245,7 +269,7 @@ func egressProxyDecorator(req *aop.RunTurnRequest, _ *agentsession.RunInput) err
 // ignored (the previous set stays in force); a full table is returned as
 // ErrCapacity — the caller must reject the turn, because a skipped
 // registration would run it unfenced.
-func turnScopeRules(req *aop.RunTurnRequest) error {
+func (e *Extension) turnScopeRules(req *aop.RunTurnRequest) error {
 	if req == nil {
 		return nil
 	}
@@ -253,7 +277,11 @@ func turnScopeRules(req *aop.RunTurnRequest) error {
 	if extension == nil {
 		return nil
 	}
-	if err := scoperules.SetRules(req.GetSessionId(), extension.GetValue()); err != nil {
+	scopes, _ := e.stores()
+	if scopes == nil {
+		return ErrNotLoaded
+	}
+	if err := scopes.SetRules(req.GetSessionId(), extension.GetValue()); err != nil {
 		if errors.Is(err, scoperules.ErrCapacity) {
 			return fmt.Errorf("scope rules: %w", err)
 		}
@@ -267,7 +295,7 @@ func turnScopeRules(req *aop.RunTurnRequest) error {
 // rather than opening a hole on one malformed send. A full table is returned
 // as ErrCapacity — the caller must reject the turn, because a skipped
 // registration would run it unfenced.
-func turnGlobalFence(req *aop.RunTurnRequest) error {
+func (e *Extension) turnGlobalFence(req *aop.RunTurnRequest) error {
 	if req == nil {
 		return nil
 	}
@@ -275,7 +303,11 @@ func turnGlobalFence(req *aop.RunTurnRequest) error {
 	if extension == nil {
 		return nil
 	}
-	if err := globalfence.SetRules(req.GetSessionId(), extension.GetValue()); err != nil {
+	_, globals := e.stores()
+	if globals == nil {
+		return ErrNotLoaded
+	}
+	if err := globals.SetRules(req.GetSessionId(), extension.GetValue()); err != nil {
 		if errors.Is(err, globalfence.ErrCapacity) {
 			return fmt.Errorf("global fence: %w", err)
 		}

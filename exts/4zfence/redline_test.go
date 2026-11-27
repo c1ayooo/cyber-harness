@@ -17,7 +17,6 @@ import (
 	"github.com/chainreactors/cyber/core/events"
 	"github.com/chainreactors/cyber/core/operation"
 	toolhooks "github.com/chainreactors/cyber/core/tool/hooks"
-	"github.com/chainreactors/cyber/exts/4zfence/globalfence"
 	guardrailext "github.com/chainreactors/cyber/exts/guardrail"
 	"google.golang.org/protobuf/types/known/anypb"
 )
@@ -44,7 +43,7 @@ func redlineFixture(t *testing.T) (*Extension, *guardrailext.Runtime, func() []r
 		mu.Unlock()
 	})
 	rt := newApprovalRuntime(t, stream)
-	e := &Extension{stream: stream}
+	e := testFenceWith(stream)
 	e.Bind(rt)
 	return e, rt, func() []redlineEvent {
 		mu.Lock()
@@ -61,7 +60,7 @@ func redlineFixture(t *testing.T) (*Extension, *guardrailext.Runtime, func() []r
 // corpus so the event count stays one per verdict.)
 func TestAdmitInstanceCommandFence(t *testing.T) {
 	e, rt, collected := redlineFixture(t)
-	if err := globalfence.SetRules("sess-gf", []byte(`{
+	if err := testFence.globals.SetRules("sess-gf", []byte(`{
 		"enabled_commands": true,
 		"commands": [
 			{"id": "gf-1", "pattern": "shutdown\\s+-h\\b", "desc": "关机", "action": "deny"},
@@ -137,7 +136,7 @@ func TestAdmitInstanceCommandFence(t *testing.T) {
 // argument IS a command and stays judged.
 func TestAdmitInstanceCommandFenceSkipsNonCommandCalls(t *testing.T) {
 	e, _, collected := redlineFixture(t)
-	if err := globalfence.SetRules("sess-gf-doc", []byte(`{
+	if err := testFence.globals.SetRules("sess-gf-doc", []byte(`{
 		"enabled_commands": true,
 		"commands": [{"id": "gf-doc", "pattern": "shutdown\\s+-h\\b", "desc": "关机", "action": "deny"}]
 	}`)); err != nil {

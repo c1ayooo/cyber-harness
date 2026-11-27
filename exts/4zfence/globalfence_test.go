@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	aop "github.com/chainreactors/cyber/aop"
-	"github.com/chainreactors/cyber/exts/4zfence/globalfence"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
@@ -18,19 +17,19 @@ func TestTurnGlobalFenceRegistration(t *testing.T) {
 		req := &aop.RunTurnRequest{SessionId: "sess-gf", Extensions: []*anypb.Any{{
 			TypeUrl: "type.googleapis.com/" + namespace + ".GlobalFence", Value: []byte(valid),
 		}}}
-		turnGlobalFence(req)
-		if _, hit := globalfence.JudgeCommand("sess-gf", "rm -rf /"); !hit {
+		testFence.turnGlobalFence(req)
+		if _, hit := testFence.globals.JudgeCommand("sess-gf", "rm -rf /"); !hit {
 			t.Fatalf("namespace %s: command fence not registered", namespace)
 		}
-		if _, hit := globalfence.DomainHit("sess-gf", "www.gov.cn"); !hit {
+		if _, hit := testFence.globals.DomainHit("sess-gf", "www.gov.cn"); !hit {
 			t.Fatalf("namespace %s: domain fence not registered", namespace)
 		}
 	}
 	invalid := `{"enabled_commands":true,"commands":[{"id":"x","pattern":"(","action":"deny"}]}`
-	turnGlobalFence(&aop.RunTurnRequest{SessionId: "sess-gf", Extensions: []*anypb.Any{{
+	testFence.turnGlobalFence(&aop.RunTurnRequest{SessionId: "sess-gf", Extensions: []*anypb.Any{{
 		TypeUrl: "type.googleapis.com/4zrcin.GlobalFence", Value: []byte(invalid),
 	}}})
-	if _, hit := globalfence.JudgeCommand("sess-gf", "rm -rf /"); !hit {
+	if _, hit := testFence.globals.JudgeCommand("sess-gf", "rm -rf /"); !hit {
 		t.Fatal("invalid payload wiped the previous fence")
 	}
 }

@@ -88,7 +88,7 @@ func TestSessionDropUnbindsRoute(t *testing.T) {
 	egress.SetSessionRoute("sess-epx-close", func(ctx context.Context, network, address string) (net.Conn, error) {
 		return nil, context.Canceled
 	})
-	if _, err := dropOnClose(t.Context(), agenthooks.SessionEvent{SessionID: "sess-epx-close"}); err != nil {
+	if _, err := (&Extension{}).dropOnClose(t.Context(), agenthooks.SessionEvent{SessionID: "sess-epx-close"}); err != nil {
 		t.Fatal(err)
 	}
 	if got := egress.LookupSessionRoute("sess-epx-close"); got != nil {
