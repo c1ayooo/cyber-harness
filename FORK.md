@@ -968,6 +968,25 @@ Wiring is one touch per composition root (`pkg/harness`, `cmd/cyber-scan`,
 moved decorator tests follow their code. Rollback: drop the wiring lines and
 the blocks disappear from the composition.
 
+## P1-4b: the fence admission moves into 4zfence (2026-11-27)
+
+`exts/4zfence` now owns a `tool.before` admission registered ahead of the
+guardrail extension: the guaranteed builtin audit and the instance-fence red
+lines judge there; a review red line holds through the guardrail runtime's
+`SubmitReview` seam (G3). `exts/guardrail/runtime.go`'s `Admit` keeps only
+the policy concerns (JEV/LLM/hybrid, scope, allow_prefixes, shadow) — net
+−41 lines against the pre-P1-4 fork. The guardrail runtime exposes three
+composition seams the fence uses (`NewRuntime`, `Emit`, `ToolCommandText`);
+`builtin.go` and the red-line tests moved to `exts/4zfence`. Composition:
+the fence entry precedes the guardrail in `BaseExtensions` and a one-line
+bind hook hands it the runtime. Behavior parity is covered by the ported
+red-line tests (`go test ./exts/4zfence ./exts/guardrail`).
+
+Remaining for P1-4: the scope-rule HTTP judge (`JudgeScopeRequest`) still
+lives on the guardrail runtime; moving it is the next step, and the guardrail
+config section (llm/shadow fields) declares itself with the decision console
+(already landed shell-side).
+
 ## Superseded patches
 
 These commits were on `tianwu/fixes` and are intentionally **not** carried after
