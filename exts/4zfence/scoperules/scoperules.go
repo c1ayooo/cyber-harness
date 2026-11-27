@@ -22,6 +22,7 @@ import (
 	"net/url"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -163,10 +164,10 @@ func (s *Set) JudgeConnect(rawURL string) (Verdict, bool) {
 }
 
 // JudgeSessionConnect judges one CONNECT tunnel attributed to a session.
-func JudgeSessionConnect(sessionID, rawURL string) (Verdict, bool) {
-	storeMu.RLock()
-	set := storeSets[sessionID]
-	storeMu.RUnlock()
+func (s *Store) JudgeSessionConnect(sessionID, rawURL string) (Verdict, bool) {
+	s.storeMu.RLock()
+	set := s.storeSets[sessionID]
+	s.storeMu.RUnlock()
 	return set.JudgeConnect(rawURL)
 }
 
@@ -345,11 +346,45 @@ func requestTarget(rawURL string) (host, path string) {
 // session store: the agent registers one set per session on every turn.
 // ---------------------------------------------------------------------------
 
-var (
+// Store owns the per-session table, the rotation park and the flow verdict
+// registry (docs/19 E3-4): no package-level session state. The fence
+// extension creates one store, Provides it, installs it for the readers that
+// predate the contribution point (the proxy judge seam and the observe
+// sidecar read the package functions), and uninstalls it on Close.
+type Store struct {
 	storeMu   sync.RWMutex
-	storeSets = map[string]*Set{}
+	storeSets map[string]*Set
 	storeRing []string
-)
+
+	parkMu    sync.Mutex
+	parkSets  map[string]*Set
+	parkOrder []string
+
+	verdictMu     sync.Mutex
+	verdictOrder  []string
+	verdictByFlow map[string]Verdict
+}
+
+// NewStore builds an empty store.
+func NewStore() *Store {
+	return &Store{storeSets: map[string]*Set{}, parkSets: map[string]*Set{}, verdictByFlow: map[string]Verdict{}}
+}
+
+// ErrNotMounted is returned by SetRules when no fence extension has installed
+// a store: a registration with nowhere to go must not vanish silently.
+var ErrNotMounted = fmt.Errorf("scope-rule store is not mounted (no fence extension installed)")
+
+var installed atomic.Pointer[Store]
+
+// Install mounts s as the tables the package functions read. Production
+// callers are the fence extension's Load and Close.
+func Install(s *Store) { installed.Store(s) }
+
+// Uninstall removes the mounted store; package-function calls judge and
+// record nothing afterwards.
+func Uninstall() { installed.Store(nil) }
+
+func current() *Store { return installed.Load() }
 
 // ErrCapacity reports that the per-session table is full. The caller must
 // refuse this session's turn instead of letting it run: evicting the oldest
@@ -364,36 +399,36 @@ var ErrCapacity = fmt.Errorf("scope-rule session table is full (%d live sessions
 // re-sends disabled drafts every turn precisely to keep this honest). A NEW
 // session beyond the table's capacity is ErrCapacity, not an eviction: the
 // oldest live session's fence must never be dropped behind its back.
-func SetRules(sessionID string, raw []byte) error {
+func (s *Store) SetRules(sessionID string, raw []byte) error {
 	set, err := Parse(raw)
 	if err != nil {
 		return err
 	}
-	storeMu.Lock()
-	defer storeMu.Unlock()
-	if _, exists := storeSets[sessionID]; !exists {
-		if len(storeRing) >= maxSessions {
+	s.storeMu.Lock()
+	defer s.storeMu.Unlock()
+	if _, exists := s.storeSets[sessionID]; !exists {
+		if len(s.storeRing) >= maxSessions {
 			return ErrCapacity
 		}
-		storeRing = append(storeRing, sessionID)
+		s.storeRing = append(s.storeRing, sessionID)
 	}
-	storeSets[sessionID] = set
+	s.storeSets[sessionID] = set
 	return nil
 }
 
 // DropSession forgets one session's rule set. Called when the session closes,
 // so the table holds only live sessions and capacity is never exhausted by
 // stale ids. Unknown ids are a no-op.
-func DropSession(sessionID string) {
-	storeMu.Lock()
-	defer storeMu.Unlock()
-	if _, exists := storeSets[sessionID]; !exists {
+func (s *Store) DropSession(sessionID string) {
+	s.storeMu.Lock()
+	defer s.storeMu.Unlock()
+	if _, exists := s.storeSets[sessionID]; !exists {
 		return
 	}
-	delete(storeSets, sessionID)
-	for i, id := range storeRing {
+	delete(s.storeSets, sessionID)
+	for i, id := range s.storeRing {
 		if id == sessionID {
-			storeRing = append(storeRing[:i], storeRing[i+1:]...)
+			s.storeRing = append(s.storeRing[:i], s.storeRing[i+1:]...)
 			break
 		}
 	}
@@ -406,54 +441,48 @@ func DropSession(sessionID string) {
 // appendix E2-2): without the park, inheritance silently misses and the
 // child runs a turn unfenced. The park is bounded; its oldest entry is
 // forgotten when a session closes by rotation and never opens a child.
-var (
-	parkMu    sync.Mutex
-	parkSets  = map[string]*Set{}
-	parkOrder []string
-)
-
 // ParkSession moves one session's set out of the live table into the rotation
 // park. Unknown ids are a no-op.
-func ParkSession(sessionID string) {
-	storeMu.Lock()
-	set, exists := storeSets[sessionID]
+func (s *Store) ParkSession(sessionID string) {
+	s.storeMu.Lock()
+	set, exists := s.storeSets[sessionID]
 	if exists {
-		delete(storeSets, sessionID)
-		for i, id := range storeRing {
+		delete(s.storeSets, sessionID)
+		for i, id := range s.storeRing {
 			if id == sessionID {
-				storeRing = append(storeRing[:i], storeRing[i+1:]...)
+				s.storeRing = append(s.storeRing[:i], s.storeRing[i+1:]...)
 				break
 			}
 		}
 	}
-	storeMu.Unlock()
+	s.storeMu.Unlock()
 	if !exists {
 		return
 	}
-	parkMu.Lock()
-	defer parkMu.Unlock()
-	if _, exists := parkSets[sessionID]; !exists {
-		parkOrder = append(parkOrder, sessionID)
+	s.parkMu.Lock()
+	defer s.parkMu.Unlock()
+	if _, exists := s.parkSets[sessionID]; !exists {
+		s.parkOrder = append(s.parkOrder, sessionID)
 	}
-	parkSets[sessionID] = set
-	if len(parkOrder) > maxSessions {
-		oldest := parkOrder[0]
-		parkOrder = parkOrder[1:]
-		delete(parkSets, oldest)
+	s.parkSets[sessionID] = set
+	if len(s.parkOrder) > maxSessions {
+		oldest := s.parkOrder[0]
+		s.parkOrder = s.parkOrder[1:]
+		delete(s.parkSets, oldest)
 	}
 }
 
 // TakeParkedSession removes and returns one parked set. ok is false when the
 // id has no parked set.
-func TakeParkedSession(sessionID string) (set *Set, ok bool) {
-	parkMu.Lock()
-	defer parkMu.Unlock()
-	set, ok = parkSets[sessionID]
+func (s *Store) TakeParkedSession(sessionID string) (set *Set, ok bool) {
+	s.parkMu.Lock()
+	defer s.parkMu.Unlock()
+	set, ok = s.parkSets[sessionID]
 	if ok {
-		delete(parkSets, sessionID)
-		for i, id := range parkOrder {
+		delete(s.parkSets, sessionID)
+		for i, id := range s.parkOrder {
 			if id == sessionID {
-				parkOrder = append(parkOrder[:i], parkOrder[i+1:]...)
+				s.parkOrder = append(s.parkOrder[:i], s.parkOrder[i+1:]...)
 				break
 			}
 		}
@@ -463,10 +492,10 @@ func TakeParkedSession(sessionID string) (set *Set, ok bool) {
 
 // JudgeSession judges one request attributed to a session. judged is false
 // when the session has no enabled set.
-func JudgeSession(sessionID, method, rawURL string) (Verdict, bool) {
-	storeMu.RLock()
-	set := storeSets[sessionID]
-	storeMu.RUnlock()
+func (s *Store) JudgeSession(sessionID, method, rawURL string) (Verdict, bool) {
+	s.storeMu.RLock()
+	set := s.storeSets[sessionID]
+	s.storeMu.RUnlock()
 	return set.Judge(method, rawURL)
 }
 
@@ -480,31 +509,31 @@ func JudgeSession(sessionID, method, rawURL string) (Verdict, bool) {
 // no registered set inherits nothing. A child beyond the table's capacity is
 // ErrCapacity: silently skipping would open the child session unfenced, so
 // the caller must fail the child's creation instead.
-func InheritSessionRules(parentID, childID string) error {
+func (s *Store) InheritSessionRules(parentID, childID string) error {
 	if parentID == "" || childID == "" || parentID == childID {
 		return nil
 	}
-	storeMu.RLock()
-	set := storeSets[parentID]
-	storeMu.RUnlock()
+	s.storeMu.RLock()
+	set := s.storeSets[parentID]
+	s.storeMu.RUnlock()
 	if set == nil {
 		// The parent may have closed a rotation hop ahead of this open
 		// (docs/19 appendix E2-2); its set is in the rotation park.
-		parked, ok := TakeParkedSession(parentID)
+		parked, ok := s.TakeParkedSession(parentID)
 		if !ok {
 			return nil
 		}
 		set = parked
 	}
-	storeMu.Lock()
-	defer storeMu.Unlock()
-	if _, exists := storeSets[childID]; !exists {
-		if len(storeRing) >= maxSessions {
+	s.storeMu.Lock()
+	defer s.storeMu.Unlock()
+	if _, exists := s.storeSets[childID]; !exists {
+		if len(s.storeRing) >= maxSessions {
 			return ErrCapacity
 		}
-		storeRing = append(storeRing, childID)
+		s.storeRing = append(s.storeRing, childID)
 	}
-	storeSets[childID] = set
+	s.storeSets[childID] = set
 	return nil
 }
 
@@ -513,58 +542,102 @@ func InheritSessionRules(parentID, childID string) error {
 // flow id (an operation covers many requests, so it cannot key this).
 // ---------------------------------------------------------------------------
 
-var (
-	verdictMu     sync.Mutex
-	verdictOrder  []string
-	verdictByFlow = map[string]Verdict{}
-)
-
 // RecordVerdict stores the verdict of one judged request for the observe
 // extension to attach as the flow's TrafficVerdict sidecar.
-func RecordVerdict(flowID string, verdict Verdict) {
+func (s *Store) RecordVerdict(flowID string, verdict Verdict) {
 	if flowID == "" {
 		return
 	}
-	verdictMu.Lock()
-	defer verdictMu.Unlock()
-	if _, exists := verdictByFlow[flowID]; !exists {
-		verdictOrder = append(verdictOrder, flowID)
-		if len(verdictOrder) > maxVerdicts {
-			delete(verdictByFlow, verdictOrder[0])
-			verdictOrder = verdictOrder[1:]
+	s.verdictMu.Lock()
+	defer s.verdictMu.Unlock()
+	if _, exists := s.verdictByFlow[flowID]; !exists {
+		s.verdictOrder = append(s.verdictOrder, flowID)
+		if len(s.verdictOrder) > maxVerdicts {
+			delete(s.verdictByFlow, s.verdictOrder[0])
+			s.verdictOrder = s.verdictOrder[1:]
 		}
 	}
-	verdictByFlow[flowID] = verdict
+	s.verdictByFlow[flowID] = verdict
 }
 
 // TakeVerdict consumes the verdict stored for one flow id.
-func TakeVerdict(flowID string) (Verdict, bool) {
-	verdictMu.Lock()
-	defer verdictMu.Unlock()
-	verdict, ok := verdictByFlow[flowID]
+func (s *Store) TakeVerdict(flowID string) (Verdict, bool) {
+	s.verdictMu.Lock()
+	defer s.verdictMu.Unlock()
+	verdict, ok := s.verdictByFlow[flowID]
 	if ok {
-		delete(verdictByFlow, flowID)
+		delete(s.verdictByFlow, flowID)
 	}
 	return verdict, ok
 }
 
-// SetForTest installs one parsed set directly (tests share this package and
-// its package-global store). Production code uses SetRules.
-func SetForTest(sessionID string, set *Set) {
-	storeMu.Lock()
-	defer storeMu.Unlock()
-	storeSets[sessionID] = set
+// The package functions below are the read seam for the readers that predate
+// the contribution point (the proxy judge seam, the observe sidecar). They
+// delegate to the store the fence extension installed; without one, sessions
+// judge nothing and verdicts record nowhere — the no-fence composition.
+
+// SetRules replaces one session's set from its manifest JSON on the mounted
+// store. Unmounted, it fails: a skipped registration would run the session
+// unfenced.
+func SetRules(sessionID string, raw []byte) error {
+	if s := current(); s != nil {
+		return s.SetRules(sessionID, raw)
+	}
+	return ErrNotMounted
 }
 
-// DropForTest removes one session's set (tests share this package's store).
-func DropForTest(sessionID string) {
-	storeMu.Lock()
-	defer storeMu.Unlock()
-	delete(storeSets, sessionID)
-	for i, id := range storeRing {
-		if id == sessionID {
-			storeRing = append(storeRing[:i], storeRing[i+1:]...)
-			break
-		}
+// DropSession forgets one session's set on the mounted store.
+func DropSession(sessionID string) {
+	if s := current(); s != nil {
+		s.DropSession(sessionID)
 	}
+}
+
+// ParkSession parks one session's set for a rotation hop on the mounted store.
+func ParkSession(sessionID string) {
+	if s := current(); s != nil {
+		s.ParkSession(sessionID)
+	}
+}
+
+// JudgeSession judges one request on the mounted store; judged is false when
+// no store is mounted (the no-fence composition judges nothing).
+func JudgeSession(sessionID, method, rawURL string) (Verdict, bool) {
+	if s := current(); s != nil {
+		return s.JudgeSession(sessionID, method, rawURL)
+	}
+	return Verdict{}, false
+}
+
+// JudgeSessionConnect judges one CONNECT request on the mounted store.
+func JudgeSessionConnect(sessionID, rawURL string) (Verdict, bool) {
+	if s := current(); s != nil {
+		return s.JudgeSessionConnect(sessionID, rawURL)
+	}
+	return Verdict{}, false
+}
+
+// InheritSessionRules copies the parent's set to the child on the mounted
+// store. Unmounted, it is a no-op: no store means no fence extension, whose
+// Load subscribes the inheritance hook in the first place.
+func InheritSessionRules(parentID, childID string) error {
+	if s := current(); s != nil {
+		return s.InheritSessionRules(parentID, childID)
+	}
+	return nil
+}
+
+// RecordVerdict stores one flow verdict on the mounted store.
+func RecordVerdict(flowID string, verdict Verdict) {
+	if s := current(); s != nil {
+		s.RecordVerdict(flowID, verdict)
+	}
+}
+
+// TakeVerdict consumes one flow verdict from the mounted store.
+func TakeVerdict(flowID string) (Verdict, bool) {
+	if s := current(); s != nil {
+		return s.TakeVerdict(flowID)
+	}
+	return Verdict{}, false
 }

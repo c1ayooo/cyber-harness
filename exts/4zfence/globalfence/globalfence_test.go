@@ -3,8 +3,19 @@ package globalfence
 import (
 	"errors"
 	"fmt"
+	"os"
 	"testing"
 )
+
+// TestMain mounts one store for the package's function-level tests; the
+// production install path is the fence extension's Load, and tests that need
+// isolation mount a fresh store themselves (drainSessionStore).
+func TestMain(m *testing.M) {
+	Install(NewStore())
+	code := m.Run()
+	Uninstall()
+	os.Exit(code)
+}
 
 const validSet = `{
   "enabled_commands": true,
@@ -175,17 +186,17 @@ func TestAllowDomainHit(t *testing.T) {
 // The fence table holds only live sessions (fork fix, P1-0): a NEW session
 // beyond the capacity is refused with ErrCapacity instead of silently evicting
 // the oldest entry, and closing a session frees its slot.
-// drainSessionStore empties the package-global table so a capacity test
-// starts from a known state (tests in this package share one store).
-func drainSessionStore() {
-	storeMu.Lock()
-	defer storeMu.Unlock()
-	storeSets = map[string]*Set{}
-	storeRing = nil
+// drainSessionStore mounts a fresh store so a capacity test starts from a
+// known state (docs/19 E3-4: no package-level table to empty).
+func drainSessionStore(t *testing.T) {
+	Install(NewStore())
+	// The cleanup remounts a fresh store instead of uninstalling: TestMain's
+	// package-wide store must survive for the tests that follow.
+	t.Cleanup(func() { Install(NewStore()) })
 }
 
 func TestCapacityRefusesNewSessionInsteadOfEvicting(t *testing.T) {
-	drainSessionStore()
+	drainSessionStore(t)
 	raw := []byte(`{"enabled_commands": true, "commands": [{"id": "gf-cap", "pattern": "shutdown\\s+-h\\b", "action": "deny"}]}`)
 	first := "gf-sess-000"
 	for i := 0; i < maxSessions; i++ {
@@ -224,7 +235,7 @@ func TestCapacityRefusesNewSessionInsteadOfEvicting(t *testing.T) {
 // subagent tool fails the child's creation, so a delegated direction never
 // starts unfenced.
 func TestInheritSessionRulesRefusesAtCapacity(t *testing.T) {
-	drainSessionStore()
+	drainSessionStore(t)
 	raw := []byte(`{"enabled_commands": true, "commands": [{"id": "gf-ih", "pattern": "shutdown\\s+-h\\b", "action": "deny"}]}`)
 	if err := SetRules("gf-inherit-parent", raw); err != nil {
 		t.Fatal(err)
