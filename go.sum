@@ -208,6 +208,8 @@ github.com/c1ayooo/libcstx/go v0.4.2-0.20260915062605-a4bd085cbb12 h1:pd6Lxlresg
 github.com/c1ayooo/libcstx/go v0.4.2-0.20260915062605-a4bd085cbb12/go.mod h1:NckMfaO1f60buIRJKrbWBF4m8qMbJDZtVazvpOY4thE=
 github.com/c1ayooo/logs v0.0.0-20260624034259-9aaea4aa52cc h1:UvVKu92ysKb+7wu3LLZR3JwvV34LkPpsI+PH6VrdJHA=
 github.com/c1ayooo/logs v0.0.0-20260624034259-9aaea4aa52cc/go.mod h1:VrXmYPbNN5AVoo1sc5aeyPVBYqubMdb3KO/tn5rRZpo=
+github.com/c1ayooo/native v1.11.1-native.1 h1:mGP/rwc3x3p+HWXqsn4kCgrQ7JMjYaAEW3b+L1k5IHA=
+github.com/c1ayooo/native v1.11.1-native.1/go.mod h1:2W+7GrrdO4NHv7ITHz8Yy3a1IxzjZCk8JR5zgTprxZs=
 github.com/c1ayooo/neutron v0.1.1-0.20260714062907-716c6b167cb6 h1:updWUCZ5oTpJI/lTsXB2M5eIUbF6fet+6U0avJl8k3k=
 github.com/c1ayooo/neutron v0.1.1-0.20260714062907-716c6b167cb6/go.mod h1:zok/CDxut71iw8NQTHKPvy0f+1G5639zr9GgDsXGnOs=
 github.com/c1ayooo/neutron/operators/full v0.1.1-0.20260704194031-f57d0a560e32 h1:s2NOdfkO64a4YTYwjp72kZGSfKQsHZ09LmgWRhNtPyo=

@@ -167,7 +167,8 @@ require (
 	github.com/bahlo/generic-list-go v0.2.0 // indirect
 	github.com/bradfitz/gomemcache v0.0.0-20260422231931-4d751bb6e37c // indirect
 	github.com/buger/jsonparser v1.1.2 // indirect
-	github.com/c1ayooo/cyber/aop v0.0.0-20260818112202-76d90a72b2c5
+	github.com/c1ayooo/4zwebshell v0.0.0
+	github.com/c1ayooo/cyber/aop v0.0.0
 	github.com/carapace-sh/carapace-shlex v1.1.1 // indirect
 	github.com/censys/censys-sdk-go v0.19.1 // indirect
 	github.com/chainreactors/files v0.0.0-20240716182835-7884ee1e77f0 // indirect
@@ -371,7 +372,7 @@ require (
 	modernc.org/memory v1.12.1 // indirect
 )
 
-replace github.com/wasilibs/go-re2 => github.com/chainreactors/native v1.11.1-native.1
+replace github.com/wasilibs/go-re2 => github.com/c1ayooo/native v1.11.1-native.1
 
 replace github.com/projectdiscovery/katana => github.com/c1ayooo/katana v1.6.2-0.20260914161750-0811dfe2d87c
 
@@ -407,3 +408,5 @@ replace (
 	github.com/chainreactors/words => github.com/c1ayooo/words v0.0.0-20260520145736-270600e60fb4
 	github.com/chainreactors/zombie => github.com/c1ayooo/zombie v1.3.1-0.20260809133033-0d0df6fa50f5
 )
+
+replace github.com/c1ayooo/4zwebshell => ../4zwebshell

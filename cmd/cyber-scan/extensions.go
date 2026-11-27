@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"slices"
 
+	webshellext "github.com/c1ayooo/4zwebshell/extension"
 	"github.com/c1ayooo/cyber/agent"
 	"github.com/c1ayooo/cyber/agent/prompt"
 	"github.com/c1ayooo/cyber/core/extension"
@@ -62,6 +63,12 @@ func extensions(config appConfig, loop agent.Loop, workDir string, proxy extensi
 		extensions = append(extensions, subagentext.New())
 	}
 	extensions = append(extensions, arsenal)
+
+	// Webshell management (4zrcin docs/18): one ledger in the control plane,
+	// two executors. The tools run a shell from this host and read the ledger
+	// over the run's own identity, so a capture node that never gets a shell
+	// call pays nothing and every turn without identity makes them unavailable.
+	extensions = append(extensions, webshellext.New(webshellext.Config{NodeID: cfg.DefaultNodeID}))
 
 	// The engine block is the recipe boundary (docs/04 §3.3): the scan-capture
 	// build (-tags captureonly) compiles an empty twin, so the scanner, proton
