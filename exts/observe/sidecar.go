@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/chainreactors/cyber/aop/payloads"
 	operationpb "github.com/chainreactors/cyber/aop/operation"
+	"github.com/chainreactors/cyber/aop/payloads"
 	"github.com/chainreactors/cyber/exts/4zfence/scoperules"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
