@@ -944,6 +944,30 @@ where the merge could not take both sides:
   (`github.com/c1ayooo/cyber`) so this merge commits buildable; the module
   path revert itself is tracked separately (4zrcin docs/19 P0).
 
+## P1-4 seams G1/G2 and the 4zfence / 4zsession blocks (2026-11-27)
+
+The fork payload code leaves `agent/session` (docs/19 appendix A):
+
+- Seam G1: the turn/open decorators are `RuntimeConfig` fields the
+  composition root fills (`agent/session/decorators.go`); there is no default
+  list — a composition that omits the blocks never fences, deliberately.
+- Seam G2: the proxy's judge logic gathers in `tools/proxy/scope_judge.go`;
+  `hub.go` and `mitm.go` keep only the call lines and the `ScopeJudge`
+  interface.
+- `exts/4zfence` owns the policy payloads (scope rules, global fence, egress
+  proxy), their turn decorators, and the SessionStart/SessionEnd hooks that
+  inherit and drop registrations; `core/scoperules` and `core/globalfence`
+  moved under it. The tables' capacity rejection (P1-0) is unchanged; the
+  golden corpora (`go test ./exts/4zfence/...`) still pass.
+- `exts/4zsession` owns the input-enrichment payloads (run goal, case seed,
+  tool env, work dir). The two blocks do not import each other.
+
+Wiring is one touch per composition root (`pkg/harness`, `cmd/cyber-scan`,
+`cmd/agent`, `cmd/audit`): append the two `TurnDecorators` lists and load
+`fence.New()`. Behavior is identical to the pre-seam inline application; the
+moved decorator tests follow their code. Rollback: drop the wiring lines and
+the blocks disappear from the composition.
+
 ## Superseded patches
 
 These commits were on `tianwu/fixes` and are intentionally **not** carried after
