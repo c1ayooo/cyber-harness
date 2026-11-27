@@ -282,3 +282,24 @@ func InheritSessionRules(parentID, childID string) error {
 	storeSets[childID] = set
 	return nil
 }
+
+// SetForTest installs one parsed set directly (tests share this package and
+// its package-global store). Production code uses SetRules.
+func SetForTest(sessionID string, set *Set) {
+	storeMu.Lock()
+	defer storeMu.Unlock()
+	storeSets[sessionID] = set
+}
+
+// DropForTest removes one session's set (tests share this package's store).
+func DropForTest(sessionID string) {
+	storeMu.Lock()
+	defer storeMu.Unlock()
+	delete(storeSets, sessionID)
+	for i, id := range storeRing {
+		if id == sessionID {
+			storeRing = append(storeRing[:i], storeRing[i+1:]...)
+			break
+		}
+	}
+}

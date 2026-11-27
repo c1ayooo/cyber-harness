@@ -6,8 +6,10 @@ import (
 	"fmt"
 	"testing"
 
+	agenthooks "github.com/chainreactors/cyber/agent/hooks"
 	aop "github.com/chainreactors/cyber/aop"
 	"github.com/chainreactors/cyber/aop/payloads"
+	"github.com/chainreactors/cyber/core/globalfence"
 	"github.com/chainreactors/cyber/core/scoperules"
 	"google.golang.org/protobuf/types/known/anypb"
 )
@@ -137,4 +139,52 @@ func TestTurnScopeRulesRefusesAtCapacity(t *testing.T) {
 		t.Fatalf("registration after cleanup failed: %v", err)
 	}
 	scoperules.DropSession("sess-cap-after-drop")
+}
+
+// The runtime's fence lifecycle handlers (fork fix P1-0): a child session
+// inherits its parent's registrations at open — a full table fails the open
+// rather than starting the child unfenced — and every close drops them, so
+// the tables hold only live sessions.
+func TestFenceLifecycleHandlers(t *testing.T) {
+	rt := &Runtime{}
+	parent := &scoperules.Set{Enabled: true, DefaultAction: scoperules.ActionRecord}
+	scoperules.SetForTest("fence-parent", parent)
+	globalfence.SetForTest("fence-parent", &globalfence.Set{EnabledDomains: true, Domains: []globalfence.DomainRule{{ID: "gf-x", Host: "x.test"}}})
+
+	child := agenthooks.SessionEvent{SessionID: "fence-child", ParentID: "fence-parent"}
+	if _, err := rt.fenceInheritOnOpen(t.Context(), child); err != nil {
+		t.Fatalf("inherit: %v", err)
+	}
+	if _, judged := scoperules.JudgeSession("fence-child", "GET", "http://x.test/"); !judged {
+		t.Fatal("child did not inherit the project fence")
+	}
+	if _, hit := globalfence.DomainHit("fence-child", "www.x.test"); !hit {
+		t.Fatal("child did not inherit the instance fence")
+	}
+
+	// A root session inherits nothing.
+	root := agenthooks.SessionEvent{SessionID: "fence-root"}
+	if _, err := rt.fenceInheritOnOpen(t.Context(), root); err != nil {
+		t.Fatalf("root inherit: %v", err)
+	}
+	if _, judged := scoperules.JudgeSession("fence-root", "GET", "http://x.test/"); judged {
+		t.Fatal("a root session inherited a fence that does not exist")
+	}
+
+	// Close drops both tables; a second drop is a no-op.
+	if _, err := rt.fenceDropOnClose(t.Context(), agenthooks.SessionEvent{SessionID: "fence-child"}); err != nil {
+		t.Fatalf("drop: %v", err)
+	}
+	if _, judged := scoperules.JudgeSession("fence-child", "GET", "http://x.test/"); judged {
+		t.Fatal("closed child still holds the project fence")
+	}
+	if _, hit := globalfence.DomainHit("fence-child", "www.x.test"); hit {
+		t.Fatal("closed child still holds the instance fence")
+	}
+	if _, err := rt.fenceDropOnClose(t.Context(), agenthooks.SessionEvent{SessionID: "fence-child"}); err != nil {
+		t.Fatalf("second drop: %v", err)
+	}
+
+	scoperules.DropForTest("fence-parent")
+	globalfence.DropForTest("fence-parent")
 }

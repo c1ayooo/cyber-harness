@@ -856,6 +856,28 @@ the 4zrcin checkout at `425e6175`.
     global-allow sidecar before the project fence).
     Rollback: revert — infrastructure names queue pending assets again.
 
+## P1-2c fence inheritance rides SessionStart (2026-11-27)
+
+Fork patch 33 registered child sessions' inherited fences inside the
+subagent tool's own `open` (`agent/subagent/sessionexec/tool.go`) — a
+fork-added block on an upstream file. The runtime's own `SessionStart` /
+`SessionEnd` hooks carry `SessionID` and `ParentID`, which is the same
+parent-child pair, so the registration now rides the hooks instead:
+
+- `agent/session/runtime.go` subscribes `fence-inherit` (on open, FailClosed:
+  an inheritance failure — a full table — fails the child's open, never
+  starts it unfenced) and `fence-drop` (on close, freeing capacity, fork fix
+  P1-0). Subscriptions live with the hooks registry.
+- `agent/subagent/sessionexec/tool.go` is reverted to upstream verbatim
+  (`git diff upstream/master` on it is empty).
+
+Behavior note: the hook fires for every runtime-opened session; roots
+(`ParentID == ""`) inherit nothing, exactly as before. Verified: child
+sessions carry `ParentSessionID` (sessionexec tool.go line 121), so the
+hook's parent id equals what the old code read from the invocation context.
+
+Rollback: revert — inheritance returns to the tool's open path.
+
 ## P1-0 fence capacity fix (2026-11-27)
 
 `core/scoperules` and `core/globalfence` stored each session's rules in a

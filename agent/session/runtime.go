@@ -10,12 +10,15 @@ import (
 	"time"
 
 	"github.com/chainreactors/cyber/agent"
+	agenthooks "github.com/chainreactors/cyber/agent/hooks"
 	"github.com/chainreactors/cyber/agent/prompt"
 	"github.com/chainreactors/cyber/agent/provider"
 	"github.com/chainreactors/cyber/agent/skills"
 	aop "github.com/chainreactors/cyber/aop"
 	"github.com/chainreactors/cyber/core/events"
+	"github.com/chainreactors/cyber/core/globalfence"
 	"github.com/chainreactors/cyber/core/hooks"
+	"github.com/chainreactors/cyber/core/scoperules"
 	"github.com/chainreactors/cyber/core/telemetry"
 	coretool "github.com/chainreactors/cyber/core/tool"
 )
@@ -237,8 +240,45 @@ func (rt *Runtime) start(ctx, lifetime context.Context) error {
 	if err := ctx.Err(); err != nil {
 		return err
 	}
+	// The fence tables (project scope rules, instance fence) hold only live
+	// sessions (fork fix P1-0): a child session inherits its parent's
+	// registrations on open — the SessionStart hook is FailClosed, so an
+	// inheritance failure fails the open instead of starting the child
+	// unfenced — and every close drops them, freeing capacity for the next
+	// session. This covers subagent children (whose ids never see a
+	// RunTurnRequest, fork patch 33) and AOP sessions alike.
+	// The subscriptions live with the hooks registry (closed with the runtime),
+	// so the returned subscriptions are not tracked.
+	agenthooks.SessionStart.On(rc.Hooks, "fence-inherit", rt.fenceInheritOnOpen)
+	agenthooks.SessionEnd.On(rc.Hooks, "fence-drop", rt.fenceDropOnClose)
 	rt.loaded = true
 	return nil
+}
+
+// fenceInheritOnOpen copies the parent's fence registrations to the child
+// session at open time. The SessionStart hook is FailClosed, so an inheritance
+// failure (a full table) fails the open instead of starting the child
+// unfenced; a root session (no parent) inherits nothing.
+func (rt *Runtime) fenceInheritOnOpen(_ context.Context, ev agenthooks.SessionEvent) (struct{}, error) {
+	if ev.ParentID == "" {
+		return struct{}{}, nil
+	}
+	if err := scoperules.InheritSessionRules(ev.ParentID, ev.SessionID); err != nil {
+		return struct{}{}, err
+	}
+	if err := globalfence.InheritSessionRules(ev.ParentID, ev.SessionID); err != nil {
+		return struct{}{}, err
+	}
+	return struct{}{}, nil
+}
+
+// fenceDropOnClose drops the session's fence registrations when it closes, so
+// the tables hold only live sessions and capacity is never exhausted by stale
+// ids (fork fix P1-0). Unknown ids are a no-op.
+func (rt *Runtime) fenceDropOnClose(_ context.Context, ev agenthooks.SessionEvent) (struct{}, error) {
+	scoperules.DropSession(ev.SessionID)
+	globalfence.DropSession(ev.SessionID)
+	return struct{}{}, nil
 }
 
 // ready rejects business admission until the owning profile has completed
