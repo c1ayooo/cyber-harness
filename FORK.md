@@ -987,6 +987,20 @@ lives on the guardrail runtime; moving it is the next step, and the guardrail
 config section (llm/shadow fields) declares itself with the decision console
 (already landed shell-side).
 
+## P1-4c: the request judge moves into 4zfence (2026-11-27)
+
+The scope-rule judge (HTTP + CONNECT) is now `exts/4zfence/scope_judge.go`
+(methods on `ScopeJudge`, built from the fence extension). Review holds no
+longer touch the guardrail runtime's pending internals: they go through the
+public `SubmitReview` seam, so a held request is still answered by the
+ordinary Pending/Resolve RPC. The seam types (`ScopeJudge`, `ScopeRequest`,
+`ScopeDecision`) live in `exts/4zfence/scoperules` — neutral ground — and
+`tools/proxy` aliases them, so the fence implements the proxy's contract
+without importing it. `exts/proxy` wires the judge from the fence extension.
+Consequence worth recording: `exts/guardrail` no longer imports
+`tools/proxy` at all, and the minimal agent dependency closure
+(`TestAgentDependencyClosureExcludesFullApplicationFeatures`) is green again.
+
 ## Superseded patches
 
 These commits were on `tianwu/fixes` and are intentionally **not** carried after
