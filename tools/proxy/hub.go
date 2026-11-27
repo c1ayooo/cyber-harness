@@ -19,7 +19,7 @@ import (
 	traffic "github.com/chainreactors/cyber/aop/traffic"
 	"github.com/chainreactors/cyber/core/hooks"
 	"github.com/chainreactors/cyber/core/operation"
-	"github.com/chainreactors/cyber/core/scoperules"
+	"github.com/chainreactors/cyber/exts/4zfence/scoperules"
 	cfg "github.com/chainreactors/cyber/pkg/config"
 	mitmproxy "github.com/chainreactors/utils/mitmproxy/proxy"
 )

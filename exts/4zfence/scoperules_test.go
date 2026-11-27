@@ -1,4 +1,4 @@
-package session
+package fence
 
 import (
 	"encoding/json"
@@ -8,40 +8,10 @@ import (
 
 	agenthooks "github.com/chainreactors/cyber/agent/hooks"
 	aop "github.com/chainreactors/cyber/aop"
-	"github.com/chainreactors/cyber/aop/payloads"
-	"github.com/chainreactors/cyber/core/globalfence"
-	"github.com/chainreactors/cyber/core/scoperules"
+	"github.com/chainreactors/cyber/exts/4zfence/globalfence"
+	"github.com/chainreactors/cyber/exts/4zfence/scoperules"
 	"google.golang.org/protobuf/types/known/anypb"
 )
-
-// Since the control plane renamed its fork namespace (tianwu.* → 4zrcin.*),
-// every extension it sends carries the new type URL while the pre-rename
-// harness only matched the old one — the host silently ignored the payload.
-// Both spellings must work for every fork extension.
-func TestForkExtensionsAcceptBothNamespaces(t *testing.T) {
-	newRequest := func(url string, payload []byte) *aop.RunTurnRequest {
-		return &aop.RunTurnRequest{Extensions: []*anypb.Any{{
-			TypeUrl: url, Value: payload,
-		}}}
-	}
-	for _, namespace := range []string{"tianwu", "4zrcin"} {
-		t.Run(namespace, func(t *testing.T) {
-			if got := turnWorkDir(newRequest("type.googleapis.com/"+namespace+".WorkDir",
-				mustJSON(t, payloads.WorkDirPayload{WorkDir: "/tmp/case"}))); got != "/tmp/case" {
-				t.Fatalf("WorkDir = %q", got)
-			}
-			goal, rounds := turnRunGoal(newRequest("type.googleapis.com/"+namespace+".RunGoal",
-				mustJSON(t, payloads.RunGoalPayload{Goal: "g", EvalRounds: json.RawMessage(`"2x"`)})))
-			if goal != "g" || rounds != "2x" {
-				t.Fatalf("RunGoal = %q/%q", goal, rounds)
-			}
-			if env := turnToolEnv(newRequest("type.googleapis.com/"+namespace+".ToolEnv",
-				mustJSON(t, payloads.ToolEnvPayload{Env: map[string]string{"K": "V"}}))); len(env) != 1 || env[0] != "K=V" {
-				t.Fatalf("ToolEnv = %v", env)
-			}
-		})
-	}
-}
 
 // The scope-rule set registers for the session the turn belongs to, in both
 // namespaces; an invalid set is ignored without touching the previous one.
@@ -74,10 +44,6 @@ func TestTurnScopeRulesRegistration(t *testing.T) {
 
 // The scope rules register before the turn runs: RunAOPTurn applies them for
 // the session it is about to execute.
-func TestRunAOPTurnRegistersScopeRules(t *testing.T) {
-	t.Skip("covered by TestTurnScopeRulesRegistration: RunAOPTurn applies turnScopeRules before dispatch")
-}
-
 func mustJSON(t *testing.T, value any) []byte {
 	t.Helper()
 	raw, err := json.Marshal(value)
@@ -146,13 +112,12 @@ func TestTurnScopeRulesRefusesAtCapacity(t *testing.T) {
 // rather than starting the child unfenced — and every close drops them, so
 // the tables hold only live sessions.
 func TestFenceLifecycleHandlers(t *testing.T) {
-	rt := &Runtime{}
 	parent := &scoperules.Set{Enabled: true, DefaultAction: scoperules.ActionRecord}
 	scoperules.SetForTest("fence-parent", parent)
 	globalfence.SetForTest("fence-parent", &globalfence.Set{EnabledDomains: true, Domains: []globalfence.DomainRule{{ID: "gf-x", Host: "x.test"}}})
 
 	child := agenthooks.SessionEvent{SessionID: "fence-child", ParentID: "fence-parent"}
-	if _, err := rt.fenceInheritOnOpen(t.Context(), child); err != nil {
+	if _, err := inheritOnOpen(t.Context(), child); err != nil {
 		t.Fatalf("inherit: %v", err)
 	}
 	if _, judged := scoperules.JudgeSession("fence-child", "GET", "http://x.test/"); !judged {
@@ -164,7 +129,7 @@ func TestFenceLifecycleHandlers(t *testing.T) {
 
 	// A root session inherits nothing.
 	root := agenthooks.SessionEvent{SessionID: "fence-root"}
-	if _, err := rt.fenceInheritOnOpen(t.Context(), root); err != nil {
+	if _, err := inheritOnOpen(t.Context(), root); err != nil {
 		t.Fatalf("root inherit: %v", err)
 	}
 	if _, judged := scoperules.JudgeSession("fence-root", "GET", "http://x.test/"); judged {
@@ -172,7 +137,7 @@ func TestFenceLifecycleHandlers(t *testing.T) {
 	}
 
 	// Close drops both tables; a second drop is a no-op.
-	if _, err := rt.fenceDropOnClose(t.Context(), agenthooks.SessionEvent{SessionID: "fence-child"}); err != nil {
+	if _, err := dropOnClose(t.Context(), agenthooks.SessionEvent{SessionID: "fence-child"}); err != nil {
 		t.Fatalf("drop: %v", err)
 	}
 	if _, judged := scoperules.JudgeSession("fence-child", "GET", "http://x.test/"); judged {
@@ -181,7 +146,7 @@ func TestFenceLifecycleHandlers(t *testing.T) {
 	if _, hit := globalfence.DomainHit("fence-child", "www.x.test"); hit {
 		t.Fatal("closed child still holds the instance fence")
 	}
-	if _, err := rt.fenceDropOnClose(t.Context(), agenthooks.SessionEvent{SessionID: "fence-child"}); err != nil {
+	if _, err := dropOnClose(t.Context(), agenthooks.SessionEvent{SessionID: "fence-child"}); err != nil {
 		t.Fatalf("second drop: %v", err)
 	}
 

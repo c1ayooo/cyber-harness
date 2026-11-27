@@ -15,7 +15,7 @@ import (
 	operationpb "github.com/chainreactors/cyber/aop/operation"
 	traffic "github.com/chainreactors/cyber/aop/traffic"
 	"github.com/chainreactors/cyber/core/operation"
-	"github.com/chainreactors/cyber/core/scoperules"
+	"github.com/chainreactors/cyber/exts/4zfence/scoperules"
 	"github.com/chainreactors/cyber/core/telemetry"
 	coretool "github.com/chainreactors/cyber/core/tool"
 	cfg "github.com/chainreactors/cyber/pkg/config"

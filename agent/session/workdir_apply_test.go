@@ -1,30 +1,13 @@
 package session
 
+// The turn's workspace lands on the agent (the block parses the payload; the
+// runtime applies it), so the application rules live beside the agent.
+
 import (
-	"encoding/json"
 	"testing"
 
-	"google.golang.org/protobuf/types/known/anypb"
-
 	"github.com/chainreactors/cyber/agent"
-	"github.com/chainreactors/cyber/aop"
 )
-
-// A resumed turn never re-opens its session: after a host restart the session is
-// re-created and has no workspace, so the turn itself must be able to supply it.
-func TestTurnWorkDirDecodesTheTianwuExtension(t *testing.T) {
-	raw, err := json.Marshal(map[string]any{"work_dir": `C:\data\projects\p\cases\in_1`})
-	if err != nil {
-		t.Fatal(err)
-	}
-	req := &aop.RunTurnRequest{Extensions: []*anypb.Any{{TypeUrl: forkWorkDirExtensionURL(), Value: raw}}}
-	if got := turnWorkDir(req); got != `C:\data\projects\p\cases\in_1` {
-		t.Fatalf("turnWorkDir = %q", got)
-	}
-	if turnWorkDir(&aop.RunTurnRequest{}) != "" {
-		t.Fatal("a request without the extension must not name a workspace")
-	}
-}
 
 func TestTurnWorkDirFillsAnEmptyWorkspaceOnly(t *testing.T) {
 	ag := agent.NewAgent(agent.Config{})

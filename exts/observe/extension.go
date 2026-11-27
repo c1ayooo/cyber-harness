@@ -18,7 +18,7 @@ import (
 	corehooks "github.com/chainreactors/cyber/core/hooks"
 	"github.com/chainreactors/cyber/core/operation"
 	procbus "github.com/chainreactors/cyber/core/proc"
-	"github.com/chainreactors/cyber/core/scoperules"
+	"github.com/chainreactors/cyber/exts/4zfence/scoperules"
 	"github.com/chainreactors/cyber/core/telemetry"
 	coretool "github.com/chainreactors/cyber/core/tool"
 	toolhooks "github.com/chainreactors/cyber/core/tool/hooks"

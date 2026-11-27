@@ -1,10 +1,10 @@
-package session
+package fence
 
 import (
 	"testing"
 
 	aop "github.com/chainreactors/cyber/aop"
-	"github.com/chainreactors/cyber/core/globalfence"
+	"github.com/chainreactors/cyber/exts/4zfence/globalfence"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 

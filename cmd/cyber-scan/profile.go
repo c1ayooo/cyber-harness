@@ -25,6 +25,8 @@ import (
 	"github.com/chainreactors/cyber/core/proc"
 	coretool "github.com/chainreactors/cyber/core/tool"
 	evidenceext "github.com/chainreactors/cyber/exts/4zevidence"
+	fenceext "github.com/chainreactors/cyber/exts/4zfence"
+	zsession "github.com/chainreactors/cyber/exts/4zsession"
 	guardrailext "github.com/chainreactors/cyber/exts/guardrail"
 	inboxext "github.com/chainreactors/cyber/exts/inbox"
 	ioaclient "github.com/chainreactors/cyber/exts/ioa/client"
@@ -292,7 +294,9 @@ func buildCyberScanProfile(config config) (*cyberScanProfile, error) {
 		agentConfig.BaseSkills = append([]string{"cyber"}, agentConfig.BaseSkills...)
 		agentConfig.NodeName = nodeName
 		agentConfig = sessionext.ConfigFromOption(config.Option, agentConfig)
-		values = append(values, sessionext.New(agentConfig))
+		agentConfig.TurnDecorators = append(agentConfig.TurnDecorators, fenceext.TurnDecorators()...)
+		agentConfig.TurnDecorators = append(agentConfig.TurnDecorators, zsession.TurnDecorators()...)
+		values = append(values, fenceext.New(), sessionext.New(agentConfig))
 		// CYBER_EXCLUDE_TOOLS=subagent removes the model-facing delegation tool;
 		// the Subagent capability (when installed) stays for other extensions.
 		if !toolExcluded("subagent") {

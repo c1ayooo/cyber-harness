@@ -19,7 +19,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/chainreactors/cyber/core/scoperules"
+	"github.com/chainreactors/cyber/exts/4zfence/scoperules"
 )
 
 // Actions for a command rule: deny refuses outright, review holds the call

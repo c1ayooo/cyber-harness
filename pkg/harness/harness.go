@@ -20,6 +20,8 @@ import (
 	"github.com/chainreactors/cyber/core/extension"
 	"github.com/chainreactors/cyber/core/proc"
 	coretool "github.com/chainreactors/cyber/core/tool"
+	fenceext "github.com/chainreactors/cyber/exts/4zfence"
+	zsession "github.com/chainreactors/cyber/exts/4zsession"
 	loopext "github.com/chainreactors/cyber/exts/agent"
 	"github.com/chainreactors/cyber/exts/guardrail"
 	sessionext "github.com/chainreactors/cyber/exts/session"
@@ -72,7 +74,13 @@ func New(config Config) (*Harness, error) {
 		if session.Loop == nil {
 			session.Loop = agent.StandardLoop{}
 		}
-		entries = append(entries, loopext.New(session.Loop), sessionext.New(session), subagentext.NewTools())
+		// The fence and session blocks (docs/19 P1-4) ride every harness
+		// composition: the fence registers the control plane's policy
+		// payloads and keeps its tables to live sessions, the session block
+		// enriches the turn input.
+		session.TurnDecorators = append(session.TurnDecorators, fenceext.TurnDecorators()...)
+		session.TurnDecorators = append(session.TurnDecorators, zsession.TurnDecorators()...)
+		entries = append(entries, fenceext.New(), loopext.New(session.Loop), sessionext.New(session), subagentext.NewTools())
 	}
 	// The final consumer reads the capabilities assembled by the graph. This
 	// keeps ownership in the extensions while giving an embedded host a small,

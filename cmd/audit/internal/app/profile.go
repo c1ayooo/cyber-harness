@@ -19,6 +19,8 @@ import (
 	"github.com/chainreactors/cyber/core/extension"
 	"github.com/chainreactors/cyber/core/namespaces"
 	"github.com/chainreactors/cyber/core/proc"
+	fenceext "github.com/chainreactors/cyber/exts/4zfence"
+	zsession "github.com/chainreactors/cyber/exts/4zsession"
 	loopext "github.com/chainreactors/cyber/exts/agent"
 	arsenalext "github.com/chainreactors/cyber/exts/arsenal"
 	nodeext "github.com/chainreactors/cyber/exts/node"
@@ -59,6 +61,8 @@ func newAuditProfile(request profile.Request, workDir string, bashTimeout int, r
 	sessionConfig := *request.Session
 	sessionConfig.NodeName = cfg.ResolveNodeName(option.NodeName)
 	sessionConfig = sessionext.ConfigFromOption(&option, sessionConfig)
+	sessionConfig.TurnDecorators = append(sessionConfig.TurnDecorators, fenceext.TurnDecorators()...)
+	sessionConfig.TurnDecorators = append(sessionConfig.TurnDecorators, zsession.TurnDecorators()...)
 	loop := loopext.New(sessionConfig.Loop)
 	var rgConfig, exclusions string
 	if report != nil {

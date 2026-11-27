@@ -1,10 +1,11 @@
-package session
+package fence
 
 import (
 	"context"
 	"net"
 	"testing"
 
+	agenthooks "github.com/chainreactors/cyber/agent/hooks"
 	aop "github.com/chainreactors/cyber/aop"
 	"github.com/chainreactors/cyber/core/egress"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -80,14 +81,16 @@ func TestTurnEgressProxyInvalidClears(t *testing.T) {
 }
 
 // Session close unbinds the route, so a later session reusing the id cannot
-// inherit a route nobody re-sent. The runtime rejection path (unknown session)
-// still clears: the binding is torn down regardless of the close outcome.
-func TestCloseAOPSessionUnbindsRoute(t *testing.T) {
-	rt := newBareRuntime(t, nil, nil)
+// inherit a route nobody re-sent. The drop runs in the fence extension's
+// SessionEnd hook; the runtime emits it from CloseSession, so the binding is
+// torn down regardless of the close outcome.
+func TestSessionDropUnbindsRoute(t *testing.T) {
 	egress.SetSessionRoute("sess-epx-close", func(ctx context.Context, network, address string) (net.Conn, error) {
 		return nil, context.Canceled
 	})
-	rt.CloseAOPSession(t.Context(), &aop.CloseSessionRequest{SessionId: "sess-epx-close"})
+	if _, err := dropOnClose(t.Context(), agenthooks.SessionEvent{SessionID: "sess-epx-close"}); err != nil {
+		t.Fatal(err)
+	}
 	if got := egress.LookupSessionRoute("sess-epx-close"); got != nil {
 		t.Fatal("closed session kept its proxy binding")
 	}

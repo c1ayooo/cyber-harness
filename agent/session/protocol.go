@@ -2,19 +2,12 @@ package session
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"log"
-	"net/url"
 	"strings"
 
 	aop "github.com/chainreactors/cyber/aop"
 	"github.com/chainreactors/cyber/aop/payloads"
-	"github.com/chainreactors/cyber/core/egress"
-	"github.com/chainreactors/cyber/core/globalfence"
-	"github.com/chainreactors/cyber/core/scoperules"
 	types "github.com/chainreactors/cyber/core/types"
-	"github.com/chainreactors/proxyclient"
 	protobuf "google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 )
@@ -67,33 +60,6 @@ func sessionWorkspace(req *aop.OpenSessionRequest) payloads.WorkDirPayload {
 // runGoalExtensionURLs lists every type URL the RunGoal payload has been
 // published under (see the WorkDir namespace note above).
 
-func turnRunGoal(req *aop.RunTurnRequest) (goal, rounds string) {
-	if req == nil {
-		return "", ""
-	}
-	if payload, ok := payloads.ParseRunGoal(payloads.ExtensionWithURL(req.GetExtensions(), payloads.RunGoalURLs)); ok {
-		goal, rounds = strings.TrimSpace(payload.Goal), payloads.EvalRoundsText(payload.EvalRounds)
-		if goal != "" || rounds != "" {
-			return goal, rounds
-		}
-	}
-	return "", ""
-}
-
-// turnWorkDir returns the workspace a control plane attached to this turn. It
-// rides the same WorkDir extension the session opening carries: a resumed turn
-// never re-opens its session, so a session the host re-created after a restart
-// would otherwise keep the agent's process directory as its workspace.
-func turnWorkDir(req *aop.RunTurnRequest) string {
-	if req == nil {
-		return ""
-	}
-	if payload, ok := payloads.ParseWorkDir(payloads.ExtensionWithURL(req.GetExtensions(), payloads.WorkDirURLs)); ok {
-		return strings.TrimSpace(payload.WorkDir)
-	}
-	return ""
-}
-
 // caseSeedExtensionURLs lists every type URL the CaseSeed payload has been
 // published under (same fork namespace generations as WorkDir). The payload is
 // {"files":[{"path":".zrcin/context.json","mode":420,"data":"<base64>"}]};
@@ -104,17 +70,6 @@ func turnWorkDir(req *aop.RunTurnRequest) string {
 // the control plane materializes in the workspace before the turn runs.
 type CaseSeedFile = payloads.CaseSeedFile
 
-// turnCaseSeed decodes the files a control plane sends with this turn. A
-// malformed payload is an error: a control plane that believes it delivered
-// the inputs must learn that it did not, instead of the model reading stale
-// or missing context.
-func turnCaseSeed(req *aop.RunTurnRequest) ([]CaseSeedFile, error) {
-	if req == nil {
-		return nil, nil
-	}
-	return payloads.ParseCaseSeed(payloads.ExtensionWithURL(req.GetExtensions(), payloads.CaseSeedURLs))
-}
-
 // toolEnvExtensionURLs lists every type URL the ToolEnv payload has been
 // published under (see the WorkDir namespace note above).
 
@@ -123,57 +78,11 @@ func turnCaseSeed(req *aop.RunTurnRequest) ([]CaseSeedFile, error) {
 // registers; a set that fails to parse is logged and ignored — the request
 // pipeline stays record-only rather than judging on garbage.
 
-// turnScopeRules registers the test-range rule set a control plane attached to
-// this turn. The set rides every turn (disabled drafts included) so the proxy
-// judges each request against what the project manifest held when the run
-// dispatched — never a stale push-once copy. An invalid payload is logged and
-// ignored (the previous set stays in force); a full table is returned as
-// ErrCapacity — the caller must reject the turn, because a skipped
-// registration would run it unfenced.
-func turnScopeRules(req *aop.RunTurnRequest) error {
-	if req == nil {
-		return nil
-	}
-	extension := payloads.ExtensionWithURL(req.GetExtensions(), payloads.ScopeRulesURLs)
-	if extension == nil {
-		return nil
-	}
-	if err := scoperules.SetRules(req.GetSessionId(), extension.GetValue()); err != nil {
-		if errors.Is(err, scoperules.ErrCapacity) {
-			return fmt.Errorf("scope rules: %w", err)
-		}
-		log.Printf("aop: ignore invalid scope rules for session %s: %v", req.GetSessionId(), err)
-	}
-	return nil
-}
-
 // globalFenceExtensionURLs is the control plane's instance-wide red lines
 // (spec #1 工单3): command patterns that never execute and domains that are
 // never reached, on every project the instance drives — judged before the
 // project fence, so a project allowlisting a denied domain still cannot reach
 // it. Same per-turn carriage and both-namespace recognition as ScopeRules.
-
-// turnGlobalFence registers the instance fence for this turn's session. An
-// invalid payload is logged and ignored; the previous set stays in force
-// rather than opening a hole on one malformed send. A full table is returned
-// as ErrCapacity — the caller must reject the turn, because a skipped
-// registration would run it unfenced.
-func turnGlobalFence(req *aop.RunTurnRequest) error {
-	if req == nil {
-		return nil
-	}
-	extension := payloads.ExtensionWithURL(req.GetExtensions(), payloads.GlobalFenceURLs)
-	if extension == nil {
-		return nil
-	}
-	if err := globalfence.SetRules(req.GetSessionId(), extension.GetValue()); err != nil {
-		if errors.Is(err, globalfence.ErrCapacity) {
-			return fmt.Errorf("global fence: %w", err)
-		}
-		log.Printf("aop: ignore invalid global fence for session %s: %v", req.GetSessionId(), err)
-	}
-	return nil
-}
 
 // egressProxyExtensionURLs is the control plane's per-turn egress proxy (the
 // project manifest "proxy" JSON: enabled/scheme/host/port/username/password
@@ -181,83 +90,8 @@ func turnGlobalFence(req *aop.RunTurnRequest) error {
 // unparsable endpoint is logged and cleared — the session falls back to the
 // node default chain rather than routing on garbage.
 
-// turnEgressProxy binds this turn's session to the project proxy a control
-// plane attached. The binding rides every turn — a disabled draft included —
-// so a session that outlives the save learns the endpoint was switched off
-// and falls back to the node default. Registration lives in core/egress (same
-// pattern as scoperules): the session layer writes, the proxy hub reads, and
-// neither imports the other.
-//
-// NewClient needs the extra protocol factories (trojan/vmess/hysteria2/anytls/
-// clash) registered; those blank imports live in tools/proxy, which every
-// agent binary links, so the factories are in the registry by the time a turn
-// with such an endpoint arrives.
-func turnEgressProxy(req *aop.RunTurnRequest) {
-	if req == nil {
-		return
-	}
-	extension := payloads.ExtensionWithURL(req.GetExtensions(), payloads.EgressProxyURLs)
-	if extension == nil {
-		return
-	}
-	sessionID := req.GetSessionId()
-	payload, ok := payloads.ParseEgressProxy(extension)
-	if !ok {
-		log.Printf("aop: ignore invalid egress proxy for session %s", sessionID)
-		egress.ClearSessionRoute(sessionID)
-		return
-	}
-	// Disabled is a stored state the operator kept, not a deletion: clearing
-	// the route is exactly how "off" reaches a session that is already live.
-	if !payload.Enabled {
-		egress.ClearSessionRoute(sessionID)
-		return
-	}
-	raw := payload.URL
-	if raw == "" {
-		// Legacy control planes without the url field: derive from the fields.
-		host := payload.Host
-		if payload.Port > 0 {
-			host = fmt.Sprintf("%s:%d", host, payload.Port)
-		}
-		u := &url.URL{Scheme: payload.Scheme, Host: host}
-		if payload.Username != "" {
-			if payload.Password != "" {
-				u.User = url.UserPassword(payload.Username, payload.Password)
-			} else {
-				u.User = url.User(payload.Username)
-			}
-		}
-		raw = u.String()
-	}
-	endpoint, err := url.Parse(raw)
-	if err != nil {
-		log.Printf("aop: ignore invalid egress proxy url for session %s: %v", sessionID, err)
-		egress.ClearSessionRoute(sessionID)
-		return
-	}
-	dial, err := proxyclient.NewClient(endpoint)
-	if err != nil {
-		log.Printf("aop: ignore undialable egress proxy for session %s: %v", sessionID, err)
-		egress.ClearSessionRoute(sessionID)
-		return
-	}
-	egress.SetSessionRoute(sessionID, egress.Dial(dial))
-}
-
 type toolEnvExtension struct {
 	Env map[string]string `json:"env"`
-}
-
-// turnToolEnv returns the per-turn tool environment as KEY=VALUE pairs.
-func turnToolEnv(req *aop.RunTurnRequest) []string {
-	if req == nil {
-		return nil
-	}
-	if pairs, ok := payloads.ParseToolEnv(payloads.ExtensionWithURL(req.GetExtensions(), payloads.ToolEnvURLs)); ok {
-		return pairs
-	}
-	return nil
 }
 
 func (rt *Runtime) OpenAOPSession(req *aop.OpenSessionRequest) *aop.OpenSessionResponse {
@@ -316,10 +150,6 @@ func (rt *Runtime) RunAOPTurn(ctx context.Context, req *aop.RunTurnRequest) *aop
 	// error rejects the turn with FAILED_PRECONDITION — a payload that claims
 	// to have landed cannot silently not have.
 	decorators := rt.config.TurnDecorators
-	if rt != nil && len(decorators) == 0 {
-		// No override: the fork payloads apply as they always have.
-		decorators = defaultForkTurnDecorators()
-	}
 	if err := applyTurnDecorators(ctx, decorators, req, &input); err != nil {
 		response.Outcome = &aop.RunTurnResponse_Rejected{Rejected: rejection("FAILED_PRECONDITION", err.Error())}
 		return response
@@ -353,14 +183,8 @@ func (rt *Runtime) CloseAOPSession(ctx context.Context, req *aop.CloseSessionReq
 		response.Outcome = &aop.CloseSessionResponse_Rejected{Rejected: rejection("INVALID_ARGUMENT", "session_id is required")}
 		return response
 	}
-	// The session is gone: its project proxy binding and its fence
-	// registrations must go with it, or a later session reusing the id would
-	// inherit a route or a fence nobody re-sent — and the fence tables hold
-	// only live sessions, so closing without dropping would exhaust capacity
-	// with stale ids.
-	egress.ClearSessionRoute(req.SessionId)
-	scoperules.DropSession(req.SessionId)
-	globalfence.DropSession(req.SessionId)
+	// Closing the session emits SessionEnd, where the composition's fence
+	// extension drops this session's registrations and proxy binding.
 	if err := rt.CloseSession(ctx, req.SessionId, SessionCloseReason(req.Reason)); err != nil {
 		response.Outcome = &aop.CloseSessionResponse_Rejected{Rejected: rejection("FAILED_PRECONDITION", err.Error())}
 		return response

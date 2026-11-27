@@ -14,7 +14,7 @@ import (
 	"github.com/chainreactors/cyber/aop"
 	operationpb "github.com/chainreactors/cyber/aop/operation"
 	"github.com/chainreactors/cyber/core/events"
-	"github.com/chainreactors/cyber/core/globalfence"
+	"github.com/chainreactors/cyber/exts/4zfence/globalfence"
 	"github.com/chainreactors/cyber/core/operation"
 	toolhooks "github.com/chainreactors/cyber/core/tool/hooks"
 	"google.golang.org/protobuf/proto"

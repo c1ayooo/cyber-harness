@@ -9,6 +9,8 @@ import (
 	agentsession "github.com/chainreactors/cyber/agent/session"
 	"github.com/chainreactors/cyber/core/extension"
 	"github.com/chainreactors/cyber/core/telemetry"
+	fenceext "github.com/chainreactors/cyber/exts/4zfence"
+	zsession "github.com/chainreactors/cyber/exts/4zsession"
 	loopext "github.com/chainreactors/cyber/exts/agent"
 	sessionext "github.com/chainreactors/cyber/exts/session"
 	subagentext "github.com/chainreactors/cyber/exts/subagent"
@@ -30,6 +32,8 @@ func newAgentProfile(option cfg.Option, logger telemetry.Logger, workDir string,
 		NodeName:         cfg.ResolveNodeName(option.NodeName),
 		PrimarySessionID: "main", Loop: agent.StandardLoop{},
 	})
+	sessionConfig.TurnDecorators = append(sessionConfig.TurnDecorators, fenceext.TurnDecorators()...)
+	sessionConfig.TurnDecorators = append(sessionConfig.TurnDecorators, zsession.TurnDecorators()...)
 	loop := loopext.New(sessionConfig.Loop)
 
 	// This build routes nothing, so it publishes the disabled endpoint and
@@ -50,6 +54,7 @@ func newAgentProfile(option cfg.Option, logger telemetry.Logger, workDir string,
 
 	p := &agentProfile{}
 	values = append(values,
+		fenceext.New(),
 		loop,
 		subagentext.New(), sessionext.New(sessionConfig), subagentext.NewTools(),
 		tuiext.New(),

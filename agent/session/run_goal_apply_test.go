@@ -1,5 +1,10 @@
 package session
 
+// The runtime applies the composition's turn decorators (seam G1, docs/19
+// appendix A): this test drives RunAOPTurn through a runtime whose
+// TurnDecorators are the 4zsession block's, and checks the evaluator's goal
+// and pacing come from the control-plane extension.
+
 import (
 	"context"
 	"strings"
@@ -8,89 +13,11 @@ import (
 
 	"github.com/chainreactors/cyber/agent/provider"
 	aop "github.com/chainreactors/cyber/aop"
+	"github.com/chainreactors/cyber/aop/payloads"
 	types "github.com/chainreactors/cyber/core/types"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-func TestTurnRunGoalExtension(t *testing.T) {
-	extension := func(typeURL, value string) *anypb.Any {
-		return &anypb.Any{TypeUrl: typeURL, Value: []byte(value)}
-	}
-	request := func(extensions ...*anypb.Any) *aop.RunTurnRequest {
-		return &aop.RunTurnRequest{Extensions: extensions}
-	}
-	for _, test := range []struct {
-		name   string
-		req    *aop.RunTurnRequest
-		goal   string
-		rounds string
-	}{
-		{name: "absent", req: request()},
-		{name: "nil request"},
-		{
-			name:   "trimmed goal and rounds",
-			req:    request(extension(forkRunGoalExtensionURL(), `{"goal":" verify admin access ","eval_rounds":" 2 "}`)),
-			goal:   "verify admin access",
-			rounds: "2",
-		},
-		{
-			name:   "numeric rounds",
-			req:    request(extension(forkRunGoalExtensionURL(), `{"goal":"verify admin access","eval_rounds":3}`)),
-			goal:   "verify admin access",
-			rounds: "3",
-		},
-		{
-			name: "goal only",
-			req:  request(extension(forkRunGoalExtensionURL(), `{"goal":"verify admin access"}`)),
-			goal: "verify admin access",
-		},
-		{
-			name: "other extensions are ignored",
-			req: request(
-				extension(forkWorkDirExtensionURL(), `{"work_dir":"C:\\case"}`),
-				extension(forkRunGoalExtensionURL(), `{"goal":"verify admin access"}`),
-			),
-			goal: "verify admin access",
-		},
-		{name: "malformed value", req: request(extension(forkRunGoalExtensionURL(), `{`))},
-		{name: "empty value", req: request(extension(forkRunGoalExtensionURL(), `{"goal":"","eval_rounds":""}`))},
-	} {
-		t.Run(test.name, func(t *testing.T) {
-			goal, rounds := turnRunGoal(test.req)
-			if goal != test.goal || rounds != test.rounds {
-				t.Fatalf("turnRunGoal() = (%q, %q), want (%q, %q)", goal, rounds, test.goal, test.rounds)
-			}
-		})
-	}
-}
-
-func testVerdict(pass bool) *provider.ChatCompletionResponse {
-	arguments := `{"pass":false,"continue":false,"reason":"not met","feedback":"","inherit_context":true}`
-	if pass {
-		arguments = `{"pass":true,"continue":false,"reason":"met","feedback":"","inherit_context":true}`
-	}
-	return &provider.ChatCompletionResponse{Choices: []provider.Choice{{Message: &aop.Message{
-		Role: "assistant",
-		Content: []*aop.Content{{Value: &aop.Content_ToolCall{ToolCall: &aop.ToolCall{
-			Id: "verdict-1", Name: "verdict", Kind: "function",
-			Arguments: &aop.EncodedValue{Data: []byte(arguments), MediaType: aop.JSONMediaType},
-		}}}},
-	}}}}
-}
-
-func requestText(request *provider.ChatCompletionRequest) string {
-	var text strings.Builder
-	for _, message := range request.Messages {
-		text.WriteString(provider.MessageText(message))
-		text.WriteByte('\n')
-	}
-	return text.String()
-}
-
-// The RunGoal extension is the control plane's evaluator contract: the
-// evaluator judges the intent's short goal while the executor still receives
-// the turn message as its first input. Without the extension the upstream
-// derivation (the input text) must remain in force.
 func TestRunAOPTurnRunGoalShapesEvaluatorGoal(t *testing.T) {
 	for _, test := range []struct {
 		name       string
@@ -100,7 +27,7 @@ func TestRunAOPTurnRunGoalShapesEvaluatorGoal(t *testing.T) {
 	}{
 		{
 			name:       "extension goal and rounds",
-			extension:  &anypb.Any{TypeUrl: forkRunGoalExtensionURL(), Value: []byte(`{"goal":"verify admin access","eval_rounds":"2"}`)},
+			extension:  &anypb.Any{TypeUrl: payloads.RunGoalURLs[0], Value: []byte(`{"goal":"verify admin access","eval_rounds":"2"}`)},
 			wantGoal:   "## Goal\nverify admin access",
 			wantRounds: "hard ceiling 2,",
 		},
@@ -120,6 +47,19 @@ func TestRunAOPTurnRunGoalShapesEvaluatorGoal(t *testing.T) {
 				testVerdict(true),
 			}}
 			rt := newBareRuntime(t, nil, scripted)
+			// Mirror 4zsession's run-goal decorator inline: the test package
+			// cannot import the block (it imports agent/session), and what
+			// matters here is that a decorator's EvalGoal/EvalRounds shape
+			// the evaluator request.
+			rt.config.TurnDecorators = []RunTurnDecorator{func(req *aop.RunTurnRequest, input *RunInput) error {
+				if payload, ok := payloads.ParseRunGoal(payloads.ExtensionWithURL(req.GetExtensions(), payloads.RunGoalURLs)); ok {
+					goal, rounds := strings.TrimSpace(payload.Goal), payloads.EvalRoundsText(payload.EvalRounds)
+					if goal != "" || rounds != "" {
+						input.EvalGoal, input.EvalRounds = goal, rounds
+					}
+				}
+				return nil
+			}}
 			if opened := rt.OpenAOPSession(&aop.OpenSessionRequest{SessionId: "session-1"}); opened.GetAccepted() == nil {
 				t.Fatalf("OpenAOPSession = %v", opened)
 			}
@@ -171,4 +111,27 @@ func TestRunAOPTurnRunGoalShapesEvaluatorGoal(t *testing.T) {
 			}
 		})
 	}
+}
+
+func testVerdict(pass bool) *provider.ChatCompletionResponse {
+	arguments := `{"pass":false,"continue":false,"reason":"not met","feedback":"","inherit_context":true}`
+	if pass {
+		arguments = `{"pass":true,"continue":false,"reason":"met","feedback":"","inherit_context":true}`
+	}
+	return &provider.ChatCompletionResponse{Choices: []provider.Choice{{Message: &aop.Message{
+		Role: "assistant",
+		Content: []*aop.Content{{Value: &aop.Content_ToolCall{ToolCall: &aop.ToolCall{
+			Id: "verdict-1", Name: "verdict", Kind: "function",
+			Arguments: &aop.EncodedValue{Data: []byte(arguments), MediaType: aop.JSONMediaType},
+		}}}},
+	}}}}
+}
+
+func requestText(request *provider.ChatCompletionRequest) string {
+	var text strings.Builder
+	for _, message := range request.Messages {
+		text.WriteString(provider.MessageText(message))
+		text.WriteByte('\n')
+	}
+	return text.String()
 }

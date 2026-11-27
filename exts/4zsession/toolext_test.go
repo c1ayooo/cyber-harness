@@ -1,4 +1,4 @@
-package session
+package zsession
 
 import (
 	"encoding/json"
@@ -7,6 +7,7 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 
 	"github.com/chainreactors/cyber/aop"
+	"github.com/chainreactors/cyber/aop/payloads"
 )
 
 // The control plane attaches the per-turn tool environment as its own extension;
@@ -20,7 +21,7 @@ func TestTurnToolEnvDecodesTheControlPlaneExtension(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	req := &aop.RunTurnRequest{Extensions: []*anypb.Any{{TypeUrl: forkToolEnvExtensionURL(), Value: raw}}}
+	req := &aop.RunTurnRequest{Extensions: []*anypb.Any{{TypeUrl: payloads.ToolEnvURLs[0], Value: raw}}}
 	env := turnToolEnv(req)
 	got := map[string]bool{}
 	for _, kv := range env {

@@ -15,7 +15,7 @@ import (
 
 	aop "github.com/chainreactors/cyber/aop"
 	"github.com/chainreactors/cyber/core/operation"
-	"github.com/chainreactors/cyber/core/scoperules"
+	"github.com/chainreactors/cyber/exts/4zfence/scoperules"
 	mitmproxy "github.com/chainreactors/utils/mitmproxy/proxy"
 )
 
