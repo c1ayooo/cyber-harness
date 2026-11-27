@@ -1140,6 +1140,28 @@ The E3 items 3 and 4 land as code (4zrcin docs/19, ticket 02-fence-internals):
 Registered hooks after this change: `SubmitReview` in
 `exts/guardrail/runtime.go` only. `scripts/check-fork.sh` reports the rest.
 
+## P4: `make resources` regenerates the embedded rules and diffs them (2026-11-28)
+
+docs/19 §5, ticket 10. The engine `Makefile` gains a `resources` target: it
+reruns the two `go:generate` directives (`tools/resources`, then
+`tools/proton/resources` with its `-need` list) against a rules-repo checkout
+and then `git diff --exit-code -- tools/resources tools/proton/resources`,
+failing with a hint when the committed outputs do not match the checkout. The
+new `TEMPLATES_DIR` variable points at the checkout — the pinned
+`tools/templates` submodule by default, any other checkout via
+`make resources TEMPLATES_DIR=...`; the target refuses to run without a
+`fingers` directory in it and passes `-t` absolute because each recipe runs
+from its own package directory. `embed-resources` is unchanged (generate
+only, still the `EMBED=1` prerequisite); `resources` is the gate that also
+compares. No generated product is touched by hand — only the Makefile and
+this registration.
+Tests: `make -n resources` prints the two directives verbatim except `-t`;
+`make resources` exits 0 with a clean `git status` on both output trees;
+`head -1 tools/resources/template.go` still `//go:build !emptyresources`;
+`make scan-capture BIN_DIR=/tmp/rs` builds; `make -n embed-resources`
+unchanged.
+Rollback: revert the commit — the Makefile and this entry are the whole diff.
+
 ## Superseded patches
 
 These commits were on `tianwu/fixes` and are intentionally **not** carried after

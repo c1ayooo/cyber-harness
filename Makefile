@@ -110,7 +110,7 @@ endif
 RECORD_PREFIX := $(if $(CYBER_RECORD_PREFIX),$(CYBER_RECORD_PREFIX),$(PROJECT_ROOT)/.cache/native/record/$(RECORD_PLATFORM)_$(RECORD_ARCH))
 RECORD_BUILD_ENV := CGO_LDFLAGS="-L$(RECORD_PREFIX)/lib $(RECORD_EXTRA_LDFLAGS)"
 
-.PHONY: help prepare frontend proto-gen standard agent full record record-native web-build web-run web all clean harness harness-llm check-architecture check-fork embed-resources ldflags engine scan scan-capture
+.PHONY: help prepare frontend proto-gen standard agent full record record-native web-build web-run web all clean harness harness-llm check-architecture check-fork embed-resources resources ldflags engine scan scan-capture
 
 help:
 	@echo "cyber-scan build targets:"
@@ -122,6 +122,7 @@ help:
 	@echo "  make web              Build cyber-harness and start the Web UI"
 	@echo "  make frontend         Build only web/frontend into web/static"
 	@echo "  make embed-arsenal    Download tools and generate target-specific embedding"
+	@echo "  make resources        Regenerate embedded rules from TEMPLATES_DIR and fail on a diff vs the committed outputs"
 	@echo "  make record-native    Install the recorder SDK"
 	@echo "  make proto-gen        Regenerate all AOP and Cyber protobuf bindings"
 	@echo "  make harness          Run user scenarios against the real application process"
@@ -137,6 +138,7 @@ help:
 	@echo "  EMBED=1               Generate and embed resources instead of loading them"
 	@echo "  ARSENAL_EMBED=1       Embed tools selected by ARSENAL_CONFIG"
 	@echo "  BIN_DIR=path          Binary output directory (default: $(BIN_DIR))"
+	@echo "  TEMPLATES_DIR=path    Rules checkout for make resources (default: the tools/templates submodule)"
 	@echo "  TAGS=tags             Tag string the 4zrcin shell forwards (see docs/19 §7)"
 	@echo "  WEB_ADDR=host:port    Web listen address (default: $(WEB_ADDR))"
 	@echo "  WEB_TOKEN=token       Optional fixed Web access token"
@@ -171,6 +173,24 @@ prepare:
 # otherwise keep these resources external.
 embed-resources:
 	$(GO) generate ./tools/resources ./tools/proton/resources
+
+# `resources` is the regeneration gate the `embed-resources` prerequisite
+# lacks: it reruns the two go:generate directives against a rules-repo
+# checkout (TEMPLATES_DIR, the pinned tools/templates submodule by default)
+# and then fails if the outputs differ from the committed ones. embed-resources
+# only generates; resources generates and compares. Both recipes run from
+# their own package directory, so the caller-supplied checkout is passed
+# absolute — the directives' relative -t defaults would not resolve otherwise.
+TEMPLATES_DIR ?= tools/templates
+
+resources:
+	@if [ ! -d "$(TEMPLATES_DIR)/fingers" ]; then \
+		echo "规则仓检出缺失，先运行 git submodule update --init tools/templates，或用 TEMPLATES_DIR= 指向一个检出"; \
+		exit 1; \
+	fi
+	cd tools/resources && $(GO) run ./templates_gen.go -t $(abspath $(TEMPLATES_DIR)) -o template.go
+	cd tools/proton/resources && $(GO) run ../../resources/templates_gen.go -t $(abspath $(TEMPLATES_DIR)) -o template.go -need found_keys,found_spray,found_filter_ext,found_filter_dir
+	git diff --exit-code -- tools/resources tools/proton/resources || { echo "规则仓与已提交的产物不一致：确认是有意的改动后提交产物，否则检查 TEMPLATES_DIR"; exit 1; }
 
 .PHONY: embed-arsenal arsenal-spec
 embed-arsenal arsenal-spec:
