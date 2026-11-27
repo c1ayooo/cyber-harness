@@ -439,6 +439,17 @@ func denied(reason string) toolhooks.Admission {
 	return toolhooks.Admission{Deny: fmt.Errorf("%w: %s", operation.ErrDenied, reason)}
 }
 
+// SubmitReview hands a call the caller already judged `review` to this
+// runtime's ordinary approval lifecycle: the pending entry is registered,
+// the Review event is emitted, and the returned admission blocks until an
+// operator resolves it or it expires (fork seam G3, 4zrcin docs/19 P1-4 —
+// a second judge composes its own admission but must not rebuild the
+// pending queue, the RPC surface and the console bindings that already
+// exist here).
+func (r *Runtime) SubmitReview(ctx context.Context, ev toolhooks.CallEvent, d *Decision) toolhooks.Admission {
+	return r.review(ctx, ev, d)
+}
+
 func (r *Runtime) review(ctx context.Context, ev toolhooks.CallEvent, d *Decision) toolhooks.Admission {
 	id := ev.Operation.GetOperationId()
 	if id == "" || ev.Call == nil {
