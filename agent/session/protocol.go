@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/url"
@@ -219,18 +220,25 @@ var scopeRulesExtensionURLs = []string{
 // turnScopeRules registers the test-range rule set a control plane attached to
 // this turn. The set rides every turn (disabled drafts included) so the proxy
 // judges each request against what the project manifest held when the run
-// dispatched — never a stale push-once copy.
-func turnScopeRules(req *aop.RunTurnRequest) {
+// dispatched — never a stale push-once copy. An invalid payload is logged and
+// ignored (the previous set stays in force); a full table is returned as
+// ErrCapacity — the caller must reject the turn, because a skipped
+// registration would run it unfenced.
+func turnScopeRules(req *aop.RunTurnRequest) error {
 	if req == nil {
-		return
+		return nil
 	}
 	extension := extensionWithURL(req.GetExtensions(), scopeRulesExtensionURLs)
 	if extension == nil {
-		return
+		return nil
 	}
 	if err := scoperules.SetRules(req.GetSessionId(), extension.GetValue()); err != nil {
+		if errors.Is(err, scoperules.ErrCapacity) {
+			return fmt.Errorf("scope rules: %w", err)
+		}
 		log.Printf("aop: ignore invalid scope rules for session %s: %v", req.GetSessionId(), err)
 	}
+	return nil
 }
 
 // globalFenceExtensionURLs is the control plane's instance-wide red lines
@@ -245,18 +253,24 @@ var globalFenceExtensionURLs = []string{
 
 // turnGlobalFence registers the instance fence for this turn's session. An
 // invalid payload is logged and ignored; the previous set stays in force
-// rather than opening a hole on one malformed send.
-func turnGlobalFence(req *aop.RunTurnRequest) {
+// rather than opening a hole on one malformed send. A full table is returned
+// as ErrCapacity — the caller must reject the turn, because a skipped
+// registration would run it unfenced.
+func turnGlobalFence(req *aop.RunTurnRequest) error {
 	if req == nil {
-		return
+		return nil
 	}
 	extension := extensionWithURL(req.GetExtensions(), globalFenceExtensionURLs)
 	if extension == nil {
-		return
+		return nil
 	}
 	if err := globalfence.SetRules(req.GetSessionId(), extension.GetValue()); err != nil {
+		if errors.Is(err, globalfence.ErrCapacity) {
+			return fmt.Errorf("global fence: %w", err)
+		}
 		log.Printf("aop: ignore invalid global fence for session %s: %v", req.GetSessionId(), err)
 	}
+	return nil
 }
 
 // egressProxyExtensionURLs is the control plane's per-turn egress proxy (the
@@ -413,9 +427,18 @@ func (rt *Runtime) RunAOPTurn(ctx context.Context, req *aop.RunTurnRequest) *aop
 	// The test-range rule set registers before the turn starts so the proxy
 	// judges this turn's requests against it. The project's egress proxy binds
 	// in the same breath: the hub routes this session's outbound calls through
-	// the endpoint the manifest held at dispatch time.
-	turnScopeRules(req)
-	turnGlobalFence(req)
+	// the endpoint the manifest held at dispatch time. A full fence table
+	// rejects the turn (FAILED_PRECONDITION): an unfenced run is never
+	// acceptable, and the control plane can free capacity by closing idle
+	// sessions or retrying later.
+	if err := turnScopeRules(req); err != nil {
+		response.Outcome = &aop.RunTurnResponse_Rejected{Rejected: rejection("FAILED_PRECONDITION", err.Error())}
+		return response
+	}
+	if err := turnGlobalFence(req); err != nil {
+		response.Outcome = &aop.RunTurnResponse_Rejected{Rejected: rejection("FAILED_PRECONDITION", err.Error())}
+		return response
+	}
 	turnEgressProxy(req)
 	var message *aop.Message
 	if req.Input != nil {
@@ -466,9 +489,14 @@ func (rt *Runtime) CloseAOPSession(ctx context.Context, req *aop.CloseSessionReq
 		response.Outcome = &aop.CloseSessionResponse_Rejected{Rejected: rejection("INVALID_ARGUMENT", "session_id is required")}
 		return response
 	}
-	// The session is gone: its project proxy binding must go with it, or a
-	// later session reusing the id would inherit a route nobody re-sent.
+	// The session is gone: its project proxy binding and its fence
+	// registrations must go with it, or a later session reusing the id would
+	// inherit a route or a fence nobody re-sent — and the fence tables hold
+	// only live sessions, so closing without dropping would exhaust capacity
+	// with stale ids.
 	egress.ClearSessionRoute(req.SessionId)
+	scoperules.DropSession(req.SessionId)
+	globalfence.DropSession(req.SessionId)
 	if err := rt.CloseSession(ctx, req.SessionId, SessionCloseReason(req.Reason)); err != nil {
 		response.Outcome = &aop.CloseSessionResponse_Rejected{Rejected: rejection("FAILED_PRECONDITION", err.Error())}
 		return response

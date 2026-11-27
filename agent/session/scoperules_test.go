@@ -2,6 +2,8 @@ package session
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
 	"testing"
 
 	aop "github.com/chainreactors/cyber/aop"
@@ -80,4 +82,58 @@ func mustJSON(t *testing.T, value any) []byte {
 		t.Fatal(err)
 	}
 	return raw
+}
+
+// A full fence table rejects the turn (FAILED_PRECONDITION) instead of
+// A full fence table rejects the turn (fork fix, P1-0): eviction would
+// unfence a live session behind its back, and a skipped registration would
+// unfence this one — so turnScopeRules surfaces ErrCapacity and RunAOPTurn
+// maps it to FAILED_PRECONDITION. The test fills the table until refusal,
+// verifies the oldest session of its own still judges (nothing evicted),
+// then drops every id it registered to leave capacity for later tests.
+func TestTurnScopeRulesRefusesAtCapacity(t *testing.T) {
+	valid := `{"enabled":true,"default_action":"record","rules":[{"id":"sr-cap","action":"block","method":"*","host":"cap.test"}]}`
+	register := func(id string) error {
+		return turnScopeRules(&aop.RunTurnRequest{SessionId: id, Extensions: []*anypb.Any{{
+			TypeUrl: "type.googleapis.com/4zrcin.ScopeRules", Value: []byte(valid),
+		}}})
+	}
+	const first = "sess-cap-first"
+	if err := register(first); err != nil {
+		t.Fatalf("first registration failed: %v", err)
+	}
+	// Fill until refusal: the table may already hold sessions from earlier
+	// tests in this package, so the loop ends at the first ErrCapacity.
+	var refused bool
+	for i := 0; i < 4096; i++ {
+		id := fmt.Sprintf("sess-cap-%04d", i)
+		if err := register(id); err != nil {
+			if !errors.Is(err, scoperules.ErrCapacity) {
+				t.Fatalf("refusal came wrapped in %v, want ErrCapacity", err)
+			}
+			refused = true
+			break
+		}
+	}
+	if !refused {
+		t.Fatal("4096 registrations never hit the capacity limit")
+	}
+	// Nothing was evicted behind the first session's back.
+	if verdict, judged := scoperules.JudgeSession(first, "GET", "https://cap.test/x"); !judged || verdict.Action != "block" {
+		t.Fatalf("first session was evicted or unfenced: %+v judged=%v", verdict, judged)
+	}
+	// Re-registration of an existing session is a refresh, never a refusal.
+	if err := register(first); err != nil {
+		t.Fatalf("existing session refused on re-registration: %v", err)
+	}
+	// Cleanup: free every slot this test took so later tests start with
+	// capacity.
+	scoperules.DropSession(first)
+	for i := 0; i < 4096; i++ {
+		scoperules.DropSession(fmt.Sprintf("sess-cap-%04d", i))
+	}
+	if err := register("sess-cap-after-drop"); err != nil {
+		t.Fatalf("registration after cleanup failed: %v", err)
+	}
+	scoperules.DropSession("sess-cap-after-drop")
 }

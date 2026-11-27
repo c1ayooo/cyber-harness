@@ -362,10 +362,19 @@ var (
 	storeRing []string
 )
 
+// ErrCapacity reports that the per-session table is full. The caller must
+// refuse this session's turn instead of letting it run: evicting the oldest
+// entry would silently unfence a live session, and skipping the registration
+// would unfence this one — neither failure mode may pass without a log, and a
+// rejected turn is the only outcome that keeps every session fenced.
+var ErrCapacity = fmt.Errorf("scope-rule session table is full (%d live sessions); refuse the turn", maxSessions)
+
 // SetRules replaces the rule set of one session from its manifest JSON. An
 // invalid set is an error and leaves the previous set untouched; a session
 // that stops sending the extension keeps its last set (the control plane
-// re-sends disabled drafts every turn precisely to keep this honest).
+// re-sends disabled drafts every turn precisely to keep this honest). A NEW
+// session beyond the table's capacity is ErrCapacity, not an eviction: the
+// oldest live session's fence must never be dropped behind its back.
 func SetRules(sessionID string, raw []byte) error {
 	set, err := Parse(raw)
 	if err != nil {
@@ -374,14 +383,31 @@ func SetRules(sessionID string, raw []byte) error {
 	storeMu.Lock()
 	defer storeMu.Unlock()
 	if _, exists := storeSets[sessionID]; !exists {
-		storeRing = append(storeRing, sessionID)
-		if len(storeRing) > maxSessions {
-			delete(storeSets, storeRing[0])
-			storeRing = storeRing[1:]
+		if len(storeRing) >= maxSessions {
+			return ErrCapacity
 		}
+		storeRing = append(storeRing, sessionID)
 	}
 	storeSets[sessionID] = set
 	return nil
+}
+
+// DropSession forgets one session's rule set. Called when the session closes,
+// so the table holds only live sessions and capacity is never exhausted by
+// stale ids. Unknown ids are a no-op.
+func DropSession(sessionID string) {
+	storeMu.Lock()
+	defer storeMu.Unlock()
+	if _, exists := storeSets[sessionID]; !exists {
+		return
+	}
+	delete(storeSets, sessionID)
+	for i, id := range storeRing {
+		if id == sessionID {
+			storeRing = append(storeRing[:i], storeRing[i+1:]...)
+			break
+		}
+	}
 }
 
 // JudgeSession judges one request attributed to a session. judged is false
@@ -400,27 +426,29 @@ func JudgeSession(sessionID, method, rawURL string) (Verdict, bool) {
 // is read-only after Parse — and the next turn re-registers the root's newest
 // set; a child that lives across a rule edit keeps the set it was born with,
 // which is the honest reading of "registered for that session". A parent with
-// no registered set inherits nothing.
-func InheritSessionRules(parentID, childID string) {
+// no registered set inherits nothing. A child beyond the table's capacity is
+// ErrCapacity: silently skipping would open the child session unfenced, so
+// the caller must fail the child's creation instead.
+func InheritSessionRules(parentID, childID string) error {
 	if parentID == "" || childID == "" || parentID == childID {
-		return
+		return nil
 	}
 	storeMu.RLock()
 	set := storeSets[parentID]
 	storeMu.RUnlock()
 	if set == nil {
-		return
+		return nil
 	}
 	storeMu.Lock()
 	defer storeMu.Unlock()
 	if _, exists := storeSets[childID]; !exists {
-		storeRing = append(storeRing, childID)
-		if len(storeRing) > maxSessions {
-			delete(storeSets, storeRing[0])
-			storeRing = storeRing[1:]
+		if len(storeRing) >= maxSessions {
+			return ErrCapacity
 		}
+		storeRing = append(storeRing, childID)
 	}
 	storeSets[childID] = set
+	return nil
 }
 
 // ---------------------------------------------------------------------------

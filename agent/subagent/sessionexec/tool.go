@@ -212,10 +212,15 @@ func (t *Tool) open(task *subagent.Run, cfg agent.Config, callID string, options
 	// sees, since its turns start through RunSession, not AOP. Inheriting the
 	// parent's registered sets here is what keeps a delegated direction fenced
 	// like its parent (fork patch 33); a parent with nothing registered
-	// inherits nothing.
+	// inherits nothing. A full table is an error and fails this child's
+	// creation: a delegated direction that would run unfenced must not start.
 	if parent := operation.InvocationFromContext(task.Context).SessionID; parent != "" {
-		scoperules.InheritSessionRules(parent, options.ID)
-		globalfence.InheritSessionRules(parent, options.ID)
+		if err := scoperules.InheritSessionRules(parent, options.ID); err != nil {
+			return nil, nil, fmt.Errorf("inherit scope rules from %s: %w", parent, err)
+		}
+		if err := globalfence.InheritSessionRules(parent, options.ID); err != nil {
+			return nil, nil, fmt.Errorf("inherit global fence from %s: %w", parent, err)
+		}
 	}
 	onClosed := t.track(options.ID, task, cfg)
 	childCfg := task.Config.ForTask(task.Detail.AgentName, callID, task.Detail)

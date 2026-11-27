@@ -150,12 +150,20 @@ var (
 	storeRing []string
 )
 
+// ErrCapacity reports that the per-session fence table is full. The caller
+// must refuse this session's turn instead of letting it run: evicting the
+// oldest entry would silently unfence a live session, and skipping the
+// registration would unfence this one.
+var ErrCapacity = fmt.Errorf("global fence session table is full (%d live sessions); refuse the turn", maxSessions)
+
 const maxSessions = 64
 
 // SetRules replaces one session's instance fence. An invalid set is an error
 // and leaves the previous set in force; a session that stops sending the
 // extension keeps its last set (the control plane re-sends the disabled state
-// every turn, which is how a fence gets turned off).
+// every turn, which is how a fence gets turned off). A NEW session beyond the
+// table's capacity is ErrCapacity, not an eviction: the oldest live session's
+// fence must never be dropped behind its back.
 func SetRules(sessionID string, raw []byte) error {
 	set, err := Parse(raw)
 	if err != nil {
@@ -164,14 +172,30 @@ func SetRules(sessionID string, raw []byte) error {
 	storeMu.Lock()
 	defer storeMu.Unlock()
 	if _, exists := storeSets[sessionID]; !exists {
-		storeRing = append(storeRing, sessionID)
-		if len(storeRing) > maxSessions {
-			delete(storeSets, storeRing[0])
-			storeRing = storeRing[1:]
+		if len(storeRing) >= maxSessions {
+			return ErrCapacity
 		}
+		storeRing = append(storeRing, sessionID)
 	}
 	storeSets[sessionID] = set
 	return nil
+}
+
+// DropSession forgets one session's instance fence. Called when the session
+// closes, so the table holds only live sessions. Unknown ids are a no-op.
+func DropSession(sessionID string) {
+	storeMu.Lock()
+	defer storeMu.Unlock()
+	if _, exists := storeSets[sessionID]; !exists {
+		return
+	}
+	delete(storeSets, sessionID)
+	for i, id := range storeRing {
+		if id == sessionID {
+			storeRing = append(storeRing[:i], storeRing[i+1:]...)
+			break
+		}
+	}
 }
 
 // JudgeCommand matches one command's text against the session's enabled
@@ -234,25 +258,27 @@ func AllowDomainHit(sessionID, host string) (DomainRule, bool) {
 // (fork patch 33), the same mechanism as scoperules.InheritSessionRules: a
 // subagent's fresh session id never sees a RunTurnRequest, so without the
 // copy its commands and tunnels would fence nothing. The parsed Set is
-// read-only after Parse, so sharing the pointer is safe.
-func InheritSessionRules(parentID, childID string) {
+// read-only after Parse, so sharing the pointer is safe. A child beyond the
+// table's capacity is ErrCapacity: silently skipping would open the child
+// session unfenced, so the caller must fail the child's creation instead.
+func InheritSessionRules(parentID, childID string) error {
 	if parentID == "" || childID == "" || parentID == childID {
-		return
+		return nil
 	}
 	storeMu.RLock()
 	set := storeSets[parentID]
 	storeMu.RUnlock()
 	if set == nil {
-		return
+		return nil
 	}
 	storeMu.Lock()
 	defer storeMu.Unlock()
 	if _, exists := storeSets[childID]; !exists {
-		storeRing = append(storeRing, childID)
-		if len(storeRing) > maxSessions {
-			delete(storeSets, storeRing[0])
-			storeRing = storeRing[1:]
+		if len(storeRing) >= maxSessions {
+			return ErrCapacity
 		}
+		storeRing = append(storeRing, childID)
 	}
 	storeSets[childID] = set
+	return nil
 }

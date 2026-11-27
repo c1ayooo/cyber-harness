@@ -856,6 +856,38 @@ the 4zrcin checkout at `425e6175`.
     global-allow sidecar before the project fence).
     Rollback: revert — infrastructure names queue pending assets again.
 
+## P1-0 fence capacity fix (2026-11-27)
+
+`core/scoperules` and `core/globalfence` stored each session's rules in a
+64-slot ring that silently evicted the oldest entry on overflow, never
+cleared on session close, and never refreshed on re-registration — the 65th
+live session silently unfenced the oldest one, and any session whose rules
+were evicted ran the rest of its turn with no fence and no log.
+
+Both fixes the control plane decided on (4zrcin docs/19 §14, decision 18):
+
+- **Capacity refuses instead of evicting.** `SetRules` returns the new
+  `ErrCapacity` for a NEW session beyond the table; it does not touch the
+  ring. An existing session re-registering (the control plane re-sends every
+  turn) is a refresh, never a refusal. `InheritSessionRules` returns the same
+  error for a child beyond capacity — the subagent tool (sessionexec) fails
+  that child's creation, so a delegated direction never starts unfenced.
+- **Session close drops the registration.** `DropSession` on CloseAOPSession
+  (next to the existing egress.ClearSessionRoute), so the table holds only
+  live sessions.
+
+Consumers: `agent/session/protocol.go` surfaces `ErrCapacity` from
+turnScopeRules/turnGlobalFence and RunAOPTurn rejects the turn with
+FAILED_PRECONDITION — the same shape the case-seed refusal already used.
+Invalid payloads stay logged-and-ignored (the previous set remains in force);
+only capacity is a turn-level failure. Tests: core capacity/eviction/
+inheritance tables per package, and the agent/session turn-refusal test that
+fills the table, checks nothing was evicted behind the first session, and
+drops its registrations.
+
+Rollback: revert — the tables regain the eviction behavior with its silent
+failure mode.
+
 ## Upstream merge 2026-11-27 (#205 gateway, #208 passive)
 
 Merged `upstream/master` (`86c5acea`) into `tianwu/fixes`. Decisions taken

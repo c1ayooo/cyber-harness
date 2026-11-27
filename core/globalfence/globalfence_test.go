@@ -1,6 +1,8 @@
 package globalfence
 
 import (
+	"errors"
+	"fmt"
 	"testing"
 )
 
@@ -168,4 +170,81 @@ func TestAllowDomainHit(t *testing.T) {
 	if _, hit := AllowDomainHit("sess-off", "dns.alidns.com"); hit {
 		t.Fatal("disabled allow list matched")
 	}
+}
+
+// The fence table holds only live sessions (fork fix, P1-0): a NEW session
+// beyond the capacity is refused with ErrCapacity instead of silently evicting
+// the oldest entry, and closing a session frees its slot.
+// drainSessionStore empties the package-global table so a capacity test
+// starts from a known state (tests in this package share one store).
+func drainSessionStore() {
+	storeMu.Lock()
+	defer storeMu.Unlock()
+	storeSets = map[string]*Set{}
+	storeRing = nil
+}
+
+func TestCapacityRefusesNewSessionInsteadOfEvicting(t *testing.T) {
+	drainSessionStore()
+	raw := []byte(`{"enabled_commands": true, "commands": [{"id": "gf-cap", "pattern": "shutdown\\s+-h\\b", "action": "deny"}]}`)
+	first := "gf-sess-000"
+	for i := 0; i < maxSessions; i++ {
+		if err := SetRules(fmt.Sprintf("gf-sess-%03d", i), raw); err != nil {
+			t.Fatalf("registration %d failed: %v", i, err)
+		}
+	}
+	// The first session still fences: nothing was evicted behind its back.
+	if _, hit := JudgeCommand(first, "shutdown -h now"); !hit {
+		t.Fatal("oldest session was evicted or unfenced")
+	}
+	if err := SetRules("gf-sess-overflow", raw); !errors.Is(err, ErrCapacity) {
+		t.Fatalf("overflow error = %v, want ErrCapacity", err)
+	}
+	if err := SetRules(first, raw); err != nil {
+		t.Fatalf("existing session refused on re-registration: %v", err)
+	}
+
+	DropSession(first)
+	if _, hit := JudgeCommand(first, "shutdown -h now"); hit {
+		t.Fatal("dropped session still fences")
+	}
+	if err := SetRules("gf-sess-overflow", raw); err != nil {
+		t.Fatalf("registration after a drop failed: %v", err)
+	}
+	if _, hit := JudgeCommand("gf-sess-overflow", "shutdown -h now"); !hit {
+		t.Fatal("overflow session after a drop fenced nothing")
+	}
+	for i := 0; i < maxSessions; i++ {
+		DropSession(fmt.Sprintf("gf-sess-%03d", i))
+	}
+	DropSession("gf-sess-overflow")
+}
+
+// Inheritance beyond the table's capacity is an error, not a silent skip: the
+// subagent tool fails the child's creation, so a delegated direction never
+// starts unfenced.
+func TestInheritSessionRulesRefusesAtCapacity(t *testing.T) {
+	drainSessionStore()
+	raw := []byte(`{"enabled_commands": true, "commands": [{"id": "gf-ih", "pattern": "shutdown\\s+-h\\b", "action": "deny"}]}`)
+	if err := SetRules("gf-inherit-parent", raw); err != nil {
+		t.Fatal(err)
+	}
+	// The parent occupies one slot; exactly maxSessions-1 fillers fill the
+	// table, so the child's inherit is the refused (maxSessions+1)th entry.
+	for i := 0; i < maxSessions-1; i++ {
+		id := fmt.Sprintf("gf-inherit-%03d", i)
+		if err := SetRules(id, raw); err != nil {
+			t.Fatalf("registration %d failed: %v", i, err)
+		}
+	}
+	if err := InheritSessionRules("gf-inherit-parent", "gf-inherit-child"); !errors.Is(err, ErrCapacity) {
+		t.Fatalf("inherit error = %v, want ErrCapacity", err)
+	}
+	if _, hit := JudgeCommand("gf-inherit-child", "shutdown -h now"); hit {
+		t.Fatal("an unregistered child fenced anything")
+	}
+	for i := 0; i < maxSessions-1; i++ {
+		DropSession(fmt.Sprintf("gf-inherit-%03d", i))
+	}
+	DropSession("gf-inherit-parent")
 }

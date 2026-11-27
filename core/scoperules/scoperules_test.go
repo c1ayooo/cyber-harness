@@ -3,6 +3,8 @@ package scoperules
 import (
 	"context"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"net"
 	"testing"
 	"time"
@@ -353,4 +355,59 @@ func TestInheritSessionRules(t *testing.T) {
 	if _, judged := JudgeSession("sess-x", "GET", "http://x/"); judged {
 		t.Fatal("empty parent registered rules")
 	}
+}
+
+// The table holds only live sessions (fork fix, P1-0): a NEW session beyond
+// the capacity is refused with ErrCapacity instead of silently evicting the
+// oldest entry — eviction unfenced a live session with no log. An existing
+// session re-registering is never refused, and DropSession frees the slot so
+// a later session fits again.
+// drainSessionStore empties the package-global table so a capacity test
+// starts from a known state (tests in this package share one store).
+func drainSessionStore() {
+	storeMu.Lock()
+	defer storeMu.Unlock()
+	storeSets = map[string]*Set{}
+	storeRing = nil
+}
+
+func TestCapacityRefusesNewSessionInsteadOfEvicting(t *testing.T) {
+	drainSessionStore()
+	raw := []byte(`{"enabled":true,"default_action":"record","rules":[{"id":"sr-cap","action":"block","method":"*","host":"cap.test"}]}`)
+	first := "sess-cap-000"
+	for i := 0; i < maxSessions; i++ {
+		if err := SetRules(fmt.Sprintf("sess-cap-%03d", i), raw); err != nil {
+			t.Fatalf("registration %d failed: %v", i, err)
+		}
+	}
+	// The first session still judges: nothing was evicted behind its back.
+	if verdict, judged := JudgeSession(first, "GET", "https://cap.test/x"); !judged || verdict.Action != ActionBlock {
+		t.Fatalf("oldest session was evicted or unfenced: %+v judged=%v", verdict, judged)
+	}
+	if err := SetRules("sess-cap-overflow", raw); !errors.Is(err, ErrCapacity) {
+		t.Fatalf("overflow error = %v, want ErrCapacity", err)
+	}
+	// An existing session re-registering past the (full) ring is a refresh,
+	// never a refusal.
+	if err := SetRules(first, raw); err != nil {
+		t.Fatalf("existing session refused on re-registration: %v", err)
+	}
+
+	// Closing the first session frees its slot; the overflow session fits and
+	// judges, and the closed one stops.
+	DropSession(first)
+	if _, judged := JudgeSession(first, "GET", "https://cap.test/x"); judged {
+		t.Fatal("dropped session still judges")
+	}
+	if err := SetRules("sess-cap-overflow", raw); err != nil {
+		t.Fatalf("registration after a drop failed: %v", err)
+	}
+	if verdict, judged := JudgeSession("sess-cap-overflow", "GET", "https://cap.test/x"); !judged || verdict.Action != ActionBlock {
+		t.Fatalf("overflow session after a drop = %+v judged=%v", verdict, judged)
+	}
+	// Cleanup: drop everything this test registered so later tests start clean.
+	for i := 0; i < maxSessions; i++ {
+		DropSession(fmt.Sprintf("sess-cap-%03d", i))
+	}
+	DropSession("sess-cap-overflow")
 }
