@@ -1119,6 +1119,14 @@ Tests: `make -n resources` prints the two directives verbatim except `-t`;
 unchanged.
 Rollback: revert the commit — the Makefile and this entry are the whole diff.
 
+Ticket 11 (docs/19 §5.2): the generator now writes the `//go:build
+!emptyresources` tag itself, so the committed
+`tools/proton/resources/template.go` carries the tag — the one-time diff the
+`resources` target surfaced — and a new file
+`tools/proton/resources/resources_empty.go` supplies the `loadEmbeddedConfig`
+no-op under `-tags emptyresources`. The artifact and the twin land in one
+commit so both build recipes compile; `make resources` is back to zero diff.
+
 ## Superseded patches
 
 These commits were on `tianwu/fixes` and are intentionally **not** carried after
