@@ -18,7 +18,6 @@ import (
 	"regexp"
 	"strings"
 	"sync"
-	"sync/atomic"
 
 	"github.com/chainreactors/cyber/exts/4zfence/scoperules"
 )
@@ -164,24 +163,8 @@ func NewStore() *Store {
 	return &Store{storeSets: map[string]*Set{}, parkSets: map[string]*Set{}}
 }
 
-// ErrNotMounted is returned by SetRules when no fence extension has installed
-// a store: a registration with nowhere to go must not vanish silently.
-var ErrNotMounted = fmt.Errorf("global fence store is not mounted (no fence extension installed)")
-
-var installed atomic.Pointer[Store]
-
-// Install mounts s as the tables the package functions read. Production
-// callers are the fence extension's Load and Close.
-func Install(s *Store) { installed.Store(s) }
-
-// Uninstall removes the mounted store; package-function calls judge nothing
-// afterwards.
-func Uninstall() { installed.Store(nil) }
-
-func current() *Store { return installed.Load() }
-
-// Clear forgets every session set, parked set and verdict: Close uninstalls
-// and clears, so no state outlives the extension that owned the store.
+// Clear forgets every session set and parked set: Close clears, so no
+// state outlives the extension that owned the store.
 func (s *Store) Clear() {
 	s.storeMu.Lock()
 	s.storeSets = map[string]*Set{}
@@ -385,69 +368,5 @@ func (s *Store) InheritSessionRules(parentID, childID string) error {
 		s.storeRing = append(s.storeRing, childID)
 	}
 	s.storeSets[childID] = set
-	return nil
-}
-
-// The package functions below are the read seam for the judge seam
-// (scope_judge) and the fence admission; they delegate to the store the fence
-// extension installed. Without one, sessions judge nothing — the no-fence
-// composition.
-
-// SetRules replaces one session's fence on the mounted store. Unmounted, it
-// fails: a skipped registration would run the session unfenced.
-func SetRules(sessionID string, raw []byte) error {
-	if s := current(); s != nil {
-		return s.SetRules(sessionID, raw)
-	}
-	return ErrNotMounted
-}
-
-// DropSession forgets one session's fence on the mounted store.
-func DropSession(sessionID string) {
-	if s := current(); s != nil {
-		s.DropSession(sessionID)
-	}
-}
-
-// ParkSession parks one session's fence for a rotation hop on the mounted
-// store.
-func ParkSession(sessionID string) {
-	if s := current(); s != nil {
-		s.ParkSession(sessionID)
-	}
-}
-
-// JudgeCommand judges one command text on the mounted store; hit is false
-// when no store is mounted (the no-fence composition judges nothing).
-func JudgeCommand(sessionID, text string) (CommandRule, bool) {
-	if s := current(); s != nil {
-		return s.JudgeCommand(sessionID, text)
-	}
-	return CommandRule{}, false
-}
-
-// DomainHit reports the first deny-list entry on the mounted store.
-func DomainHit(sessionID, host string) (DomainRule, bool) {
-	if s := current(); s != nil {
-		return s.DomainHit(sessionID, host)
-	}
-	return DomainRule{}, false
-}
-
-// AllowDomainHit reports the first allow-list entry on the mounted store.
-func AllowDomainHit(sessionID, host string) (DomainRule, bool) {
-	if s := current(); s != nil {
-		return s.AllowDomainHit(sessionID, host)
-	}
-	return DomainRule{}, false
-}
-
-// InheritSessionRules copies the parent's fence to the child on the mounted
-// store. Unmounted, it is a no-op: no store means no fence extension, whose
-// Load subscribes the inheritance hook in the first place.
-func InheritSessionRules(parentID, childID string) error {
-	if s := current(); s != nil {
-		return s.InheritSessionRules(parentID, childID)
-	}
 	return nil
 }
