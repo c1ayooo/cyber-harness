@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	agenthooks "github.com/chainreactors/cyber/agent/hooks"
+	agentsession "github.com/chainreactors/cyber/agent/session"
 	aop "github.com/chainreactors/cyber/aop"
 	"github.com/chainreactors/cyber/exts/4zfence/globalfence"
 	"github.com/chainreactors/cyber/exts/4zfence/scoperules"
@@ -152,4 +153,61 @@ func TestFenceLifecycleHandlers(t *testing.T) {
 
 	scoperules.DropForTest("fence-parent")
 	globalfence.DropForTest("fence-parent")
+}
+
+// Session.rotate closes the old session before it opens the continuation
+// (agent/session rotate), so a rotation close must park the registrations
+// for the child's inheritance instead of dropping them — otherwise /clear,
+// /compact and resume each run one turn with the child unfenced (docs/19
+// appendix E2-2, fork fix 已决 18). Non-rotation closes still drop.
+func TestFenceRotationCloseParksForContinuation(t *testing.T) {
+	scoperules.SetForTest("rot-parent", &scoperules.Set{Enabled: true, DefaultAction: scoperules.ActionRecord, Rules: []scoperules.Rule{{ID: "sr-r", Action: scoperules.ActionBlock, Method: "*", Host: "blocked.test", PathPrefix: "/"}}})
+	globalfence.SetForTest("rot-parent", &globalfence.Set{EnabledDomains: true, Domains: []globalfence.DomainRule{{ID: "gf-r", Host: "gov.cn"}}})
+
+	// The rotate order, reproduced: SessionEnd for the old id first...
+	if _, err := dropOnClose(t.Context(), agenthooks.SessionEvent{SessionID: "rot-parent", Reason: string(agentsession.SessionCloseCleared)}); err != nil {
+		t.Fatalf("rotate close: %v", err)
+	}
+	if _, judged := scoperules.JudgeSession("rot-parent", "GET", "http://blocked.test/"); judged {
+		t.Fatal("rotated-out parent still holds a live registration")
+	}
+	// ...then SessionStart for the continuation, whose parent is already
+	// gone from the live tables and must inherit from the park.
+	if _, err := inheritOnOpen(t.Context(), agenthooks.SessionEvent{SessionID: "rot-child", ParentID: "rot-parent"}); err != nil {
+		t.Fatalf("continuation inherit: %v", err)
+	}
+	if _, judged := scoperules.JudgeSession("rot-child", "GET", "http://blocked.test/x"); !judged {
+		t.Fatal("continuation did not inherit the project fence across rotation")
+	}
+	if _, hit := globalfence.DomainHit("rot-child", "www.gov.cn"); !hit {
+		t.Fatal("continuation did not inherit the instance fence across rotation")
+	}
+
+	// A second hop parks and inherits the same way.
+	if _, err := dropOnClose(t.Context(), agenthooks.SessionEvent{SessionID: "rot-child", Reason: string(agentsession.SessionCloseCompacted)}); err != nil {
+		t.Fatalf("second rotate close: %v", err)
+	}
+	if _, err := inheritOnOpen(t.Context(), agenthooks.SessionEvent{SessionID: "rot-grandchild", ParentID: "rot-child"}); err != nil {
+		t.Fatalf("second continuation inherit: %v", err)
+	}
+	if _, judged := scoperules.JudgeSession("rot-grandchild", "GET", "http://blocked.test/x"); !judged {
+		t.Fatal("second continuation did not inherit the project fence")
+	}
+
+	// A non-rotation close drops without parking: a later open with that
+	// parent id inherits nothing.
+	if _, err := dropOnClose(t.Context(), agenthooks.SessionEvent{SessionID: "rot-grandchild", Reason: string(agentsession.SessionCloseCompleted)}); err != nil {
+		t.Fatalf("final close: %v", err)
+	}
+	if _, err := inheritOnOpen(t.Context(), agenthooks.SessionEvent{SessionID: "rot-after", ParentID: "rot-grandchild"}); err != nil {
+		t.Fatalf("inherit after final close: %v", err)
+	}
+	if _, judged := scoperules.JudgeSession("rot-after", "GET", "http://blocked.test/x"); judged {
+		t.Fatal("a completed close leaked its registrations into the park")
+	}
+
+	scoperules.DropForTest("rot-child")
+	globalfence.DropForTest("rot-child")
+	scoperules.DropForTest("rot-after")
+	globalfence.DropForTest("rot-after")
 }

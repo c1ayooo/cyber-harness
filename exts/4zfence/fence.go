@@ -136,12 +136,30 @@ func inheritOnOpen(_ context.Context, ev agenthooks.SessionEvent) (struct{}, err
 	return struct{}{}, nil
 }
 
+// rotatingReasons are the close reasons that are immediately followed by a
+// continuation open on the same logical session (Session.rotate: /clear,
+// /compact, resume). Their SessionEnd fires before the child's SessionStart,
+// so the registrations park for one hop instead of dropping — otherwise the
+// child's inheritance silently misses and it runs a turn unfenced
+// (docs/19 appendix E2-2).
+var rotatingReasons = map[string]bool{
+	string(agentsession.SessionCloseCleared):   true,
+	string(agentsession.SessionCloseCompacted): true,
+	string(agentsession.SessionCloseResumed):   true,
+}
+
 // dropOnClose drops the session's fence registrations and its project proxy
 // binding when the session closes, so the tables hold only live sessions and
-// capacity is never exhausted by stale ids (fork fix P1-0). Unknown ids are a
-// no-op.
+// capacity is never exhausted by stale ids (fork fix P1-0). A rotation close
+// parks the registrations for the continuation's inheritance instead.
+// Unknown ids are a no-op.
 func dropOnClose(_ context.Context, ev agenthooks.SessionEvent) (struct{}, error) {
 	egress.ClearSessionRoute(ev.SessionID)
+	if rotatingReasons[ev.Reason] {
+		scoperules.ParkSession(ev.SessionID)
+		globalfence.ParkSession(ev.SessionID)
+		return struct{}{}, nil
+	}
 	scoperules.DropSession(ev.SessionID)
 	globalfence.DropSession(ev.SessionID)
 	return struct{}{}, nil

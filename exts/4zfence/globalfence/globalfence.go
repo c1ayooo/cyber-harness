@@ -198,6 +198,68 @@ func DropSession(sessionID string) {
 	}
 }
 
+// The rotation park holds the fences of sessions closed by a rotation
+// (/clear, /compact, resume) for one continuation hop. The agent rotates by
+// closing the old session before opening its continuation, so the child's
+// SessionStart finds the parent already gone from the live table (docs/19
+// appendix E2-2): without the park, inheritance silently misses and the
+// child runs a turn unfenced. The park is bounded; its oldest entry is
+// forgotten when a session closes by rotation and never opens a child.
+var (
+	parkMu    sync.Mutex
+	parkSets  = map[string]*Set{}
+	parkOrder []string
+)
+
+// ParkSession moves one session's fence out of the live table into the
+// rotation park. Unknown ids are a no-op.
+func ParkSession(sessionID string) {
+	storeMu.Lock()
+	set, exists := storeSets[sessionID]
+	if exists {
+		delete(storeSets, sessionID)
+		for i, id := range storeRing {
+			if id == sessionID {
+				storeRing = append(storeRing[:i], storeRing[i+1:]...)
+				break
+			}
+		}
+	}
+	storeMu.Unlock()
+	if !exists {
+		return
+	}
+	parkMu.Lock()
+	defer parkMu.Unlock()
+	if _, exists := parkSets[sessionID]; !exists {
+		parkOrder = append(parkOrder, sessionID)
+	}
+	parkSets[sessionID] = set
+	if len(parkOrder) > maxSessions {
+		oldest := parkOrder[0]
+		parkOrder = parkOrder[1:]
+		delete(parkSets, oldest)
+	}
+}
+
+// TakeParkedSession removes and returns one parked fence. ok is false when
+// the id has no parked fence.
+func TakeParkedSession(sessionID string) (set *Set, ok bool) {
+	parkMu.Lock()
+	defer parkMu.Unlock()
+	set, ok = parkSets[sessionID]
+	if ok {
+		delete(parkSets, sessionID)
+		for i, id := range parkOrder {
+			if id == sessionID {
+				parkOrder = append(parkOrder[:i], parkOrder[i+1:]...)
+				break
+			}
+		}
+	}
+	return set, ok
+}
+
 // JudgeCommand matches one command's text against the session's enabled
 // pattern list. hit is false when nothing matches — including when the list
 // is disabled or the session never registered one.
@@ -269,7 +331,13 @@ func InheritSessionRules(parentID, childID string) error {
 	set := storeSets[parentID]
 	storeMu.RUnlock()
 	if set == nil {
-		return nil
+		// The parent may have closed a rotation hop ahead of this open
+		// (docs/19 appendix E2-2); its fence is in the rotation park.
+		parked, ok := TakeParkedSession(parentID)
+		if !ok {
+			return nil
+		}
+		set = parked
 	}
 	storeMu.Lock()
 	defer storeMu.Unlock()
