@@ -200,6 +200,10 @@ const LegacySection = "guardrail"
 // fence section's provider (when set) overrides the effective judge.
 var legacyKeys = []string{"on_error", "shadow", "scope", "allow_prefixes", "timeout", "concurrency", "llm"}
 
+// legacyProviders name the judges that only exist in the fence section; a
+// legacy guardrail section carrying one migrates its provider key too.
+var legacyProviders = map[string]bool{"llm": true, "hybrid": true}
+
 // MigrateDocument moves the judge keys from a document's legacy guardrail
 // section into the fence section, in memory only — an operator's file is
 // never rewritten at startup (已决 19). The save path (the shell's settings
@@ -230,6 +234,13 @@ func MigrateDocument(document map[string]any) (bool, string) {
 			delete(section, key)
 			moved = append(moved, key)
 		}
+	}
+	if provider, ok := section["provider"].(string); ok && legacyProviders[provider] {
+		if _, taken := fence["provider"]; !taken {
+			fence["provider"] = provider
+		}
+		delete(section, "provider")
+		moved = append(moved, "provider")
 	}
 	if len(moved) == 0 {
 		return false, ""

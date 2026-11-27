@@ -1,5 +1,7 @@
 package guardrail
 
+import fenceconfig "github.com/chainreactors/cyber/exts/4zfence/config"
+
 import (
 	"context"
 	"encoding/json"
@@ -18,7 +20,7 @@ import (
 )
 
 func testLLMPolicy(endpoint, onError string, timeout time.Duration) *llmPolicy {
-	return newLLMPolicy(LLMConfig{BaseURL: endpoint, Model: "fixture-judge"}, onError, timeout, 8)
+	return newLLMPolicy(fenceconfig.LLMConfig{BaseURL: endpoint, Model: "fixture-judge"}, onError, timeout, 8)
 }
 
 // llmAnswer renders an OpenAI-compatible chat-completions body.
@@ -296,7 +298,7 @@ func TestLLMConcurrencyIsBounded(t *testing.T) {
 		fmt.Fprint(w, llmAnswer("ALLOW"))
 	}))
 	defer server.Close()
-	policy := newLLMPolicy(LLMConfig{BaseURL: server.URL, Model: "fixture-judge"}, "review", time.Second, 2)
+	policy := newLLMPolicy(fenceconfig.LLMConfig{BaseURL: server.URL, Model: "fixture-judge"}, "review", time.Second, 2)
 	var wg sync.WaitGroup
 	var failures atomic.Int32
 	for range 6 {

@@ -1,5 +1,7 @@
 package guardrail
 
+import fenceconfig "github.com/chainreactors/cyber/exts/4zfence/config"
+
 import (
 	"context"
 	"errors"
@@ -203,7 +205,7 @@ func TestJEVUsageIsReportedAsAOPUsageFact(t *testing.T) {
 				extension.Provided[*events.Stream](stream),
 				extension.Provided[*hooks.Registry](registry),
 				extension.Provided[*jevapi.Client](client),
-				New(Config{Provider: ProviderJEV, Mode: ModeAuto, ReviewTimeout: "1s"}),
+				New(Config{Provider: ProviderJEV, Mode: ModeAuto, ReviewTimeout: "1s"}, fenceconfig.Config{}),
 			)
 			if err != nil {
 				t.Fatal(err)
@@ -310,7 +312,7 @@ func TestLLMUsageIsReportedAsAOPUsageFact(t *testing.T) {
 			set, err := extension.New(
 				extension.Provided[*events.Stream](stream),
 				extension.Provided[*hooks.Registry](registry),
-				New(Config{Provider: ProviderLLM, Mode: ModeAuto, LLM: LLMConfig{BaseURL: server.URL, Model: "fixture-judge"}}),
+				New(Config{Mode: ModeAuto}, fenceconfig.Config{Provider: ProviderLLM, LLM: fenceconfig.LLMConfig{BaseURL: server.URL, Model: "fixture-judge"}}),
 			)
 			if err != nil {
 				t.Fatal(err)
@@ -378,7 +380,7 @@ func TestHybridUsagesKeepTheirJudgeEmitters(t *testing.T) {
 		extension.Provided[*events.Stream](stream),
 		extension.Provided[*hooks.Registry](registry),
 		extension.Provided[*jevapi.Client](client),
-		New(Config{Provider: ProviderHybrid, Mode: ModeAuto, LLM: LLMConfig{BaseURL: llmServer.URL, Model: "fixture-judge"}}),
+		New(Config{Mode: ModeAuto}, fenceconfig.Config{Provider: ProviderHybrid, LLM: fenceconfig.LLMConfig{BaseURL: llmServer.URL, Model: "fixture-judge"}}),
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -438,7 +440,7 @@ func TestLLMProviderExtensionDoesNotRequireJEVClient(t *testing.T) {
 	set, err := extension.New(
 		extension.Provided[*events.Stream](stream),
 		extension.Provided[*hooks.Registry](registry),
-		New(Config{Provider: ProviderLLM, Mode: ModeAuto, LLM: LLMConfig{BaseURL: server.URL, Model: "fixture-judge", APIKey: "fixture-key"}}),
+		New(Config{Mode: ModeAuto}, fenceconfig.Config{Provider: ProviderLLM, LLM: fenceconfig.LLMConfig{BaseURL: server.URL, Model: "fixture-judge", APIKey: "fixture-key"}}),
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -461,7 +463,7 @@ func TestLLMProviderExtensionDoesNotRequireJEVClient(t *testing.T) {
 	hybrid, err := extension.New(
 		extension.Provided[*events.Stream](events.New()),
 		extension.Provided[*hooks.Registry](hooks.New()),
-		New(Config{Provider: ProviderHybrid, LLM: LLMConfig{BaseURL: server.URL, Model: "fixture-judge"}}),
+		New(Config{}, fenceconfig.Config{Provider: ProviderHybrid, LLM: fenceconfig.LLMConfig{BaseURL: server.URL, Model: "fixture-judge"}}),
 	)
 	if err != nil {
 		t.Fatal(err)

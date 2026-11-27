@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"github.com/chainreactors/cyber/core/resource"
+	fenceext "github.com/chainreactors/cyber/exts/4zfence"
 	"github.com/chainreactors/cyber/exts/gateway"
 	guardrailext "github.com/chainreactors/cyber/exts/guardrail"
 	ioaclient "github.com/chainreactors/cyber/exts/ioa/client"
@@ -60,6 +61,7 @@ func declareResources(cli *hostcli.Registry, agentOptions *cfg.AgentOptions) *cf
 	}))
 	mustDeclare(recordext.Declare(resources))
 	mustDeclare(guardrailext.Declare(resources))
+	mustDeclare(fenceext.Declare(resources))
 	mustDeclare(jevext.Declare(resources))
 	mustDeclare(scannerext.Declare(resources))
 	mustDeclare(passiveconfig.Declare(resources))

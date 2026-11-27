@@ -1,5 +1,7 @@
 package guardrail
 
+import fenceconfig "github.com/chainreactors/cyber/exts/4zfence/config"
+
 import (
 	"bytes"
 	"context"
@@ -68,7 +70,7 @@ Rules:
 // flagged call, and both apply the configured on_error policy to provider
 // failures instead of returning an error.
 type llmPolicy struct {
-	config  LLMConfig
+	config  fenceconfig.LLMConfig
 	onError string
 	timeout time.Duration
 	client  *http.Client
@@ -79,8 +81,8 @@ type llmPolicy struct {
 	reportUsage func(context.Context, *aop.TokenUsage)
 }
 
-func newLLMPolicy(config LLMConfig, onError string, timeout time.Duration, concurrency int) *llmPolicy {
-	config = config.defaults()
+func newLLMPolicy(config fenceconfig.LLMConfig, onError string, timeout time.Duration, concurrency int) *llmPolicy {
+	config = config.Defaults()
 	if onError == "" {
 		onError = "review"
 	}

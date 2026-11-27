@@ -13,6 +13,8 @@
 // TurnDecorators, so a composition that omits 4zfence simply never fences.
 package fence
 
+import fenceconfig "github.com/chainreactors/cyber/exts/4zfence/config"
+
 import (
 	"context"
 	"errors"
@@ -31,10 +33,13 @@ import (
 	"github.com/chainreactors/cyber/core/events"
 	"github.com/chainreactors/cyber/core/extension"
 	"github.com/chainreactors/cyber/core/hooks"
+	"github.com/chainreactors/cyber/core/resource"
 	toolhooks "github.com/chainreactors/cyber/core/tool/hooks"
+
 	"github.com/chainreactors/cyber/exts/4zfence/globalfence"
 	"github.com/chainreactors/cyber/exts/4zfence/scoperules"
 	guardrailext "github.com/chainreactors/cyber/exts/guardrail"
+	cfg "github.com/chainreactors/cyber/pkg/config"
 )
 
 // Extension keeps the fence tables to live sessions via the session hooks,
@@ -92,6 +97,19 @@ func (e *Extension) Close(_ context.Context) error {
 	}
 	e.subs = nil
 	return nil
+}
+
+// Declare registers the fence's configuration section (the judge knobs;
+// docs/19 已决 15). The section's struct and validation are fenceconfig's —
+// the shell's settings writer shares them through the engine module.
+func Declare(resources *resource.Registry) error {
+	_, err := resource.Add[cfg.Section](resources, cfg.Section{
+		Key:      fenceconfig.ConfigKey,
+		New:      func() any { return &fenceconfig.Config{} },
+		Secrets:  []string{"llm.api_key"},
+		Validate: func(v any) error { return v.(*fenceconfig.Config).Validate() },
+	})
+	return err
 }
 
 // TurnDecorators returns the fence's turn decorators in application order:

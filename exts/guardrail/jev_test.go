@@ -1,5 +1,7 @@
 package guardrail
 
+import fenceconfig "github.com/chainreactors/cyber/exts/4zfence/config"
+
 import (
 	"context"
 	"encoding/json"
@@ -79,7 +81,7 @@ func TestConfiguredKeyAlwaysInstallsTwoStageChecks(t *testing.T) {
 				extension.Provided[*hooks.Registry](registry),
 				extension.Provided[*events.Stream](events.New()),
 				extension.Provided[*jevapi.Client](client),
-				New(Config{Provider: "jev", JEV: JEVConfig{OnError: "review", Criteria: map[string]string{"review": "operator screening marker"}}}),
+				New(Config{Provider: "jev", JEV: JEVConfig{OnError: "review", Criteria: map[string]string{"review": "operator screening marker"}}}, fenceconfig.Config{}),
 			)
 			if err != nil {
 				t.Fatal(err)

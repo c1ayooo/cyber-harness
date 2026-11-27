@@ -9,6 +9,7 @@ import (
 	"github.com/chainreactors/cyber/agent"
 	"github.com/chainreactors/cyber/agent/prompt"
 	"github.com/chainreactors/cyber/core/extension"
+	fenceconfig "github.com/chainreactors/cyber/exts/4zfence/config"
 	loopext "github.com/chainreactors/cyber/exts/agent"
 	arsenalext "github.com/chainreactors/cyber/exts/arsenal"
 	"github.com/chainreactors/cyber/exts/gateway"
@@ -27,7 +28,7 @@ import (
 
 // extensions returns the product's extensions in load order. Gateway binds
 // configuration to the existing owners before their consumers are loaded.
-func extensions(config appConfig, loop agent.Loop, workDir string, proxy *proxyext.Extension, guardrailConfig guardrailext.Config) ([]extension.Extension, error) {
+func extensions(config appConfig, loop agent.Loop, workDir string, proxy *proxyext.Extension, guardrailConfig guardrailext.Config, fenceConfig fenceconfig.Config) ([]extension.Extension, error) {
 	config.DataDir = cfg.ResolveDataDir(config.DataDir)
 	config.Scanner.Resources.CacheDir = filepath.Join(config.DataDir, "cache")
 
@@ -43,6 +44,7 @@ func extensions(config appConfig, loop agent.Loop, workDir string, proxy *proxye
 
 	extensions, err := harness.BaseExtensions(harness.BaseConfig{
 		Guardrail:  guardrailConfig,
+		Fence:      fenceConfig,
 		Directory:  workDir,
 		SkillPaths: config.CLISkillPaths,
 		Terminal:   terminalext.Config{Environment: childEnv},

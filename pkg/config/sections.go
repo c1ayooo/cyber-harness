@@ -1,5 +1,7 @@
 package config
 
+import fenceconfig "github.com/chainreactors/cyber/exts/4zfence/config"
+
 import (
 	"context"
 	"fmt"
@@ -138,6 +140,10 @@ func mergeFields(dst, src map[string]any) {
 	}
 }
 func (r *Sections) Normalize(document map[string]any) (Values, error) {
+	// The fence section's judge keys used to live in the guardrail section
+	// (docs/19 已决 19): recognize the legacy spelling on every read; the
+	// save path performs the same move on disk.
+	fenceconfig.MigrateDocument(document)
 	if err := validateMapping(document, reflect.TypeFor[Option](), "", r); err != nil {
 		return nil, err
 	}

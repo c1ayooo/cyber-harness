@@ -13,6 +13,7 @@ import (
 	"github.com/chainreactors/cyber/core/telemetry"
 	coretool "github.com/chainreactors/cyber/core/tool"
 	fenceext "github.com/chainreactors/cyber/exts/4zfence"
+	fenceconfig "github.com/chainreactors/cyber/exts/4zfence/config"
 	fileext "github.com/chainreactors/cyber/exts/files"
 	guardrailext "github.com/chainreactors/cyber/exts/guardrail"
 	promptext "github.com/chainreactors/cyber/exts/prompt"
@@ -34,6 +35,7 @@ type BaseConfig struct {
 	Provider     provider.StartupConfig
 	Logger       telemetry.Logger
 	Guardrail    guardrailext.Config
+	Fence        fenceconfig.Config
 	// Egress publishes the routing endpoint the terminal borrows. A host that
 	// installs a proxy passes that extension; one that routes nothing passes
 	// NoEgress.
@@ -74,7 +76,7 @@ func BaseExtensions(c BaseConfig) ([]extension.Extension, error) {
 		// (audit + red lines) is consulted first; the bind hook afterwards
 		// hands it the guardrail runtime for the approval lifecycle.
 		fenceext.New(),
-		guardrailext.New(c.Guardrail),
+		guardrailext.New(c.Guardrail, c.Fence),
 		extension.Func{LoadFunc: func(scope *extension.Scope) error {
 			runtime, err := extension.Use[*guardrailext.Runtime](scope)
 			if err != nil {

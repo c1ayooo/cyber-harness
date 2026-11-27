@@ -26,6 +26,7 @@ import (
 	coretool "github.com/chainreactors/cyber/core/tool"
 	evidenceext "github.com/chainreactors/cyber/exts/4zevidence"
 	fenceext "github.com/chainreactors/cyber/exts/4zfence"
+	fenceconfig "github.com/chainreactors/cyber/exts/4zfence/config"
 	zsession "github.com/chainreactors/cyber/exts/4zsession"
 	guardrailext "github.com/chainreactors/cyber/exts/guardrail"
 	inboxext "github.com/chainreactors/cyber/exts/inbox"
@@ -135,8 +136,18 @@ func buildCyberScanProfile(config config) (*cyberScanProfile, error) {
 	}
 	// Screening is selected explicitly and independently of acceleration.
 	guardrailValue := *guardrailConfig
+	// The fence section carries the judge knobs (docs/19 已决 15); its provider
+	// overrides the guardrail section's when it names a judge.
+	fenceConfig := fenceconfig.Config{}
+	if fenceValue, fenceErr := cfg.Get[*fenceconfig.Config](resolved, fenceconfig.ConfigKey); fenceErr == nil && fenceValue != nil {
+		if fenceValue.Provider != "" {
+			guardrailValue.Provider = fenceValue.Provider
+		}
+		fenceConfig = *fenceValue
+		fenceConfig.Provider = guardrailValue.Provider
+	}
 
-	graph, err := extensions(config.Base, loop, workDir, proxyExtension, guardrailValue)
+	graph, err := extensions(config.Base, loop, workDir, proxyExtension, guardrailValue, fenceConfig)
 	if err != nil {
 		return nil, fmt.Errorf("construct Cyber application: %w", err)
 	}
