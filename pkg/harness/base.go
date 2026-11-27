@@ -13,6 +13,7 @@ import (
 	"github.com/chainreactors/cyber/core/telemetry"
 	coretool "github.com/chainreactors/cyber/core/tool"
 	fileext "github.com/chainreactors/cyber/exts/files"
+	guardrailext "github.com/chainreactors/cyber/exts/guardrail"
 	promptext "github.com/chainreactors/cyber/exts/prompt"
 	providerext "github.com/chainreactors/cyber/exts/provider"
 	skillsext "github.com/chainreactors/cyber/exts/skills"
@@ -31,10 +32,11 @@ type BaseConfig struct {
 	Terminal     terminalext.Config
 	Provider     provider.StartupConfig
 	Logger       telemetry.Logger
+	Guardrail    guardrailext.Config
 	// Policy is the judge block the product root composes explicitly (docs/19
-	// E3-2): the fence ahead of the guardrail, bound at load. Nil composes no
-	// judge at all — an embedding host that skips it gets no fence, the
-	// Egress precedent of absence-as-value.
+	// E3-2), loaded ahead of the guardrail so a fence's tool.before admission
+	// is consulted first. Nil composes none: an embedding host that skips it
+	// gets upstream's base.
 	Policy []extension.Extension
 	// Egress publishes the routing endpoint the terminal borrows. A host that
 	// installs a proxy passes that extension; one that routes nothing passes
@@ -73,11 +75,10 @@ func BaseExtensions(c BaseConfig) ([]extension.Extension, error) {
 		coretool.NewCommandRegistry(),
 		coretool.NewToolRegistry(),
 	}
-	// The judge block is appended when the product composed one (docs/19
-	// E3-2): the fence ahead of the guardrail, bound at load. A nil Policy
-	// composes no judge at all.
+	// The product's judge block loads ahead of the guardrail (docs/19 E3-2).
 	entries = append(entries, c.Policy...)
 	return append(entries,
+		guardrailext.New(c.Guardrail),
 		library,
 		promptext.New(),
 		egressProvider,

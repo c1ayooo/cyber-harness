@@ -10,7 +10,6 @@ import (
 	"github.com/chainreactors/cyber/core/extension"
 	"github.com/chainreactors/cyber/core/telemetry"
 	loopext "github.com/chainreactors/cyber/exts/agent"
-	guardrailext "github.com/chainreactors/cyber/exts/guardrail"
 	sessionext "github.com/chainreactors/cyber/exts/session"
 	subagentext "github.com/chainreactors/cyber/exts/subagent"
 	terminalext "github.com/chainreactors/cyber/exts/terminal"
@@ -34,11 +33,8 @@ func newAgentProfile(option cfg.Option, logger telemetry.Logger, workDir string,
 	loop := loopext.New(sessionConfig.Loop)
 
 	// This build routes nothing, so it publishes the disabled endpoint and
-	// links no proxy at all. It judges with the guardrail alone, zero-config:
-	// the judge block is the product root's decision (docs/19 E3-2), and the
-	// 4z fence must stay out of this build's dependency closure.
+	// links no proxy at all.
 	values, err := harness.BaseExtensions(harness.BaseConfig{
-		Policy:     []extension.Extension{guardrailext.New(guardrailext.Config{})},
 		Directory:  workDir,
 		SkillPaths: cfg.LocalSkillPaths(option.Skills),
 		Terminal:   terminalext.Config{Timeout: bashTimeout},

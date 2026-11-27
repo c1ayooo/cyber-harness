@@ -82,10 +82,9 @@ func New(config Config) (*Harness, error) {
 		if h.providers, err = extension.Use[*provider.State](scope); err != nil {
 			return err
 		}
-		// The judge block is optional since E3-2: a composition without
-		// Policy has no guardrail runtime, and SetMode reports that instead
-		// of failing the load.
-		h.guardrail, _ = extension.Use[*guardrail.Runtime](scope)
+		if h.guardrail, err = extension.Use[*guardrail.Runtime](scope); err != nil {
+			return err
+		}
 		if h.events, err = extension.Use[*events.Stream](scope); err != nil {
 			return err
 		}

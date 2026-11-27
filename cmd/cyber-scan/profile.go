@@ -140,20 +140,21 @@ func buildCyberScanProfile(config config) (*cyberScanProfile, error) {
 
 	// The judge block is the product composition's own decision (docs/19 E3-2):
 	// the fence loads ahead of the guardrail so its tool.before admission is
-	// consulted first; the bind hook afterwards hands it the guardrail runtime
-	// for the approval lifecycle.
-	policy, fenceExtension := assembly.Policy(guardrailValue, fenceConfig)
+	// consulted first; the bind hook behind it hands it the guardrail runtime
+	// for the approval lifecycle. The guardrail itself stays in the base
+	// composition, fed by the guardrail section.
+	judge := assembly.Policy(fenceConfig, guardrailValue.Rules)
 	proxyExtension := proxyext.New(proxyext.Config{
 		WorkDir: workDir, Proxy: config.Base.Scanner.Resources.Proxy,
 		// The judge is the fence's; the exemption names whatever server URL
 		// this node serves (fork patch 36) — its bookkeeping calls always
 		// work, unjudged and uncaptured. Empty for a profile without an agent
 		// server (the Web service profile).
-		ScopeJudge:       fenceext.NewScopeJudge(fenceExtension),
+		ScopeJudge:       fenceext.NewScopeJudge(judge.Fence),
 		RequestExemption: fenceext.ControlPlaneExemption(controlPlaneHost(config.Option)),
 		Capture:          capture, Storage: config.Base.TrafficStorage,
 	})
-	graph, err := extensions(config.Base, loop, workDir, proxyExtension, policy)
+	graph, err := extensions(config.Base, loop, workDir, proxyExtension, guardrailValue, judge)
 	if err != nil {
 		return nil, fmt.Errorf("construct Cyber application: %w", err)
 	}

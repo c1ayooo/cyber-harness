@@ -12,6 +12,7 @@ import (
 	loopext "github.com/chainreactors/cyber/exts/agent"
 	arsenalext "github.com/chainreactors/cyber/exts/arsenal"
 	"github.com/chainreactors/cyber/exts/gateway"
+	guardrailext "github.com/chainreactors/cyber/exts/guardrail"
 	mcpext "github.com/chainreactors/cyber/exts/mcp"
 	okfext "github.com/chainreactors/cyber/exts/okf"
 	proxyext "github.com/chainreactors/cyber/exts/proxy"
@@ -26,7 +27,7 @@ import (
 
 // extensions returns the product's extensions in load order. Gateway binds
 // configuration to the existing owners before their consumers are loaded.
-func extensions(config appConfig, loop agent.Loop, workDir string, proxy *proxyext.Extension, policy []extension.Extension) ([]extension.Extension, error) {
+func extensions(config appConfig, loop agent.Loop, workDir string, proxy *proxyext.Extension, guardrailConfig guardrailext.Config, judge assembly.Judge) ([]extension.Extension, error) {
 	config.DataDir = cfg.ResolveDataDir(config.DataDir)
 	config.Scanner.Resources.CacheDir = filepath.Join(config.DataDir, "cache")
 
@@ -41,9 +42,8 @@ func extensions(config appConfig, loop agent.Loop, workDir string, proxy *proxye
 	childEnv := map[string]string{"PATH": arsenal.BinPath() + string(os.PathListSeparator) + os.Getenv("PATH")}
 
 	extensions, err := harness.BaseExtensions(harness.BaseConfig{
-		// The judge block is the product's own composition decision (docs/19
-		// E3-2): the fence ahead of the guardrail, bound at load.
-		Policy:     policy,
+		Guardrail:  guardrailConfig,
+		Policy:     judge.Ahead,
 		Directory:  workDir,
 		SkillPaths: config.CLISkillPaths,
 		Terminal:   terminalext.Config{Environment: childEnv},
@@ -54,6 +54,9 @@ func extensions(config appConfig, loop agent.Loop, workDir string, proxy *proxye
 	if err != nil {
 		return nil, err
 	}
+	// Behind the base: the bind hands the fence the guardrail runtime the
+	// base just installed (docs/19 E3-2).
+	extensions = append(extensions, judge.Behind...)
 	engines, passiveBindings := assembly.Engines(assembly.EnginesInput{
 		SkipEngines:      config.SkipEngines,
 		Scanner:          config.Scanner,

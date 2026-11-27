@@ -7,32 +7,37 @@ import (
 	guardrailext "github.com/chainreactors/cyber/exts/guardrail"
 )
 
-// Policy composes the judge block a product root installs explicitly
-// (docs/19 E3-2): the fence ahead of the guardrail so its tool.before
-// admission (audit + red lines) is consulted first, the bind hook afterwards
-// handing the fence the guardrail runtime for the approval lifecycle. The
-// returned fence extension lets the same composition wire the proxy's scope
-// judge without a second lookup.
+// Judge is the 4z judge block a product root adds around the guardrail the
+// base composition installs (docs/19 E3-2).
 //
-// The fence owns the judging (E3-3): its constructor takes the fence section
-// and the guardrail section's own jev block, which a jev or hybrid stage
-// screens with. The guardrail keeps upstream's single-argument constructor
-// and only runs the approval queue.
+// Ahead loads before that guardrail, so the fence's tool.before admission
+// (audit + red lines) is consulted first. Behind loads after it and hands the
+// fence the guardrail runtime for the approval lifecycle. Fence is the same
+// extension, so the same composition wires the proxy's scope judge without a
+// second lookup.
+type Judge struct {
+	Ahead, Behind []extension.Extension
+	Fence         *fenceext.Extension
+}
+
+// Policy composes the judge block for a composition that judges with the
+// fence. The guardrail itself stays where upstream put it: the root passes its
+// config through BaseConfig.Guardrail.
 //
 // Living here rather than in pkg/harness keeps the upstream base composition
-// free of product blocks: a host that skips Policy composes no judge at all.
-func Policy(guardrail guardrailext.Config, fence fenceconfig.Config) ([]extension.Extension, *fenceext.Extension) {
-	fenceExtension := fenceext.New(fence, guardrail.Rules)
-	return []extension.Extension{
-		fenceExtension,
-		guardrailext.New(guardrail),
-		extension.Func{LoadFunc: func(scope *extension.Scope) error {
+// free of product blocks: a root that passes no Policy composes none.
+func Policy(fence fenceconfig.Config, jevRules guardrailext.Rules) Judge {
+	fenceExtension := fenceext.New(fence, jevRules)
+	return Judge{
+		Ahead: []extension.Extension{fenceExtension},
+		Behind: []extension.Extension{extension.Func{LoadFunc: func(scope *extension.Scope) error {
 			runtime, err := extension.Use[*guardrailext.Runtime](scope)
 			if err != nil {
 				return err
 			}
 			fenceExtension.Bind(runtime)
 			return nil
-		}},
-	}, fenceExtension
+		}}},
+		Fence: fenceExtension,
+	}
 }

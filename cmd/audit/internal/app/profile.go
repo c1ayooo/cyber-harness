@@ -21,7 +21,6 @@ import (
 	"github.com/chainreactors/cyber/core/proc"
 	loopext "github.com/chainreactors/cyber/exts/agent"
 	arsenalext "github.com/chainreactors/cyber/exts/arsenal"
-	guardrailext "github.com/chainreactors/cyber/exts/guardrail"
 	nodeext "github.com/chainreactors/cyber/exts/node"
 	okfext "github.com/chainreactors/cyber/exts/okf"
 	protonext "github.com/chainreactors/cyber/exts/proton"
@@ -85,11 +84,8 @@ func newAuditProfile(request profile.Request, workDir string, bashTimeout int, r
 	}
 
 	// This build routes nothing, so it publishes the disabled endpoint and
-	// links no proxy at all. It judges with the guardrail alone, zero-config:
-	// the judge block is the product root's decision (docs/19 E3-2), and the
-	// 4z fence must stay out of this build's dependency closure.
+	// links no proxy at all.
 	values, err := harness.BaseExtensions(harness.BaseConfig{
-		Policy:     []extension.Extension{guardrailext.New(guardrailext.Config{})},
 		Directory:  workDir,
 		SkillPaths: cfg.LocalSkillPaths(option.Skills),
 		Terminal:   terminalext.Config{Timeout: bashTimeout, Environment: environment},
