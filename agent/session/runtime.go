@@ -70,7 +70,13 @@ type Config struct {
 	Events     *events.Stream
 
 	// Capabilities are borrowed from their owning extensions.
-	Hooks                 *hooks.Registry
+	Hooks *hooks.Registry
+	// OpenSessionDecorators / TurnDecorators are the seam-G1 request
+	// decorators (docs/19 appendix A): applied in order by
+	// OpenAOPSession / RunAOPTurn, an error rejecting the request. Empty by
+	// default — upstream behavior.
+	OpenSessionDecorators []OpenSessionDecorator
+	TurnDecorators        []RunTurnDecorator
 	Tools                 coretool.Executor
 	CommandRegistry       coretool.CommandExecutor
 	Skills                *skills.Store

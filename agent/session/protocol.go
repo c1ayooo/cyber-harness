@@ -266,11 +266,19 @@ func (rt *Runtime) OpenAOPSession(req *aop.OpenSessionRequest) *aop.OpenSessionR
 		response.Outcome = &aop.OpenSessionResponse_Rejected{Rejected: rejection("INVALID_ARGUMENT", "session_id is required")}
 		return response
 	}
-	workspace := sessionWorkspace(req)
-	session, err := rt.EnsureSession(SessionOptions{
+	options := SessionOptions{
 		ID: req.SessionId, ParentSessionID: req.ParentSessionId, ParentToolCallID: req.ParentToolCallId,
-		WorkDir: workspace.WorkDir, SingleTask: workspace.SingleTask,
-	})
+		WorkDir: sessionWorkspace(req).WorkDir, SingleTask: sessionWorkspace(req).SingleTask,
+	}
+	// Seam G1 (docs/19 appendix A): registered request decorators turn the
+	// fork payloads into session options; an error rejects the open.
+	if rt != nil && len(rt.config.OpenSessionDecorators) > 0 {
+		if err := applyOpenSessionDecorators(context.Background(), rt.config.OpenSessionDecorators, req, &options); err != nil {
+			response.Outcome = &aop.OpenSessionResponse_Rejected{Rejected: rejection("FAILED_PRECONDITION", err.Error())}
+			return response
+		}
+	}
+	session, err := rt.EnsureSession(options)
 	if err != nil {
 		response.Outcome = &aop.OpenSessionResponse_Rejected{Rejected: rejection("FAILED_PRECONDITION", err.Error())}
 		return response
@@ -295,43 +303,28 @@ func (rt *Runtime) RunAOPTurn(ctx context.Context, req *aop.RunTurnRequest) *aop
 			break
 		}
 	}
-	// The test-range rule set registers before the turn starts so the proxy
-	// judges this turn's requests against it. The project's egress proxy binds
-	// in the same breath: the hub routes this session's outbound calls through
-	// the endpoint the manifest held at dispatch time. A full fence table
-	// rejects the turn (FAILED_PRECONDITION): an unfenced run is never
-	// acceptable, and the control plane can free capacity by closing idle
-	// sessions or retrying later.
-	if err := turnScopeRules(req); err != nil {
-		response.Outcome = &aop.RunTurnResponse_Rejected{Rejected: rejection("FAILED_PRECONDITION", err.Error())}
-		return response
-	}
-	if err := turnGlobalFence(req); err != nil {
-		response.Outcome = &aop.RunTurnResponse_Rejected{Rejected: rejection("FAILED_PRECONDITION", err.Error())}
-		return response
-	}
-	turnEgressProxy(req)
 	var message *aop.Message
 	if req.Input != nil {
 		message = protobuf.CloneOf(req.Input)
 	}
-	// A control plane may separate the evaluator's goal from the executor's
-	// turn message. Its own extension wins over AgentRunOptions.eval_rounds
-	// when both carry a pacing spec.
-	evalGoal, evalRounds := turnRunGoal(req)
-	if evalRounds == "" {
-		evalRounds = options.EvalRounds
+	input := RunInput{
+		TurnID: req.TurnId, Message: message, Continue: req.ContinueSession,
+		MaxTurns: int(req.MaxTurns), EvalCriteria: options.EvalCriteria, EvalRounds: options.EvalRounds,
 	}
-	seed, seedErr := turnCaseSeed(req)
-	if seedErr != nil {
-		response.Outcome = &aop.RunTurnResponse_Rejected{Rejected: rejection("FAILED_PRECONDITION", seedErr.Error())}
+	// Seam G1 (docs/19 appendix A): registered turn decorators turn the fork
+	// payloads (fence rules, work dir, case seed, …) into the run input. An
+	// error rejects the turn with FAILED_PRECONDITION — a payload that claims
+	// to have landed cannot silently not have.
+	decorators := rt.config.TurnDecorators
+	if rt != nil && len(decorators) == 0 {
+		// No override: the fork payloads apply as they always have.
+		decorators = defaultForkTurnDecorators()
+	}
+	if err := applyTurnDecorators(ctx, decorators, req, &input); err != nil {
+		response.Outcome = &aop.RunTurnResponse_Rejected{Rejected: rejection("FAILED_PRECONDITION", err.Error())}
 		return response
 	}
-	_, err := rt.RunSession(ctx, req.SessionId, RunInput{
-		TurnID: req.TurnId, Message: message, Continue: req.ContinueSession,
-		MaxTurns: int(req.MaxTurns), EvalCriteria: options.EvalCriteria, EvalRounds: evalRounds, EvalGoal: evalGoal,
-		ToolEnv: turnToolEnv(req), WorkDir: turnWorkDir(req), Seed: seed,
-	})
+	_, err := rt.RunSession(ctx, req.SessionId, input)
 	if err != nil {
 		response.Outcome = &aop.RunTurnResponse_Rejected{Rejected: rejection("FAILED_PRECONDITION", err.Error())}
 		return response
