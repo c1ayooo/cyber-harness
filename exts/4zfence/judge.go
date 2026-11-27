@@ -9,14 +9,19 @@ package fence
 
 import (
 	"context"
+	"crypto/sha256"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"strings"
+	"time"
 
 	jevapi "github.com/chainreactors/cyber/agent/provider/jev"
 	aop "github.com/chainreactors/cyber/aop"
+	operationpb "github.com/chainreactors/cyber/aop/operation"
 	"github.com/chainreactors/cyber/core/events"
 	"github.com/chainreactors/cyber/core/extension"
+	"github.com/chainreactors/cyber/core/operation"
 	toolhooks "github.com/chainreactors/cyber/core/tool/hooks"
 	fenceconfig "github.com/chainreactors/cyber/exts/4zfence/config"
 	"github.com/chainreactors/cyber/exts/4zfence/policy"
@@ -128,18 +133,24 @@ func (e *Extension) judge(ctx context.Context, ev toolhooks.CallEvent, options j
 	}
 	invalid := err != nil || d == nil
 	if invalid {
-		if d == nil {
-			d = &guardrailext.Decision{Action: guardrailext.Action_ACTION_RECORD, Reason: "guardrail policy failed"}
-		}
-		e.emitDecision(ctx, d, ev)
+		d = &guardrailext.Decision{Action: guardrailext.Action_ACTION_BLOCK, Reason: "Guardrail policy unavailable or invalid"}
+	}
+	if ctx.Err() != nil {
+		d = &guardrailext.Decision{Action: guardrailext.Action_ACTION_BLOCK, Reason: "Invocation canceled"}
+	}
+	d.Reason = guardrailext.RedactText(d.Reason)
+	// The journal carries the first-stage judgment when it is valid; the
+	// fallback or canceled decision otherwise.
+	if !invalid && risk != nil && ctx.Err() == nil {
+		e.emitDecision(ctx, risk, ev)
 	} else {
 		e.emitDecision(ctx, d, ev)
 	}
-	// Cancellation is never overridden. Shadow mode records the judgment and
-	// always lets the invocation through, including a broken-judgment fallback.
 	if ctx.Err() != nil {
 		return denied(d.Reason), nil
 	}
+	// Shadow mode records the judgment and always lets the invocation
+	// through, including a broken-judgment fallback.
 	if options.shadow {
 		return toolhooks.Admission{}, nil
 	}
@@ -148,20 +159,34 @@ func (e *Extension) judge(ctx context.Context, ev toolhooks.CallEvent, options j
 	if invalid {
 		return denied(d.Reason), nil
 	}
-	// Safe mode's deterministic prefix allow list releases a judged call
-	// without a human, while still emitting the decision event above.
-	if options.mode == string(guardrailext.ModeSafe) && options.allowedPrefix(ev) {
-		return toolhooks.Admission{}, nil
-	}
 	if options.mode != string(guardrailext.ModeSafe) && options.mode != string(guardrailext.ModeAuto) {
 		return denied("invalid fence mode"), nil
+	}
+	if options.mode == string(guardrailext.ModeSafe) && options.allowedPrefix(ev) {
+		return toolhooks.Admission{}, nil
 	}
 	if d.Action == guardrailext.Action_ACTION_RECORD {
 		return toolhooks.Admission{}, nil
 	}
-	// Every risky judgment — review and block — holds on the ordinary approval
-	// lifecycle, in safe and auto mode alike: only the operator's refusal or
-	// the failed-judgment path above denies.
+	if options.mode == string(guardrailext.ModeAuto) {
+		// Auto mode denies, with the model-visible rejection message and the
+		// bounded same-invocation backoff; the audit carries a REJECTED review.
+		e.emitAutoAudit(ctx, ev, risk, d)
+		repeat := e.repeatedRejection(ctx, ev)
+		if repeat > 1 {
+			timer := time.NewTimer(time.Duration(min(repeat-1, 8)) * 250 * time.Millisecond)
+			defer timer.Stop()
+			select {
+			case <-ctx.Done():
+				return denied("fence invocation canceled"), nil
+			case <-timer.C:
+			}
+		}
+		return denied(fmt.Sprintf("Guardrail intercepted this tool invocation (%d identical attempts in this turn); the tool was not executed. Reason: ", repeat) + d.Reason +
+			" Do not repeat the same invocation. Reassess the risk and choose a safer next action or explain the limitation. Every new tool call is checked again."), nil
+	}
+	// Safe mode holds every risky judgment on the ordinary approval lifecycle;
+	// only the operator's refusal or the failed-judgment path above denies.
 	rt := e.boundRuntime()
 	if rt == nil {
 		return denied(d.Reason + "（fence admission is not bound to a guardrail runtime）"), nil
@@ -175,30 +200,84 @@ func (e *Extension) judge(ctx context.Context, ev toolhooks.CallEvent, options j
 
 // evaluatePolicy preserves the original call for the policy stage and never
 // exposes provider failures through the tool result; the hook boundary
-// handles panics. The fence reports its own failures in its own journal.
+// handles panics. Sentinels that describe the policy shape (no judgment, no
+// second stage) pass through so the caller can distinguish them from
+// provider failures.
 func evaluatePolicy(ctx context.Context, fn func(context.Context, toolhooks.CallEvent) (*guardrailext.Decision, error), ev toolhooks.CallEvent) (*guardrailext.Decision, error) {
 	if err := ctx.Err(); err != nil {
 		return nil, err
 	}
 	d, err := fn(ctx, cloneCallEvent(ev))
 	if err != nil {
-		// Sentinels that describe the policy shape (no judgment, no second
-		// stage) pass through so the caller can distinguish them from
-		// provider failures.
 		if errors.Is(err, policy.ErrNoPolicy) || errors.Is(err, policy.ErrNoConsequence) {
 			return nil, err
 		}
 		return nil, errors.New("fence check failed")
 	}
 	if d == nil || d.Action < guardrailext.Action_ACTION_RECORD || d.Action > guardrailext.Action_ACTION_BLOCK {
-		return nil, errors.New("guardrail check failed")
+		return nil, errors.New("fence check failed")
 	}
 	return d, nil
 }
 
 func cloneCallEvent(ev toolhooks.CallEvent) toolhooks.CallEvent {
-	ev.Call = proto.Clone(ev.Call).(*aop.ToolCall)
+	if ev.Call != nil {
+		ev.Call = proto.Clone(ev.Call).(*aop.ToolCall)
+	}
+	if ev.Operation != nil {
+		ev.Operation = proto.Clone(ev.Operation).(*operationpb.Ref)
+	}
 	return ev
+}
+
+// emitAutoAudit publishes the auto-mode audit review (REJECTED for every
+// risky judgment; APPROVED when the consequence stage downgraded to record),
+// the shape the old guardrail Admit emitted with ResolutionSource "auto".
+func (e *Extension) emitAutoAudit(ctx context.Context, ev toolhooks.CallEvent, risk, d *guardrailext.Decision) {
+	audit := proto.Clone(risk).(*guardrailext.Decision)
+	if d != risk {
+		audit.Reason += "\nConsequence assessment: " + d.Reason
+	}
+	state := guardrailext.ReviewState_REVIEW_STATE_REJECTED
+	if d.Action == guardrailext.Action_ACTION_RECORD {
+		state = guardrailext.ReviewState_REVIEW_STATE_APPROVED
+	}
+	review := &guardrailext.Review{Call: guardrailext.SanitizeCall(ev.Call), Operation: ev.Operation,
+		SessionId: operation.InvocationFromContext(ctx).SessionID, Decision: audit,
+		State: state, ResolutionSource: "auto"}
+	e.emitDecision(ctx, review, ev)
+}
+
+// repeatedRejection counts identical attempts within one turn, the bounded
+// diagnostic state behind the auto-mode backoff (upstream keeps the same map
+// on its runtime).
+func (e *Extension) repeatedRejection(ctx context.Context, ev toolhooks.CallEvent) int {
+	inv := operation.InvocationFromContext(ctx)
+	if inv.SessionID == "" || inv.TurnID == "" {
+		return 1
+	}
+	args := string(ev.Call.GetArguments().GetData())
+	var value any
+	if json.Unmarshal([]byte(args), &value) == nil {
+		if canonical, jerr := json.Marshal(value); jerr == nil {
+			args = string(canonical)
+		}
+	}
+	key, _ := json.Marshal([]string{inv.SessionID, inv.TurnID, ev.Call.GetName(), ev.Call.GetWorkingDirectory(), args})
+	hash := sha256.Sum256(key)
+	e.rejectionsMu.Lock()
+	defer e.rejectionsMu.Unlock()
+	if e.rejections == nil {
+		e.rejections = make(map[[32]byte]int)
+	}
+	if _, exists := e.rejections[hash]; !exists && len(e.rejections) >= 1024 {
+		for old := range e.rejections {
+			delete(e.rejections, old)
+			break
+		}
+	}
+	e.rejections[hash]++
+	return e.rejections[hash]
 }
 
 // buildPolicy assembles the provider the fence section selects. provider jev
@@ -211,8 +290,7 @@ func (e *Extension) buildPolicy(scope *extension.Scope, stream *events.Stream) (
 		if err != nil {
 			return nil, err
 		}
-		jev := policy.NewJEV(e.jevRules, client)
-		policy.SetUsage(jev, policy.UsageReporter(stream, policy.EmitterJEV))
+		jev := policy.NewJEV(e.jevRules, client, policy.UsageReporter(stream, policy.EmitterJEV))
 		if e.fence.Provider == fenceconfig.ProviderJEV {
 			return jev, nil
 		}

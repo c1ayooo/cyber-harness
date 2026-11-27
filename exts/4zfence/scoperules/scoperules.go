@@ -382,6 +382,23 @@ func Uninstall() { installed.Store(nil) }
 
 func current() *Store { return installed.Load() }
 
+// Clear forgets every session set, parked set and verdict: Close uninstalls
+// and clears, so no state outlives the extension that owned the store.
+func (s *Store) Clear() {
+	s.storeMu.Lock()
+	s.storeSets = map[string]*Set{}
+	s.storeRing = nil
+	s.storeMu.Unlock()
+	s.parkMu.Lock()
+	s.parkSets = map[string]*Set{}
+	s.parkOrder = nil
+	s.parkMu.Unlock()
+	s.verdictMu.Lock()
+	s.verdictByFlow = map[string]Verdict{}
+	s.verdictOrder = nil
+	s.verdictMu.Unlock()
+}
+
 // ErrCapacity reports that the per-session table is full. The caller must
 // refuse this session's turn instead of letting it run: evicting the oldest
 // entry would silently unfence a live session, and skipping the registration

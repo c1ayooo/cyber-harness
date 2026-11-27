@@ -62,6 +62,11 @@ type Extension struct {
 	// (the proxy judge and the observe sidecar). Close uninstalls and clears.
 	scopes  *scoperules.Store
 	globals *globalfence.Store
+
+	// The auto-mode repeated-rejection backoff state (upstream keeps the same
+	// map on its runtime): bounded diagnostic counters, never decisions.
+	rejectionsMu sync.Mutex
+	rejections   map[[32]byte]int
 }
 
 var _ extension.Extension = (*Extension)(nil)
@@ -138,6 +143,12 @@ func (e *Extension) Close(_ context.Context) error {
 		sub.Close(context.Background())
 	}
 	e.subs = nil
+	if e.scopes != nil {
+		e.scopes.Clear()
+	}
+	if e.globals != nil {
+		e.globals.Clear()
+	}
 	scoperules.Uninstall()
 	globalfence.Uninstall()
 	e.scopes, e.globals = nil, nil
