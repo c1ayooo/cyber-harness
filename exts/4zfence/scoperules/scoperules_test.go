@@ -6,20 +6,9 @@ import (
 	"errors"
 	"fmt"
 	"net"
-	"os"
 	"testing"
 	"time"
 )
-
-// TestMain mounts one store for the package's function-level tests; the
-// production install path is the fence extension's Load, and tests that need
-// isolation mount a fresh store themselves (drainSessionStore).
-func TestMain(m *testing.M) {
-	Install(NewStore())
-	code := m.Run()
-	Uninstall()
-	os.Exit(code)
-}
 
 const validSet = `{
   "enabled": true,
@@ -201,29 +190,29 @@ func TestJudgeDisabledAndShadow(t *testing.T) {
 }
 
 func TestSessionStoreReplacesPerTurn(t *testing.T) {
-	if err := SetRules("sess-1", []byte(validSet)); err != nil {
+	if err := testStore.SetRules("sess-1", []byte(validSet)); err != nil {
 		t.Fatal(err)
 	}
-	if verdict, judged := JudgeSession("sess-1", "GET", "https://api.example.com/v1/x"); !judged || verdict.Action != ActionRecord {
+	if verdict, judged := testStore.JudgeSession("sess-1", "GET", "https://api.example.com/v1/x"); !judged || verdict.Action != ActionRecord {
 		t.Fatalf("registered set not judged: %+v judged=%v", verdict, judged)
 	}
 	// The control plane re-sends the set every turn; the newest one wins.
 	next := `{"enabled":true,"default_action":"record","rules":[]}`
-	if err := SetRules("sess-1", []byte(next)); err != nil {
+	if err := testStore.SetRules("sess-1", []byte(next)); err != nil {
 		t.Fatal(err)
 	}
-	if verdict, judged := JudgeSession("sess-1", "GET", "https://api.example.com/v1/x"); !judged || verdict.Action != ActionRecord {
+	if verdict, judged := testStore.JudgeSession("sess-1", "GET", "https://api.example.com/v1/x"); !judged || verdict.Action != ActionRecord {
 		t.Fatalf("replaced set not judged: %+v judged=%v", verdict, judged)
 	}
 	// An invalid set is refused and leaves the previous one untouched.
-	if err := SetRules("sess-1", []byte(`{"enabled":true,"default_action":"nope"}`)); err == nil {
+	if err := testStore.SetRules("sess-1", []byte(`{"enabled":true,"default_action":"nope"}`)); err == nil {
 		t.Fatal("invalid set accepted")
 	}
-	if _, judged := JudgeSession("sess-1", "GET", "https://api.example.com/v1/x"); !judged {
+	if _, judged := testStore.JudgeSession("sess-1", "GET", "https://api.example.com/v1/x"); !judged {
 		t.Fatal("invalid set wiped the previous rules")
 	}
 	// Unknown sessions are never judged.
-	if _, judged := JudgeSession("sess-unknown", "GET", "https://a.com/"); judged {
+	if _, judged := testStore.JudgeSession("sess-unknown", "GET", "https://a.com/"); judged {
 		t.Fatal("unregistered session judged")
 	}
 }
@@ -321,29 +310,29 @@ func TestResolveHostCache(t *testing.T) {
 // RunTurnRequest time, a channel the child's turns never see. A parent with
 // nothing registered inherits nothing, and empty/self ids are no-ops.
 func TestInheritSessionRules(t *testing.T) {
-	if err := SetRules("sess-parent", []byte(`{"enabled":true,"default_action":"record","rules":[{"id":"sr-1","action":"block","method":"*","host":"blocked.test"}]}`)); err != nil {
+	if err := testStore.SetRules("sess-parent", []byte(`{"enabled":true,"default_action":"record","rules":[{"id":"sr-1","action":"block","method":"*","host":"blocked.test"}]}`)); err != nil {
 		t.Fatal(err)
 	}
-	InheritSessionRules("sess-parent", "sess-child")
-	verdict, judged := JudgeSession("sess-child", "GET", "http://blocked.test/x")
+	testStore.InheritSessionRules("sess-parent", "sess-child")
+	verdict, judged := testStore.JudgeSession("sess-child", "GET", "http://blocked.test/x")
 	if !judged || verdict.Action != ActionBlock || verdict.RuleID != "sr-1" {
 		t.Fatalf("child verdict = %+v judged=%v", verdict, judged)
 	}
-	if v, judged := JudgeSession("sess-child", "GET", "http://other.test/x"); !judged || !v.DefaultMissed {
+	if v, judged := testStore.JudgeSession("sess-child", "GET", "http://other.test/x"); !judged || !v.DefaultMissed {
 		t.Fatalf("child fallback = %+v judged=%v", v, judged)
 	}
 
 	// A parent that never registered fences nothing.
-	InheritSessionRules("sess-ghost", "sess-orphan")
-	if _, judged := JudgeSession("sess-orphan", "GET", "http://x/"); judged {
+	testStore.InheritSessionRules("sess-ghost", "sess-orphan")
+	if _, judged := testStore.JudgeSession("sess-orphan", "GET", "http://x/"); judged {
 		t.Fatal("unknown parent registered rules on the child")
 	}
 
 	// Empty and self ids are no-ops, not panics and not registrations.
-	InheritSessionRules("", "sess-x")
-	InheritSessionRules("sess-parent", "")
-	InheritSessionRules("sess-parent", "sess-parent")
-	if _, judged := JudgeSession("sess-x", "GET", "http://x/"); judged {
+	testStore.InheritSessionRules("", "sess-x")
+	testStore.InheritSessionRules("sess-parent", "")
+	testStore.InheritSessionRules("sess-parent", "sess-parent")
+	if _, judged := testStore.JudgeSession("sess-x", "GET", "http://x/"); judged {
 		t.Fatal("empty parent registered rules")
 	}
 }
@@ -353,13 +342,12 @@ func TestInheritSessionRules(t *testing.T) {
 // oldest entry — eviction unfenced a live session with no log. An existing
 // session re-registering is never refused, and DropSession frees the slot so
 // a later session fits again.
-// drainSessionStore mounts a fresh store so a capacity test starts from a
+// drainSessionStore swaps in a fresh store so a capacity test starts from a
 // known state (docs/19 E3-4: no package-level table to empty).
 func drainSessionStore(t *testing.T) {
-	Install(NewStore())
-	// The cleanup remounts a fresh store instead of uninstalling: TestMain's
-	// package-wide store must survive for the tests that follow.
-	t.Cleanup(func() { Install(NewStore()) })
+	testStore = NewStore()
+	// The cleanup restores a fresh store for the tests that follow.
+	t.Cleanup(func() { testStore = NewStore() })
 }
 
 func TestCapacityRefusesNewSessionInsteadOfEvicting(t *testing.T) {
@@ -367,38 +355,38 @@ func TestCapacityRefusesNewSessionInsteadOfEvicting(t *testing.T) {
 	raw := []byte(`{"enabled":true,"default_action":"record","rules":[{"id":"sr-cap","action":"block","method":"*","host":"cap.test"}]}`)
 	first := "sess-cap-000"
 	for i := 0; i < maxSessions; i++ {
-		if err := SetRules(fmt.Sprintf("sess-cap-%03d", i), raw); err != nil {
+		if err := testStore.SetRules(fmt.Sprintf("sess-cap-%03d", i), raw); err != nil {
 			t.Fatalf("registration %d failed: %v", i, err)
 		}
 	}
 	// The first session still judges: nothing was evicted behind its back.
-	if verdict, judged := JudgeSession(first, "GET", "https://cap.test/x"); !judged || verdict.Action != ActionBlock {
+	if verdict, judged := testStore.JudgeSession(first, "GET", "https://cap.test/x"); !judged || verdict.Action != ActionBlock {
 		t.Fatalf("oldest session was evicted or unfenced: %+v judged=%v", verdict, judged)
 	}
-	if err := SetRules("sess-cap-overflow", raw); !errors.Is(err, ErrCapacity) {
+	if err := testStore.SetRules("sess-cap-overflow", raw); !errors.Is(err, ErrCapacity) {
 		t.Fatalf("overflow error = %v, want ErrCapacity", err)
 	}
 	// An existing session re-registering past the (full) ring is a refresh,
 	// never a refusal.
-	if err := SetRules(first, raw); err != nil {
+	if err := testStore.SetRules(first, raw); err != nil {
 		t.Fatalf("existing session refused on re-registration: %v", err)
 	}
 
 	// Closing the first session frees its slot; the overflow session fits and
 	// judges, and the closed one stops.
-	DropSession(first)
-	if _, judged := JudgeSession(first, "GET", "https://cap.test/x"); judged {
+	testStore.DropSession(first)
+	if _, judged := testStore.JudgeSession(first, "GET", "https://cap.test/x"); judged {
 		t.Fatal("dropped session still judges")
 	}
-	if err := SetRules("sess-cap-overflow", raw); err != nil {
+	if err := testStore.SetRules("sess-cap-overflow", raw); err != nil {
 		t.Fatalf("registration after a drop failed: %v", err)
 	}
-	if verdict, judged := JudgeSession("sess-cap-overflow", "GET", "https://cap.test/x"); !judged || verdict.Action != ActionBlock {
+	if verdict, judged := testStore.JudgeSession("sess-cap-overflow", "GET", "https://cap.test/x"); !judged || verdict.Action != ActionBlock {
 		t.Fatalf("overflow session after a drop = %+v judged=%v", verdict, judged)
 	}
 	// Cleanup: drop everything this test registered so later tests start clean.
 	for i := 0; i < maxSessions; i++ {
-		DropSession(fmt.Sprintf("sess-cap-%03d", i))
+		testStore.DropSession(fmt.Sprintf("sess-cap-%03d", i))
 	}
-	DropSession("sess-cap-overflow")
+	testStore.DropSession("sess-cap-overflow")
 }

@@ -11,7 +11,6 @@ import (
 	operationpb "github.com/chainreactors/cyber/aop/operation"
 	"github.com/chainreactors/cyber/core/events"
 	"github.com/chainreactors/cyber/core/operation"
-	"github.com/chainreactors/cyber/exts/4zfence/globalfence"
 	"github.com/chainreactors/cyber/exts/4zfence/scoperules"
 	guardrailext "github.com/chainreactors/cyber/exts/guardrail"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -31,7 +30,7 @@ func scopeRuntime(t *testing.T) (*ScopeJudge, *guardrailext.Runtime, func() []gu
 		mu.Unlock()
 	})
 	runtime := newApprovalRuntime(t, stream)
-	e := &Extension{stream: stream}
+	e := testFenceWith(stream)
 	e.Bind(runtime)
 	judge := NewScopeJudge(e)
 	return judge, runtime, func() []guardrailEvent {
@@ -68,7 +67,7 @@ func scopeRequest(sessionID string, call *aop.ToolCall) scoperules.ScopeRequest 
 
 func TestJudgeScopeRequestRecordGoesToSidecarOnly(t *testing.T) {
 	judge, _, collected := scopeRuntime(t)
-	if err := scoperules.SetRules("sess-a", []byte(scopeSetJSON)); err != nil {
+	if err := testFence.scopes.SetRules("sess-a", []byte(scopeSetJSON)); err != nil {
 		t.Fatal(err)
 	}
 	decision := judge.JudgeScopeRequest(scopeRequest("sess-a", scopeCall(t, "flow-1", "GET", "https://api.ok.test/v1")))
@@ -89,7 +88,7 @@ func TestJudgeScopeRequestRecordGoesToSidecarOnly(t *testing.T) {
 
 func TestJudgeScopeRequestBlockEmitsDecision(t *testing.T) {
 	judge, _, collected := scopeRuntime(t)
-	if err := scoperules.SetRules("sess-a", []byte(scopeSetJSON)); err != nil {
+	if err := testFence.scopes.SetRules("sess-a", []byte(scopeSetJSON)); err != nil {
 		t.Fatal(err)
 	}
 	decision := judge.JudgeScopeRequest(scopeRequest("sess-a", scopeCall(t, "flow-2", "POST", "https://sub.blocked.test/x")))
@@ -125,7 +124,7 @@ func TestJudgeScopeRequestBlockEmitsDecision(t *testing.T) {
 // asset-pending flow owns that approval).
 func TestJudgeScopeRequestReviewHoldsAndResolves(t *testing.T) {
 	judge, runtime, collected := scopeRuntime(t)
-	if err := scoperules.SetRules("sess-a", []byte(`{"enabled":true,"default_action":"record","rules":[{"id":"sr-review","action":"review","method":"*","host":"held.test"}]}`)); err != nil {
+	if err := testFence.scopes.SetRules("sess-a", []byte(`{"enabled":true,"default_action":"record","rules":[{"id":"sr-review","action":"review","method":"*","host":"held.test"}]}`)); err != nil {
 		t.Fatal(err)
 	}
 	req := scopeRequest("sess-a", scopeCall(t, "flow-3", "PUT", "https://held.test/admin"))
@@ -188,7 +187,7 @@ func TestJudgeScopeRequestReviewHoldsAndResolves(t *testing.T) {
 // asset-pending flow owns the approval).
 func TestJudgeScopeRequestDefaultMissRefusesWithoutHold(t *testing.T) {
 	judge, _, collected := scopeRuntime(t)
-	if err := scoperules.SetRules("sess-a", []byte(`{"enabled":true,"default_action":"review","rules":[]}`)); err != nil {
+	if err := testFence.scopes.SetRules("sess-a", []byte(`{"enabled":true,"default_action":"review","rules":[]}`)); err != nil {
 		t.Fatal(err)
 	}
 	done := make(chan scoperules.ScopeDecision, 1)
@@ -219,10 +218,10 @@ func TestJudgeScopeRequestDefaultMissRefusesWithoutHold(t *testing.T) {
 // the sidecar names the global entry, not a project rule.
 func TestJudgeScopeRequestGlobalDomainWinsOverProjectAllowlist(t *testing.T) {
 	judge, _, collected := scopeRuntime(t)
-	if err := scoperules.SetRules("sess-g", []byte(`{"enabled":true,"default_action":"record","rules":[{"id":"sr-ok","action":"record","method":"*","host":"gov.cn"}]}`)); err != nil {
+	if err := testFence.scopes.SetRules("sess-g", []byte(`{"enabled":true,"default_action":"record","rules":[{"id":"sr-ok","action":"record","method":"*","host":"gov.cn"}]}`)); err != nil {
 		t.Fatal(err)
 	}
-	if err := globalfence.SetRules("sess-g", []byte(`{"enabled_domains":true,"domains":[{"id":"gf-10","host":"gov.cn"}]}`)); err != nil {
+	if err := testFence.globals.SetRules("sess-g", []byte(`{"enabled_domains":true,"domains":[{"id":"gf-10","host":"gov.cn"}]}`)); err != nil {
 		t.Fatal(err)
 	}
 	decision := judge.JudgeScopeRequest(scopeRequest("sess-g", scopeCall(t, "flow-20", "GET", "https://www.gov.cn/x")))
@@ -244,7 +243,7 @@ func TestJudgeScopeRequestGlobalDomainWinsOverProjectAllowlist(t *testing.T) {
 // without holding, and a globally denied domain refuses with an audit event.
 func TestJudgeScopeConnect(t *testing.T) {
 	judge, _, collected := scopeRuntime(t)
-	if err := scoperules.SetRules("sess-c", []byte(`{"enabled":true,"default_action":"record","rules":[{"id":"sr-host","action":"record","method":"GET","host":"allowed.test"}]}`)); err != nil {
+	if err := testFence.scopes.SetRules("sess-c", []byte(`{"enabled":true,"default_action":"record","rules":[{"id":"sr-host","action":"record","method":"GET","host":"allowed.test"}]}`)); err != nil {
 		t.Fatal(err)
 	}
 	quiet := judge.JudgeScopeConnect(scopeRequest("sess-c", scopeCall(t, "flow-30", "CONNECT", "allowed.test:443")))
@@ -260,7 +259,7 @@ func TestJudgeScopeConnect(t *testing.T) {
 	}
 
 	// Global denial wins over a project allowlist, on the tunnel itself.
-	if err := globalfence.SetRules("sess-c", []byte(`{"enabled_domains":true,"domains":[{"id":"gf-10","host":"gov.cn"}]}`)); err != nil {
+	if err := testFence.globals.SetRules("sess-c", []byte(`{"enabled_domains":true,"domains":[{"id":"gf-10","host":"gov.cn"}]}`)); err != nil {
 		t.Fatal(err)
 	}
 	denied := judge.JudgeScopeConnect(scopeRequest("sess-c", scopeCall(t, "flow-32", "CONNECT", "www.gov.cn:443")))
@@ -277,7 +276,7 @@ func TestJudgeScopeRequestReviewWithoutOperationRefuses(t *testing.T) {
 	// control plane: refuse rather than hold forever. (The default miss no
 	// longer reaches the hold path at all — see the default-miss test.)
 	judge, _, _ := scopeRuntime(t)
-	if err := scoperules.SetRules("sess-a", []byte(`{"enabled":true,"default_action":"record","rules":[{"id":"sr-review","action":"review","method":"*","host":"held.test"}]}`)); err != nil {
+	if err := testFence.scopes.SetRules("sess-a", []byte(`{"enabled":true,"default_action":"record","rules":[{"id":"sr-review","action":"review","method":"*","host":"held.test"}]}`)); err != nil {
 		t.Fatal(err)
 	}
 	req := scopeRequest("sess-a", scopeCall(t, "flow-4", "GET", "https://held.test/"))
@@ -290,7 +289,7 @@ func TestJudgeScopeRequestReviewWithoutOperationRefuses(t *testing.T) {
 
 func TestJudgeScopeRequestUnjudgedInputs(t *testing.T) {
 	judge, _, collected := scopeRuntime(t)
-	if err := scoperules.SetRules("sess-a", []byte(scopeSetJSON)); err != nil {
+	if err := testFence.scopes.SetRules("sess-a", []byte(scopeSetJSON)); err != nil {
 		t.Fatal(err)
 	}
 	// A session without a registered set is never judged.
@@ -309,7 +308,7 @@ func TestJudgeScopeRequestUnjudgedInputs(t *testing.T) {
 
 func TestJudgeScopeRequestShadowNeverHolds(t *testing.T) {
 	judge, _, collected := scopeRuntime(t)
-	if err := scoperules.SetRules("sess-a", []byte(`{"enabled":true,"shadow":true,"default_action":"review","rules":[{"id":"sr-9","action":"block","method":"*","host":"*"}]}`)); err != nil {
+	if err := testFence.scopes.SetRules("sess-a", []byte(`{"enabled":true,"shadow":true,"default_action":"review","rules":[{"id":"sr-9","action":"block","method":"*","host":"*"}]}`)); err != nil {
 		t.Fatal(err)
 	}
 	decision := judge.JudgeScopeRequest(scopeRequest("sess-a", scopeCall(t, "flow-7", "GET", "https://whatever.test/")))
@@ -341,7 +340,7 @@ func scopeCallPassive(t *testing.T, flowID, method, url string) *aop.ToolCall {
 // is the flag the control plane's asset-pending flow routes on.
 func TestJudgeScopeRequestCarriesVerdictVerbatim(t *testing.T) {
 	judge, _, _ := scopeRuntime(t)
-	if err := scoperules.SetRules("sess-a", []byte(`{"enabled":true,"default_action":"review","rules":[]}`)); err != nil {
+	if err := testFence.scopes.SetRules("sess-a", []byte(`{"enabled":true,"default_action":"review","rules":[]}`)); err != nil {
 		t.Fatal(err)
 	}
 	decision := judge.JudgeScopeRequest(scopeRequest("sess-a", scopeCall(t, "flow-11", "GET", "https://any.test/x")))
@@ -356,7 +355,7 @@ func TestJudgeScopeRequestCarriesVerdictVerbatim(t *testing.T) {
 // patch 34). A deliberate request under the same rules stays a miss.
 func TestJudgeScopeRequestPassiveMissRecordsWithoutPending(t *testing.T) {
 	judge, _, collected := scopeRuntime(t)
-	if err := scoperules.SetRules("sess-a", []byte(`{"enabled":true,"default_action":"review","rules":[]}`)); err != nil {
+	if err := testFence.scopes.SetRules("sess-a", []byte(`{"enabled":true,"default_action":"review","rules":[]}`)); err != nil {
 		t.Fatal(err)
 	}
 	decision := judge.JudgeScopeRequest(scopeRequest("sess-a", scopeCallPassive(t, "flow-12", "GET", "https://cdn.test/app.js")))
@@ -385,7 +384,7 @@ func TestJudgeScopeRequestPassiveMissRecordsWithoutPending(t *testing.T) {
 // patch 34).
 func TestJudgeScopeRequestExplicitRowBeatsPassive(t *testing.T) {
 	judge, _, collected := scopeRuntime(t)
-	if err := scoperules.SetRules("sess-a", []byte(`{"enabled":true,"default_action":"record","rules":[{"id":"sr-no","action":"block","method":"*","host":"blocked.test"}]}`)); err != nil {
+	if err := testFence.scopes.SetRules("sess-a", []byte(`{"enabled":true,"default_action":"record","rules":[{"id":"sr-no","action":"block","method":"*","host":"blocked.test"}]}`)); err != nil {
 		t.Fatal(err)
 	}
 	decision := judge.JudgeScopeRequest(scopeRequest("sess-a", scopeCallPassive(t, "flow-14", "GET", "https://blocked.test/app.js")))

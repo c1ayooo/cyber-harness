@@ -1123,19 +1123,22 @@ The E3 items 3 and 4 land as code (4zrcin docs/19, ticket 02-fence-internals):
   block (pkg/harness/base.go and cmd/cyber-scan update with the composition
   lane).
 - The session tables are extension-owned (`scoperules.Store`,
-  `globalfence.Store`): created, provided and installed at the fence's Load,
-  uninstalled and cleared at Close. The package functions remain as the read
-  seam for the readers that predate the contribution point
-  (`tools/proxy/scope_judge.go`, `exts/observe/sidecar.go`,
-  `tools/proxy/hub_traffic.go`); without a mounted store they judge and
-  record nothing. Registered exit: when those readers borrow the provided
-  `*Store` (composition lane), the install mechanism and the package
-  delegators delete. The rotation park (E2-2) moved into the store unchanged;
+  `globalfence.Store`): created and provided at the fence's Load, cleared at
+  Close. The fence's entry points — the turn decorators, the session hooks,
+  the admission and the scope judge — are methods on `*Extension` and read
+  those stores directly, so neither store package has a package-level seam
+  any more: `installed`, `Install`, `Uninstall`, `current`, `ErrNotMounted`
+  and the package-level forwarders are deleted, and `TurnDecorators` is a
+  method cyber-scan takes from the fence instance it already holds. An entry
+  point that must register or copy rules reports `ErrNotLoaded` when the
+  extension holds no store; the ones that only judge or forget treat it as
+  nothing to do. The rotation park (E2-2) moved into the store unchanged;
   `SetForTest`/`DropForTest` are deleted and the tests register through
-  `SetRules` on a fresh store. At the merge with the proxy-seam revision the
-  flow-verdict registry stays with the proxy seam (`tools/proxy`, aliased in
-  `scoperules/judge.go`): the store-level registry this lane added had no
-  production caller once both landed, and was dropped.
+  `SetRules` on a store they own. At the merge with the proxy-seam revision
+  the flow-verdict registry stays with the proxy seam (`tools/proxy`, aliased
+  in `scoperules/judge.go`): the store-level registry this lane added had no
+  production caller once both landed, and was dropped. Still package-level,
+  by an earlier decision: `core/egress`'s session route table.
 
 Registered hooks after this change: `SubmitReview` in
 `exts/guardrail/runtime.go` only. `scripts/check-fork.sh` reports the rest.

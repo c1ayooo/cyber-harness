@@ -22,7 +22,6 @@ import (
 	"github.com/chainreactors/cyber/core/events"
 	"github.com/chainreactors/cyber/core/operation"
 	toolhooks "github.com/chainreactors/cyber/core/tool/hooks"
-	"github.com/chainreactors/cyber/exts/4zfence/globalfence"
 	"github.com/chainreactors/cyber/exts/4zfence/scoperules"
 	guardrailext "github.com/chainreactors/cyber/exts/guardrail"
 )
@@ -69,13 +68,13 @@ func TestAcceptanceCorpus(t *testing.T) {
 			stream := events.New()
 			rt := newApprovalRuntime(t, stream)
 			defer func() { _ = rt.Close(context.Background()) }()
-			e := &Extension{stream: stream}
+			e := testFenceWith(stream)
 			e.Bind(rt)
 			if sample.Config.GlobalFence != nil {
-				if err := globalfence.SetRules("sess-acc", sample.Config.GlobalFence); err != nil {
+				if err := testFence.globals.SetRules("sess-acc", sample.Config.GlobalFence); err != nil {
 					t.Fatal(err)
 				}
-				defer globalfence.DropSession("sess-acc")
+				defer testFence.globals.DropSession("sess-acc")
 			}
 			var decisions []string
 			var decisionsMu sync.Mutex
@@ -148,19 +147,19 @@ func TestAcceptanceCorpus(t *testing.T) {
 			stream := events.New()
 			rt := newApprovalRuntime(t, stream)
 			defer func() { _ = rt.Close(context.Background()) }()
-			e := &Extension{stream: stream}
+			e := testFenceWith(stream)
 			e.Bind(rt)
 			if sample.Config.GlobalFence != nil {
-				if err := globalfence.SetRules("sess-acc", sample.Config.GlobalFence); err != nil {
+				if err := testFence.globals.SetRules("sess-acc", sample.Config.GlobalFence); err != nil {
 					t.Fatal(err)
 				}
-				defer globalfence.DropSession("sess-acc")
+				defer testFence.globals.DropSession("sess-acc")
 			}
 			if sample.Config.ScopeRules != nil {
-				if err := scoperules.SetRules("sess-acc", sample.Config.ScopeRules); err != nil {
+				if err := testFence.scopes.SetRules("sess-acc", sample.Config.ScopeRules); err != nil {
 					t.Fatal(err)
 				}
-				defer scoperules.DropSession("sess-acc")
+				defer testFence.scopes.DropSession("sess-acc")
 			}
 			judge := NewScopeJudge(e)
 			decision := judge.JudgeScopeRequest(scoperules.ScopeRequest{

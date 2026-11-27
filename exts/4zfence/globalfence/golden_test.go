@@ -51,12 +51,12 @@ func TestGoldenCorpus(t *testing.T) {
 
 	entries := make([]fenceGoldenEntry, 0, len(samples))
 	for _, sample := range samples {
-		if err := SetRules("golden-session", []byte(sample.Set)); err != nil {
+		if err := testStore.SetRules("golden-session", []byte(sample.Set)); err != nil {
 			t.Fatalf("%s: register: %v", sample.Name, err)
 		}
 		entry := fenceGoldenEntry{Name: sample.Name}
 		if sample.Command != "" {
-			rule, hit := JudgeCommand("golden-session", sample.Command)
+			rule, hit := testStore.JudgeCommand("golden-session", sample.Command)
 			entry.CommandHit = hit
 			entry.RuleID = rule.ID
 			if hit != sample.CommandHit {
@@ -67,8 +67,8 @@ func TestGoldenCorpus(t *testing.T) {
 			}
 		}
 		if sample.Host != "" {
-			_, denyHit := DomainHit("golden-session", sample.Host)
-			_, allowHit := AllowDomainHit("golden-session", sample.Host)
+			_, denyHit := testStore.DomainHit("golden-session", sample.Host)
+			_, allowHit := testStore.AllowDomainHit("golden-session", sample.Host)
 			entry.DenyHit, entry.AllowHit = denyHit, allowHit
 			// The deny list outranks the allow list on the same name (patch 37).
 			if denyHit != sample.DenyHit {
@@ -80,7 +80,7 @@ func TestGoldenCorpus(t *testing.T) {
 		}
 		entries = append(entries, entry)
 	}
-	DropSession("golden-session")
+	testStore.DropSession("golden-session")
 
 	goldenPath := filepath.Join("testdata", "fence_golden.json")
 	encoded, err := json.MarshalIndent(entries, "", "  ")

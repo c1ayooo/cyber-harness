@@ -22,7 +22,6 @@ import (
 	"net/url"
 	"strings"
 	"sync"
-	"sync/atomic"
 	"time"
 )
 
@@ -366,23 +365,7 @@ func NewStore() *Store {
 	return &Store{storeSets: map[string]*Set{}, parkSets: map[string]*Set{}}
 }
 
-// ErrNotMounted is returned by SetRules when no fence extension has installed
-// a store: a registration with nowhere to go must not vanish silently.
-var ErrNotMounted = fmt.Errorf("scope-rule store is not mounted (no fence extension installed)")
-
-var installed atomic.Pointer[Store]
-
-// Install mounts s as the tables the package functions read. Production
-// callers are the fence extension's Load and Close.
-func Install(s *Store) { installed.Store(s) }
-
-// Uninstall removes the mounted store; package-function calls judge and
-// record nothing afterwards.
-func Uninstall() { installed.Store(nil) }
-
-func current() *Store { return installed.Load() }
-
-// Clear forgets every session set and parked set: Close uninstalls and
+// Clear forgets every session set and parked set: Close clears, so no
 // clears, so no state outlives the extension that owned the store. The
 // flow-verdict registry is not cleared here — it belongs to the proxy seam.
 func (s *Store) Clear() {
@@ -544,62 +527,5 @@ func (s *Store) InheritSessionRules(parentID, childID string) error {
 		s.storeRing = append(s.storeRing, childID)
 	}
 	s.storeSets[childID] = set
-	return nil
-}
-
-// The package functions below are the read seam for the callers that hold no
-// store reference (the request decorators, the session hooks). They delegate
-// to the store the fence extension installed; without one, sessions judge
-// nothing — the no-fence composition. The flow-verdict registry is not here:
-// the proxy seam owns it (tools/proxy, aliased in judge.go).
-
-// SetRules replaces one session's set from its manifest JSON on the mounted
-// store. Unmounted, it fails: a skipped registration would run the session
-// unfenced.
-func SetRules(sessionID string, raw []byte) error {
-	if s := current(); s != nil {
-		return s.SetRules(sessionID, raw)
-	}
-	return ErrNotMounted
-}
-
-// DropSession forgets one session's set on the mounted store.
-func DropSession(sessionID string) {
-	if s := current(); s != nil {
-		s.DropSession(sessionID)
-	}
-}
-
-// ParkSession parks one session's set for a rotation hop on the mounted store.
-func ParkSession(sessionID string) {
-	if s := current(); s != nil {
-		s.ParkSession(sessionID)
-	}
-}
-
-// JudgeSession judges one request on the mounted store; judged is false when
-// no store is mounted (the no-fence composition judges nothing).
-func JudgeSession(sessionID, method, rawURL string) (Verdict, bool) {
-	if s := current(); s != nil {
-		return s.JudgeSession(sessionID, method, rawURL)
-	}
-	return Verdict{}, false
-}
-
-// JudgeSessionConnect judges one CONNECT request on the mounted store.
-func JudgeSessionConnect(sessionID, rawURL string) (Verdict, bool) {
-	if s := current(); s != nil {
-		return s.JudgeSessionConnect(sessionID, rawURL)
-	}
-	return Verdict{}, false
-}
-
-// InheritSessionRules copies the parent's set to the child on the mounted
-// store. Unmounted, it is a no-op: no store means no fence extension, whose
-// Load subscribes the inheritance hook in the first place.
-func InheritSessionRules(parentID, childID string) error {
-	if s := current(); s != nil {
-		return s.InheritSessionRules(parentID, childID)
-	}
 	return nil
 }

@@ -9,23 +9,31 @@ import (
 	agenthooks "github.com/chainreactors/cyber/agent/hooks"
 	agentsession "github.com/chainreactors/cyber/agent/session"
 	aop "github.com/chainreactors/cyber/aop"
+	"github.com/chainreactors/cyber/core/events"
 	"github.com/chainreactors/cyber/exts/4zfence/globalfence"
 	"github.com/chainreactors/cyber/exts/4zfence/scoperules"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-// installStores mounts fresh scope and fence stores for one test — the real
-// production path is the fence extension's Load; the uninstall rides the
-// extension's Close. Tests get the same semantics without constructing the
-// whole extension.
+// testFence is the fence extension the package's tests read and write: the
+// turn decorators, the session hooks, the admission and the scope judge all
+// act on its own tables (docs/19 E3-4).
+var testFence *Extension
+
+// installStores builds the test's fence extension with fresh scope and fence
+// tables. The real production path is the extension's Load; tests get the
+// same tables without constructing the whole extension.
 func installStores(t *testing.T) {
 	t.Helper()
-	scoperules.Install(scoperules.NewStore())
-	globalfence.Install(globalfence.NewStore())
-	t.Cleanup(func() {
-		scoperules.Uninstall()
-		globalfence.Uninstall()
-	})
+	testFence = &Extension{scopes: scoperules.NewStore(), globals: globalfence.NewStore()}
+	t.Cleanup(func() { testFence = nil })
+}
+
+// testFenceWith gives that extension its stream, so what a test registers is
+// what its judge and admission read.
+func testFenceWith(stream *events.Stream) *Extension {
+	testFence.stream = stream
+	return testFence
 }
 
 // The scope-rule set registers for the session the turn belongs to, in both
@@ -37,23 +45,23 @@ func TestTurnScopeRulesRegistration(t *testing.T) {
 		req := &aop.RunTurnRequest{SessionId: "sess-scope", Extensions: []*anypb.Any{{
 			TypeUrl: "type.googleapis.com/" + namespace + ".ScopeRules", Value: []byte(valid),
 		}}}
-		turnScopeRules(req)
-		verdict, judged := scoperules.JudgeSession("sess-scope", "GET", "https://api.example.test/v1")
+		testFence.turnScopeRules(req)
+		verdict, judged := testFence.scopes.JudgeSession("sess-scope", "GET", "https://api.example.test/v1")
 		if !judged || verdict.Action != "review" {
 			t.Fatalf("namespace %s: verdict = %+v judged=%v", namespace, verdict, judged)
 		}
 	}
 	invalid := `{"enabled":true,"default_action":"nonsense"}`
-	turnScopeRules(&aop.RunTurnRequest{SessionId: "sess-scope", Extensions: []*anypb.Any{{
+	testFence.turnScopeRules(&aop.RunTurnRequest{SessionId: "sess-scope", Extensions: []*anypb.Any{{
 		TypeUrl: "type.googleapis.com/4zrcin.ScopeRules", Value: []byte(invalid),
 	}}})
-	if verdict, judged := scoperules.JudgeSession("sess-scope", "GET", "https://api.example.test/v1"); !judged || verdict.Action != "review" {
+	if verdict, judged := testFence.scopes.JudgeSession("sess-scope", "GET", "https://api.example.test/v1"); !judged || verdict.Action != "review" {
 		t.Fatalf("invalid set wiped the previous rules: %+v judged=%v", verdict, judged)
 	}
 	// A turn without the extension keeps the last set (the control plane
 	// re-sends even disabled drafts every turn precisely to keep this honest).
-	turnScopeRules(&aop.RunTurnRequest{SessionId: "sess-scope"})
-	if _, judged := scoperules.JudgeSession("sess-scope", "GET", "https://x.test/"); !judged {
+	testFence.turnScopeRules(&aop.RunTurnRequest{SessionId: "sess-scope"})
+	if _, judged := testFence.scopes.JudgeSession("sess-scope", "GET", "https://x.test/"); !judged {
 		t.Fatal("extension-less turn dropped the registered set")
 	}
 }
@@ -80,7 +88,7 @@ func TestTurnScopeRulesRefusesAtCapacity(t *testing.T) {
 	installStores(t)
 	valid := `{"enabled":true,"default_action":"record","rules":[{"id":"sr-cap","action":"block","method":"*","host":"cap.test"}]}`
 	register := func(id string) error {
-		return turnScopeRules(&aop.RunTurnRequest{SessionId: id, Extensions: []*anypb.Any{{
+		return testFence.turnScopeRules(&aop.RunTurnRequest{SessionId: id, Extensions: []*anypb.Any{{
 			TypeUrl: "type.googleapis.com/4zrcin.ScopeRules", Value: []byte(valid),
 		}}})
 	}
@@ -105,7 +113,7 @@ func TestTurnScopeRulesRefusesAtCapacity(t *testing.T) {
 		t.Fatal("4096 registrations never hit the capacity limit")
 	}
 	// Nothing was evicted behind the first session's back.
-	if verdict, judged := scoperules.JudgeSession(first, "GET", "https://cap.test/x"); !judged || verdict.Action != "block" {
+	if verdict, judged := testFence.scopes.JudgeSession(first, "GET", "https://cap.test/x"); !judged || verdict.Action != "block" {
 		t.Fatalf("first session was evicted or unfenced: %+v judged=%v", verdict, judged)
 	}
 	// Re-registration of an existing session is a refresh, never a refusal.
@@ -114,14 +122,14 @@ func TestTurnScopeRulesRefusesAtCapacity(t *testing.T) {
 	}
 	// Cleanup: free every slot this test took so later tests start with
 	// capacity.
-	scoperules.DropSession(first)
+	testFence.scopes.DropSession(first)
 	for i := 0; i < 4096; i++ {
-		scoperules.DropSession(fmt.Sprintf("sess-cap-%04d", i))
+		testFence.scopes.DropSession(fmt.Sprintf("sess-cap-%04d", i))
 	}
 	if err := register("sess-cap-after-drop"); err != nil {
 		t.Fatalf("registration after cleanup failed: %v", err)
 	}
-	scoperules.DropSession("sess-cap-after-drop")
+	testFence.scopes.DropSession("sess-cap-after-drop")
 }
 
 // The runtime's fence lifecycle handlers (fork fix P1-0): a child session
@@ -130,49 +138,49 @@ func TestTurnScopeRulesRefusesAtCapacity(t *testing.T) {
 // the tables hold only live sessions.
 func TestFenceLifecycleHandlers(t *testing.T) {
 	installStores(t)
-	if err := scoperules.SetRules("fence-parent", []byte(`{"enabled":true,"default_action":"record","rules":[{"id":"sr-x","action":"block","method":"*","host":"x.test","path_prefix":"/"}]}`)); err != nil {
+	if err := testFence.scopes.SetRules("fence-parent", []byte(`{"enabled":true,"default_action":"record","rules":[{"id":"sr-x","action":"block","method":"*","host":"x.test","path_prefix":"/"}]}`)); err != nil {
 		t.Fatal(err)
 	}
-	if err := globalfence.SetRules("fence-parent", []byte(`{"enabled_domains":true,"domains":[{"id":"gf-x","host":"x.test"}]}`)); err != nil {
+	if err := testFence.globals.SetRules("fence-parent", []byte(`{"enabled_domains":true,"domains":[{"id":"gf-x","host":"x.test"}]}`)); err != nil {
 		t.Fatal(err)
 	}
 
 	child := agenthooks.SessionEvent{SessionID: "fence-child", ParentID: "fence-parent"}
-	if _, err := inheritOnOpen(t.Context(), child); err != nil {
+	if _, err := testFence.inheritOnOpen(t.Context(), child); err != nil {
 		t.Fatalf("inherit: %v", err)
 	}
-	if _, judged := scoperules.JudgeSession("fence-child", "GET", "http://x.test/"); !judged {
+	if _, judged := testFence.scopes.JudgeSession("fence-child", "GET", "http://x.test/"); !judged {
 		t.Fatal("child did not inherit the project fence")
 	}
-	if _, hit := globalfence.DomainHit("fence-child", "www.x.test"); !hit {
+	if _, hit := testFence.globals.DomainHit("fence-child", "www.x.test"); !hit {
 		t.Fatal("child did not inherit the instance fence")
 	}
 
 	// A root session inherits nothing.
 	root := agenthooks.SessionEvent{SessionID: "fence-root"}
-	if _, err := inheritOnOpen(t.Context(), root); err != nil {
+	if _, err := testFence.inheritOnOpen(t.Context(), root); err != nil {
 		t.Fatalf("root inherit: %v", err)
 	}
-	if _, judged := scoperules.JudgeSession("fence-root", "GET", "http://x.test/"); judged {
+	if _, judged := testFence.scopes.JudgeSession("fence-root", "GET", "http://x.test/"); judged {
 		t.Fatal("a root session inherited a fence that does not exist")
 	}
 
 	// Close drops both tables; a second drop is a no-op.
-	if _, err := dropOnClose(t.Context(), agenthooks.SessionEvent{SessionID: "fence-child"}); err != nil {
+	if _, err := testFence.dropOnClose(t.Context(), agenthooks.SessionEvent{SessionID: "fence-child"}); err != nil {
 		t.Fatalf("drop: %v", err)
 	}
-	if _, judged := scoperules.JudgeSession("fence-child", "GET", "http://x.test/"); judged {
+	if _, judged := testFence.scopes.JudgeSession("fence-child", "GET", "http://x.test/"); judged {
 		t.Fatal("closed child still holds the project fence")
 	}
-	if _, hit := globalfence.DomainHit("fence-child", "www.x.test"); hit {
+	if _, hit := testFence.globals.DomainHit("fence-child", "www.x.test"); hit {
 		t.Fatal("closed child still holds the instance fence")
 	}
-	if _, err := dropOnClose(t.Context(), agenthooks.SessionEvent{SessionID: "fence-child"}); err != nil {
+	if _, err := testFence.dropOnClose(t.Context(), agenthooks.SessionEvent{SessionID: "fence-child"}); err != nil {
 		t.Fatalf("second drop: %v", err)
 	}
 
-	scoperules.DropSession("fence-parent")
-	globalfence.DropSession("fence-parent")
+	testFence.scopes.DropSession("fence-parent")
+	testFence.globals.DropSession("fence-parent")
 }
 
 // Session.rotate closes the old session before it opens the continuation
@@ -182,57 +190,57 @@ func TestFenceLifecycleHandlers(t *testing.T) {
 // appendix E2-2, fork fix 已决 18). Non-rotation closes still drop.
 func TestFenceRotationCloseParksForContinuation(t *testing.T) {
 	installStores(t)
-	if err := scoperules.SetRules("rot-parent", []byte(`{"enabled":true,"default_action":"record","rules":[{"id":"sr-r","action":"block","method":"*","host":"blocked.test","path_prefix":"/"}]}`)); err != nil {
+	if err := testFence.scopes.SetRules("rot-parent", []byte(`{"enabled":true,"default_action":"record","rules":[{"id":"sr-r","action":"block","method":"*","host":"blocked.test","path_prefix":"/"}]}`)); err != nil {
 		t.Fatal(err)
 	}
-	if err := globalfence.SetRules("rot-parent", []byte(`{"enabled_domains":true,"domains":[{"id":"gf-r","host":"gov.cn"}]}`)); err != nil {
+	if err := testFence.globals.SetRules("rot-parent", []byte(`{"enabled_domains":true,"domains":[{"id":"gf-r","host":"gov.cn"}]}`)); err != nil {
 		t.Fatal(err)
 	}
 
 	// The rotate order, reproduced: SessionEnd for the old id first...
-	if _, err := dropOnClose(t.Context(), agenthooks.SessionEvent{SessionID: "rot-parent", Reason: string(agentsession.SessionCloseCleared)}); err != nil {
+	if _, err := testFence.dropOnClose(t.Context(), agenthooks.SessionEvent{SessionID: "rot-parent", Reason: string(agentsession.SessionCloseCleared)}); err != nil {
 		t.Fatalf("rotate close: %v", err)
 	}
-	if _, judged := scoperules.JudgeSession("rot-parent", "GET", "http://blocked.test/"); judged {
+	if _, judged := testFence.scopes.JudgeSession("rot-parent", "GET", "http://blocked.test/"); judged {
 		t.Fatal("rotated-out parent still holds a live registration")
 	}
 	// ...then SessionStart for the continuation, whose parent is already
 	// gone from the live tables and must inherit from the park.
-	if _, err := inheritOnOpen(t.Context(), agenthooks.SessionEvent{SessionID: "rot-child", ParentID: "rot-parent"}); err != nil {
+	if _, err := testFence.inheritOnOpen(t.Context(), agenthooks.SessionEvent{SessionID: "rot-child", ParentID: "rot-parent"}); err != nil {
 		t.Fatalf("continuation inherit: %v", err)
 	}
-	if _, judged := scoperules.JudgeSession("rot-child", "GET", "http://blocked.test/x"); !judged {
+	if _, judged := testFence.scopes.JudgeSession("rot-child", "GET", "http://blocked.test/x"); !judged {
 		t.Fatal("continuation did not inherit the project fence across rotation")
 	}
-	if _, hit := globalfence.DomainHit("rot-child", "www.gov.cn"); !hit {
+	if _, hit := testFence.globals.DomainHit("rot-child", "www.gov.cn"); !hit {
 		t.Fatal("continuation did not inherit the instance fence across rotation")
 	}
 
 	// A second hop parks and inherits the same way.
-	if _, err := dropOnClose(t.Context(), agenthooks.SessionEvent{SessionID: "rot-child", Reason: string(agentsession.SessionCloseCompacted)}); err != nil {
+	if _, err := testFence.dropOnClose(t.Context(), agenthooks.SessionEvent{SessionID: "rot-child", Reason: string(agentsession.SessionCloseCompacted)}); err != nil {
 		t.Fatalf("second rotate close: %v", err)
 	}
-	if _, err := inheritOnOpen(t.Context(), agenthooks.SessionEvent{SessionID: "rot-grandchild", ParentID: "rot-child"}); err != nil {
+	if _, err := testFence.inheritOnOpen(t.Context(), agenthooks.SessionEvent{SessionID: "rot-grandchild", ParentID: "rot-child"}); err != nil {
 		t.Fatalf("second continuation inherit: %v", err)
 	}
-	if _, judged := scoperules.JudgeSession("rot-grandchild", "GET", "http://blocked.test/x"); !judged {
+	if _, judged := testFence.scopes.JudgeSession("rot-grandchild", "GET", "http://blocked.test/x"); !judged {
 		t.Fatal("second continuation did not inherit the project fence")
 	}
 
 	// A non-rotation close drops without parking: a later open with that
 	// parent id inherits nothing.
-	if _, err := dropOnClose(t.Context(), agenthooks.SessionEvent{SessionID: "rot-grandchild", Reason: string(agentsession.SessionCloseCompleted)}); err != nil {
+	if _, err := testFence.dropOnClose(t.Context(), agenthooks.SessionEvent{SessionID: "rot-grandchild", Reason: string(agentsession.SessionCloseCompleted)}); err != nil {
 		t.Fatalf("final close: %v", err)
 	}
-	if _, err := inheritOnOpen(t.Context(), agenthooks.SessionEvent{SessionID: "rot-after", ParentID: "rot-grandchild"}); err != nil {
+	if _, err := testFence.inheritOnOpen(t.Context(), agenthooks.SessionEvent{SessionID: "rot-after", ParentID: "rot-grandchild"}); err != nil {
 		t.Fatalf("inherit after final close: %v", err)
 	}
-	if _, judged := scoperules.JudgeSession("rot-after", "GET", "http://blocked.test/x"); judged {
+	if _, judged := testFence.scopes.JudgeSession("rot-after", "GET", "http://blocked.test/x"); judged {
 		t.Fatal("a completed close leaked its registrations into the park")
 	}
 
-	scoperules.DropSession("rot-child")
-	globalfence.DropSession("rot-child")
-	scoperules.DropSession("rot-after")
-	globalfence.DropSession("rot-after")
+	testFence.scopes.DropSession("rot-child")
+	testFence.globals.DropSession("rot-child")
+	testFence.scopes.DropSession("rot-after")
+	testFence.globals.DropSession("rot-after")
 }

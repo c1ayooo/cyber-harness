@@ -71,13 +71,19 @@ func (j *ScopeJudge) JudgeScopeRequest(req scoperules.ScopeRequest) scoperules.S
 	// default-allow list (fork patch 37) sits between them: infrastructure
 	// the operator always permits is recorded and forwarded before the
 	// project fence can queue it as a pending asset.
-	if rule, hit := globalfence.AllowDomainHit(req.Invocation.SessionID, requestHost(rawURL)); hit {
-		return j.allowGlobal(req, rule, scopeRequestFlowID(req.Call))
+	scopes, globals := j.fence.stores()
+	if globals != nil {
+		if rule, hit := globals.AllowDomainHit(req.Invocation.SessionID, requestHost(rawURL)); hit {
+			return j.allowGlobal(req, rule, scopeRequestFlowID(req.Call))
+		}
+		if rule, hit := globals.DomainHit(req.Invocation.SessionID, requestHost(rawURL)); hit {
+			return j.refuseGlobal(req, rule, scopeRequestFlowID(req.Call))
+		}
 	}
-	if rule, hit := globalfence.DomainHit(req.Invocation.SessionID, requestHost(rawURL)); hit {
-		return j.refuseGlobal(req, rule, scopeRequestFlowID(req.Call))
+	if scopes == nil {
+		return scoperules.ScopeDecision{}
 	}
-	verdict, judged := scoperules.JudgeSession(req.Invocation.SessionID, scopeRequestMethod(req.Call), rawURL)
+	verdict, judged := scopes.JudgeSession(req.Invocation.SessionID, scopeRequestMethod(req.Call), rawURL)
 	if !judged {
 		return scoperules.ScopeDecision{}
 	}
@@ -164,13 +170,19 @@ func (j *ScopeJudge) JudgeScopeConnect(req scoperules.ScopeRequest) scoperules.S
 		return scoperules.ScopeDecision{}
 	}
 	rawURL := scopeRequestURL(req.Call)
-	if rule, hit := globalfence.AllowDomainHit(req.Invocation.SessionID, scoperules.RequestHost(rawURL)); hit {
-		return j.allowGlobal(req, rule, scopeRequestFlowID(req.Call))
+	scopes, globals := j.fence.stores()
+	if globals != nil {
+		if rule, hit := globals.AllowDomainHit(req.Invocation.SessionID, scoperules.RequestHost(rawURL)); hit {
+			return j.allowGlobal(req, rule, scopeRequestFlowID(req.Call))
+		}
+		if rule, hit := globals.DomainHit(req.Invocation.SessionID, scoperules.RequestHost(rawURL)); hit {
+			return j.refuseGlobal(req, rule, scopeRequestFlowID(req.Call))
+		}
 	}
-	if rule, hit := globalfence.DomainHit(req.Invocation.SessionID, scoperules.RequestHost(rawURL)); hit {
-		return j.refuseGlobal(req, rule, scopeRequestFlowID(req.Call))
+	if scopes == nil {
+		return scoperules.ScopeDecision{}
 	}
-	verdict, judged := scoperules.JudgeSessionConnect(req.Invocation.SessionID, rawURL)
+	verdict, judged := scopes.JudgeSessionConnect(req.Invocation.SessionID, rawURL)
 	if !judged {
 		return scoperules.ScopeDecision{}
 	}

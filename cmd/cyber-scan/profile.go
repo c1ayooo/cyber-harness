@@ -313,7 +313,7 @@ func buildCyberScanProfile(config config) (*cyberScanProfile, error) {
 		agentConfig.BaseSkills = append([]string{"cyber"}, agentConfig.BaseSkills...)
 		agentConfig.NodeName = nodeName
 		agentConfig = sessionext.ConfigFromOption(config.Option, agentConfig)
-		agentConfig.TurnDecorators = append(agentConfig.TurnDecorators, fenceext.TurnDecorators()...)
+		agentConfig.TurnDecorators = append(agentConfig.TurnDecorators, judge.Fence.TurnDecorators()...)
 		agentConfig.TurnDecorators = append(agentConfig.TurnDecorators, zsession.TurnDecorators()...)
 		values = append(values, sessionext.New(agentConfig))
 		// CYBER_EXCLUDE_TOOLS=subagent removes the model-facing delegation tool;
