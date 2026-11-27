@@ -5,7 +5,6 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"sync"
@@ -21,7 +20,6 @@ import (
 	"github.com/chainreactors/cyber/core/telemetry"
 	coretool "github.com/chainreactors/cyber/core/tool"
 	toolhooks "github.com/chainreactors/cyber/core/tool/hooks"
-	"github.com/chainreactors/cyber/exts/4zfence/scoperules"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -247,28 +245,10 @@ func (e *Extension) fileAccess(ctx context.Context, event toolhooks.FileEvent) (
 
 func (e *Extension) flowCompleted(ctx context.Context, event toolhooks.FlowEvent) (struct{}, error) {
 	// Hub gives this boundary an owned, hydrated copy after FlowStore commit.
-	// A judged request additionally carries its scope-rule verdict as the
-	// control plane's TrafficVerdict sidecar (registered fork hook, ≤20
-	// lines; forks patches 21/30/33): the registry keys by flow id and this
-	// take consumes it exactly once. Pre-built sidecars append directly —
-	// wrapping would nest Any-in-Any and hide the real type URL.
-	var sidecars []*anypb.Any
-	if verdict, ok := scoperules.TakeVerdict(event.Flow.GetId()); ok {
-		if encoded, err := json.Marshal(verdict); err == nil {
-			sidecars = append(sidecars, &anypb.Any{TypeUrl: "type.googleapis.com/4zrcin.TrafficVerdict", Value: encoded})
-		}
-	}
-	e.emit(ctx, event.Flow, event.Operation, anySlice(sidecars)...)
+	// A judged request additionally carries its scope-rule verdict sidecar
+	// (registered fork hook; patches 21/30/33).
+	e.emitWithSidecars(ctx, event.Flow, event.Operation, verdictSidecar(event.Flow.GetId()))
 	return struct{}{}, nil
-}
-
-// anySlice adapts pre-built Any sidecars to the emit signature.
-func anySlice(values []*anypb.Any) []proto.Message {
-	out := make([]proto.Message, len(values))
-	for i, v := range values {
-		out[i] = v
-	}
-	return out
 }
 
 func (e *Extension) emitCompleted(ctx context.Context, kind, name string, lifecycle toolhooks.Lifecycle, sidecars ...proto.Message) {
