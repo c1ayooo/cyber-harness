@@ -24,6 +24,7 @@ import (
 	"github.com/chainreactors/cyber/core/namespaces"
 	"github.com/chainreactors/cyber/core/proc"
 	coretool "github.com/chainreactors/cyber/core/tool"
+	evidenceext "github.com/chainreactors/cyber/exts/4zevidence"
 	guardrailext "github.com/chainreactors/cyber/exts/guardrail"
 	inboxext "github.com/chainreactors/cyber/exts/inbox"
 	ioaclient "github.com/chainreactors/cyber/exts/ioa/client"
@@ -177,13 +178,21 @@ func buildCyberScanProfile(config config) (*cyberScanProfile, error) {
 		values = append(values, observer)
 	}
 	var observeKinds []observeext.Kind
+	evidenceEnabled := false
 	for item := range strings.SplitSeq(config.Option.Observe, ",") {
-		if item = strings.TrimSpace(item); item != "" {
-			observeKinds = append(observeKinds, observeext.Kind(item))
+		if item = strings.TrimSpace(item); item == "" {
+			continue
 		}
+		// The artifacts kind is 4zrcin's evidence return (4zevidence): it does
+		// not exist in upstream observe, which reverted to its upstream form.
+		if observeext.Kind(item) == "artifacts" {
+			evidenceEnabled = true
+			continue
+		}
+		observeKinds = append(observeKinds, observeext.Kind(item))
 	}
 	// Export existing operation facts whenever any OTel signal is configured.
-	if otelEnabled && len(observeKinds) == 0 {
+	if otelEnabled && len(observeKinds) == 0 && !evidenceEnabled {
 		observeKinds = []observeext.Kind{observeext.Tools, observeext.Commands, observeext.Processes}
 	}
 	if len(observeKinds) > 0 {
@@ -192,6 +201,9 @@ func buildCyberScanProfile(config config) (*cyberScanProfile, error) {
 			return nil, err
 		}
 		values = append(values, observer)
+	}
+	if evidenceEnabled {
+		values = append(values, evidenceext.New(evidenceext.Options{Enabled: true}))
 	}
 	// Install session tools and source hooks before starting the active router.
 	var router *inboxext.Extension

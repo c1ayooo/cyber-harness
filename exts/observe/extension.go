@@ -8,13 +8,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"path/filepath"
 	"sync"
 
 	aop "github.com/chainreactors/cyber/aop"
 	filepb "github.com/chainreactors/cyber/aop/file"
 	operationpb "github.com/chainreactors/cyber/aop/operation"
-	"github.com/chainreactors/cyber/core/artifactsync"
 	coreevents "github.com/chainreactors/cyber/core/events"
 	"github.com/chainreactors/cyber/core/extension"
 	corehooks "github.com/chainreactors/cyber/core/hooks"
@@ -37,10 +35,6 @@ const (
 	Processes Kind = "processes"
 	Files     Kind = "files"
 	HTTP      Kind = "http"
-	// Artifacts (fork patch 23c): changed files under the case directory are
-	// shipped back to the control plane as 4zrcin.Artifact sidecars, so a
-	// remote node without a shared filesystem still delivers its evidence.
-	Artifacts Kind = "artifacts"
 )
 
 type Options struct {
@@ -68,7 +62,7 @@ func New(options Options) (*Extension, error) {
 	kinds := make(map[Kind]bool, len(options.Kinds))
 	for _, kind := range options.Kinds {
 		switch kind {
-		case Tools, Commands, Processes, Files, HTTP, Artifacts:
+		case Tools, Commands, Processes, Files, HTTP:
 			if kinds[kind] {
 				return nil, fmt.Errorf("duplicate observation kind %q", kind)
 			}
@@ -123,18 +117,14 @@ func (e *Extension) Load(scope *extension.Scope) error {
 			toolhooks.CommandCompleted.On(e.hooks, source, e.commandCompleted),
 		)
 	}
-	// The artifacts kind needs the same hooks as processes/files: its sidecars
-	// ride the process-completion snapshot diff and the in-band file writes
-	// (fork patch 28). Without this, `--observe artifacts` alone parsed but
-	// subscribed to nothing and shipped nothing.
-	if e.kinds[Processes] || e.kinds[Files] || e.kinds[Artifacts] {
+	if e.kinds[Processes] || e.kinds[Files] {
 		e.subs = append(e.subs,
 			toolhooks.ProcessStarting.On(e.hooks, source, e.processStarting),
 			toolhooks.ProcessStartedObserved.On(e.hooks, source, e.processStarted),
 			toolhooks.ProcessCompleted.On(e.hooks, source, e.processCompleted),
 		)
 	}
-	if e.kinds[Files] || e.kinds[Artifacts] {
+	if e.kinds[Files] {
 		e.subs = append(e.subs, toolhooks.FileAccessObserved.On(e.hooks, source, e.fileAccess))
 	}
 	if e.kinds[HTTP] {
@@ -159,19 +149,10 @@ func eventFor(ctx context.Context, payload proto.Message, correlation *operation
 		}
 	}
 	for _, sidecar := range sidecars {
-		if sidecar == nil {
-			continue
-		}
-		if anyMsg, ok := sidecar.(*anypb.Any); ok {
-			// Pre-built sidecars are already typed Any values (the JSON-in-Any
-			// fork extensions such as 4zrcin.TrafficVerdict and 4zrcin.Artifact).
-			// Wrapping them again would nest Any-in-Any and the control plane's
-			// exact-URL match would never see the real type URL.
-			event.Extensions = append(event.Extensions, anyMsg)
-			continue
-		}
-		if err := aop.SetTypedExtension(event, sidecar); err != nil {
-			return nil, err
+		if sidecar != nil {
+			if err := aop.SetTypedExtension(event, sidecar); err != nil {
+				return nil, err
+			}
 		}
 	}
 	return event, nil
@@ -220,9 +201,8 @@ func (e *Extension) commandCompleted(ctx context.Context, event toolhooks.Comman
 
 func (e *Extension) processStarting(ctx context.Context, event toolhooks.ProcessEvent) (struct{}, error) {
 	// Snapshot preparation is deliberately synchronous with the real pre-start
-	// boundary; no work is performed when neither file observation nor artifact
-	// sync is selected — both live off the same before/after diff.
-	if e.kinds[Files] || e.kinds[Artifacts] {
+	// boundary; no work is performed when file observation is not selected.
+	if e.kinds[Files] {
 		e.processSnapshot(ctx, event)
 	}
 	return struct{}{}, nil
@@ -236,21 +216,14 @@ func (e *Extension) processStarted(ctx context.Context, event toolhooks.ProcessE
 }
 
 func (e *Extension) processCompleted(ctx context.Context, event toolhooks.ProcessCompletion) (struct{}, error) {
-	// The artifact sidecars ride the process-completed event: one batch per
-	// command, derived from the same snapshot diff the file observations use.
-	var sidecars []proto.Message
-	if e.kinds[Artifacts] || e.kinds[Files] {
-		sidecars = e.finishSnapshot(ctx, event)
+	if e.kinds[Files] {
+		e.finishSnapshot(ctx, event)
 	}
-	// Emit the carrier when the process observation itself is wanted, or when
-	// this batch actually carries artifacts: an artifacts-only node ships a
-	// minimal completion per changed batch and nothing otherwise (patch 28).
-	if e.kinds[Processes] || (e.kinds[Artifacts] && len(sidecars) > 0) {
+	if e.kinds[Processes] {
 		if event.Session != nil {
-			args := append([]proto.Message{procbus.SessionToProto(event.Session)}, sidecars...)
-			e.emitCompleted(ctx, "process", event.Process.Command, event.Lifecycle, args...)
+			e.emitCompleted(ctx, "process", event.Process.Command, event.Lifecycle, procbus.SessionToProto(event.Session))
 		} else {
-			e.emitCompleted(ctx, "process", event.Process.Command, event.Lifecycle, sidecars...)
+			e.emitCompleted(ctx, "process", event.Process.Command, event.Lifecycle)
 		}
 	}
 	return struct{}{}, nil
@@ -268,42 +241,34 @@ func (e *Extension) fileAccess(ctx context.Context, event toolhooks.FileEvent) (
 		sum := sha256.Sum256(event.Data)
 		access.Digest = hex.EncodeToString(sum[:])
 	}
-	var sidecars []proto.Message
-	// In-band artifact (fork patch 23c): a write/create whose content the hook
-	// already carried ships as a sidecar without a second disk read.
-	if e.kinds[Artifacts] && len(event.Data) > 0 &&
-		(event.Op == filepb.AccessOp_ACCESS_OP_WRITE || event.Op == filepb.AccessOp_ACCESS_OP_CREATE || event.Op == filepb.AccessOp_ACCESS_OP_EDIT) {
-		rel := event.Path
-		if event.Directory != "" {
-			if r, err := filepath.Rel(event.Directory, event.Path); err == nil {
-				rel = r
-			}
-		}
-		if encoded, err := artifactsync.FromData("file", rel, event.Data, 0); err == nil {
-			sidecars = append(sidecars, encoded)
-		}
-	}
-	// Same rule as the process carrier: a file observation is only published
-	// when someone asked for it, or when it carries artifact sidecars.
-	if e.kinds[Files] || len(sidecars) > 0 {
-		e.emit(ctx, access, event.Operation, sidecars...)
-	}
+	e.emit(ctx, access, event.Operation)
 	return struct{}{}, nil
 }
 
 func (e *Extension) flowCompleted(ctx context.Context, event toolhooks.FlowEvent) (struct{}, error) {
 	// Hub gives this boundary an owned, hydrated copy after FlowStore commit.
 	// A judged request additionally carries its scope-rule verdict as the
-	// control plane's TrafficVerdict sidecar; the registry keys by flow id and
-	// this take consumes it exactly once.
-	var sidecars []proto.Message
+	// control plane's TrafficVerdict sidecar (registered fork hook, ≤20
+	// lines; forks patches 21/30/33): the registry keys by flow id and this
+	// take consumes it exactly once. Pre-built sidecars append directly —
+	// wrapping would nest Any-in-Any and hide the real type URL.
+	var sidecars []*anypb.Any
 	if verdict, ok := scoperules.TakeVerdict(event.Flow.GetId()); ok {
 		if encoded, err := json.Marshal(verdict); err == nil {
 			sidecars = append(sidecars, &anypb.Any{TypeUrl: "type.googleapis.com/4zrcin.TrafficVerdict", Value: encoded})
 		}
 	}
-	e.emit(ctx, event.Flow, event.Operation, sidecars...)
+	e.emit(ctx, event.Flow, event.Operation, anySlice(sidecars)...)
 	return struct{}{}, nil
+}
+
+// anySlice adapts pre-built Any sidecars to the emit signature.
+func anySlice(values []*anypb.Any) []proto.Message {
+	out := make([]proto.Message, len(values))
+	for i, v := range values {
+		out[i] = v
+	}
+	return out
 }
 
 func (e *Extension) emitCompleted(ctx context.Context, kind, name string, lifecycle toolhooks.Lifecycle, sidecars ...proto.Message) {
@@ -350,46 +315,26 @@ func (e *Extension) processSnapshot(ctx context.Context, event toolhooks.Process
 	}
 }
 
-// finishSnapshot diffs the pre-start snapshot against the case directory,
-// emits the FileAccess observations (Files kind) and returns the artifact
-// sidecars for the changed files (fork patch 23c) to ride the caller's
-// completed event.
-func (e *Extension) finishSnapshot(ctx context.Context, event toolhooks.ProcessCompletion) []proto.Message {
+func (e *Extension) finishSnapshot(ctx context.Context, event toolhooks.ProcessCompletion) {
 	id := event.Operation.GetOperationId()
 	e.mu.Lock()
 	before, ok := e.snapshots[id]
 	delete(e.snapshots, id)
 	e.mu.Unlock()
 	if !ok {
-		return nil
+		return
 	}
 	after, err := TakeSnapshot(event.Process.Directory, e.fileOptions())
 	if err != nil {
 		e.snapshotError(ctx, event.Operation, event.Process.Directory, err)
-		return nil
+		return
 	}
-	var sidecars []proto.Message
 	for _, change := range DiffSnapshots(before, after) {
-		if e.kinds[Files] {
-			e.emit(ctx, &filepb.Access{
-				Id: aop.EnvelopeID(), Op: change.Op, Source: filepb.AccessSource_ACCESS_SOURCE_SNAPSHOT,
-				Path: change.Path, WorkDir: event.Process.Directory, Size: change.Size, Timestamp: timestamppb.Now(),
-			}, event.Operation)
-		}
-		if !e.kinds[Artifacts] || change.Op == filepb.AccessOp_ACCESS_OP_DELETE {
-			continue
-		}
-		rel, relErr := filepath.Rel(event.Process.Directory, change.Path)
-		if relErr != nil || rel == "." {
-			continue
-		}
-		for _, encoded := range artifactsync.Collect("process", []artifactsync.Change{
-			{RelPath: rel, AbsPath: change.Path},
-		}, artifactsync.Limits{}) {
-			sidecars = append(sidecars, encoded)
-		}
+		e.emit(ctx, &filepb.Access{
+			Id: aop.EnvelopeID(), Op: change.Op, Source: filepb.AccessSource_ACCESS_SOURCE_SNAPSHOT,
+			Path: change.Path, WorkDir: event.Process.Directory, Size: change.Size, Timestamp: timestamppb.Now(),
+		}, event.Operation)
 	}
-	return sidecars
 }
 
 func (e *Extension) snapshotError(ctx context.Context, correlation *operationpb.Ref, directory string, err error) {

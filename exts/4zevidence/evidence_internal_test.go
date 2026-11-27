@@ -1,17 +1,17 @@
-package observe
+package evidence
 
-// In-package integration test for the artifact sidecar channel (fork patches
-// 23c, 27, 28): a process completion under the artifacts kind ships changed
-// case-directory files as 4zrcin.Artifact sidecars, while the node's private
-// .zrcin state never ships — except the two handoff files a control plane reads
-// back (facts.jsonl, worker-note.md). The artifacts kind works on its own.
+// Integration test for the evidence channel (fork patches 23c, 27, 28),
+// migrated from exts/observe when this extension was extracted (P1-2a): a
+// process completion ships changed case-directory files as 4zrcin.Artifact
+// sidecars, while the node's private .zrcin state never ships — except the
+// two handoff files a control plane reads back (facts.jsonl,
+// worker-note.md).
 
 import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
 	"os"
-	"path/filepath"
 	"testing"
 
 	aop "github.com/chainreactors/cyber/aop"
@@ -19,6 +19,8 @@ import (
 	"github.com/chainreactors/cyber/core/artifactsync"
 	coreevents "github.com/chainreactors/cyber/core/events"
 	toolhooks "github.com/chainreactors/cyber/core/tool/hooks"
+	observeext "github.com/chainreactors/cyber/exts/observe"
+	"path/filepath"
 )
 
 func TestArtifactsSidecarsOnProcessCompleted(t *testing.T) {
@@ -29,10 +31,9 @@ func TestArtifactsSidecarsOnProcessCompleted(t *testing.T) {
 	defer sub.Cancel()
 
 	e := &Extension{
-		kinds:     map[Kind]bool{Processes: true, Files: true, Artifacts: true},
 		events:    stream,
 		file:      defaultFileOptions(),
-		snapshots: map[string]Snapshot{},
+		snapshots: map[string]observeext.Snapshot{},
 	}
 	ctx := context.Background()
 	ref := &operationpb.Ref{OperationId: "op-1"}
@@ -42,7 +43,7 @@ func TestArtifactsSidecarsOnProcessCompleted(t *testing.T) {
 	if err := os.WriteFile(before, []byte("old"), 0o600); err != nil {
 		t.Fatal(err)
 	}
-	e.processSnapshot(ctx, toolhooks.ProcessEvent{Operation: ref, Directory: caseDir})
+	e.processStarting(ctx, toolhooks.ProcessEvent{Operation: ref, Directory: caseDir})
 
 	// The process creates output, refreshes the baseline and touches the
 	// node-private metadata directory.
@@ -158,10 +159,9 @@ func TestArtifactsOnlyKindShipsChangedFiles(t *testing.T) {
 	defer sub.Cancel()
 
 	e := &Extension{
-		kinds:     map[Kind]bool{Artifacts: true},
 		events:    stream,
 		file:      defaultFileOptions(),
-		snapshots: map[string]Snapshot{},
+		snapshots: map[string]observeext.Snapshot{},
 	}
 	ctx := context.Background()
 	ref := &operationpb.Ref{OperationId: "op-only"}
@@ -170,7 +170,7 @@ func TestArtifactsOnlyKindShipsChangedFiles(t *testing.T) {
 		Process:   toolhooks.ProcessEvent{Operation: ref, Directory: caseDir, Command: "bash"},
 	}
 
-	e.processSnapshot(ctx, toolhooks.ProcessEvent{Operation: ref, Directory: caseDir})
+	e.processStarting(ctx, toolhooks.ProcessEvent{Operation: ref, Directory: caseDir})
 	e.processCompleted(ctx, completion)
 	if len(events) != 0 {
 		t.Fatalf("a completion without changes published %d events", len(events))
@@ -178,7 +178,7 @@ func TestArtifactsOnlyKindShipsChangedFiles(t *testing.T) {
 
 	// Each completion pairs with its own start snapshot (the ProcessStarting
 	// hook supplies it in production); the change lands after the snapshot.
-	e.processSnapshot(ctx, toolhooks.ProcessEvent{Operation: ref, Directory: caseDir})
+	e.processStarting(ctx, toolhooks.ProcessEvent{Operation: ref, Directory: caseDir})
 	if err := os.MkdirAll(filepath.Join(caseDir, ".zrcin"), 0o700); err != nil {
 		t.Fatal(err)
 	}
