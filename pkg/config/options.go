@@ -169,6 +169,7 @@ type MiscOptions struct {
 	Verbose      []bool `short:"v" long:"verbose" description:"Increase verbosity (-v thinking and tool previews, -vv full tool results)"`
 	Quiet        bool   `short:"q" long:"quiet" config:"quiet" description:"Quiet mode — only show final result"`
 	NoColor      bool   `long:"no-color" config:"no_color" description:"Disable ANSI colors in scanner output"`
+	CaptureOnly  bool   `long:"capture-only" config:"capture_only" local:"true" description:"Capture node: assemble no scan engines, fenced traffic and evidence relay only; announce scan-capture to the Hub"`
 	Version      bool   `long:"version" description:"Print version and exit"`
 }
 

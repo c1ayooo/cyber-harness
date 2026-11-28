@@ -102,6 +102,9 @@ func configFromOption(option *cfg.Option, providerMode provider.StartupMode, ses
 			PlaywrightSession: option.PlaywrightSession, OptionalTools: option.Tools,
 			MitmCapture: hub.Mitm, TrafficStorage: option.TrafficOptions,
 			Logger: logger, CLISkillPaths: cfg.LocalSkillPaths(option.Skills),
+			// The capture mode is the runtime recipe switch: it leaves the
+			// engine block unassembled and flips the hello marker (recipe.go).
+			SkipEngines: option.CaptureOnly,
 		},
 	}, nil
 }
