@@ -1549,15 +1549,40 @@ and depend on the machine, not on the code:
 
 ## Build and deploy
 
-Use the [4zrcin build scripts](https://github.com/kksty/tianwu#从源码构建与启动)
+Use the [4zrcin build scripts](https://github.com/c1ayooo/4zrcin)
 with the same fork checkout for the Hub and scan binaries. The scripts select
 platform tags and build `cmd/cyber-harness` and `cmd/cyber-scan`. Pass the
 directory of a review worktree explicitly when checking an upstream merge.
 
-Record the fork commit and AOP check with the build. Deployment and rollback
-use [4zrcin's deployment guide](https://github.com/kksty/tianwu/blob/main/docs/02-deploy.md).
+Record the fork commit with the build. Deployment and rollback
+use [4zrcin's deployment guide](https://github.com/c1ayooo/4zrcin/blob/main/docs/02-deploy.md).
 
 ## Rule
 
 Confirm whether a bug belongs to the caller, the protocol contract or the fork.
 For each patch, record the cause, regression test and rollback notes in its commit.
+
+Rules for every change to this fork, whoever makes it:
+
+- **Upstream's existing files carry registered hooks only.** A hook is at
+  most 20 added lines (tests, docs and golden files are left out of the
+  count but still registered; `go.mod` and `go.sum` are accounted line by
+  line). The logic lives in fork-owned files: `exts/4z*`, `pkg/assembly`,
+  `aop/payloads`. Register each changed upstream file by exact path under
+  "Local patches". `make check-fork` prints the verdict table;
+  `make check-fork STRICT=1` fails on an unregistered file or an over-budget
+  hook. The hooks over budget today, and why, are recorded in 4zrcin's
+  `docs/19-decoupling-plan.md`, appendix E.
+- **Add to the protocol, never change it.** New payloads go into new files
+  or anypb sidecars; upstream messages stay as they are.
+- **State travels through the extension.** Pass it with `Provide`/`Use` on
+  the scope, keep it on the extension instance, and clear it when the
+  extension closes.
+- **Compose 4z behaviour in the product root.** Today only `cmd/cyber-scan`
+  passes the 4z blocks, through `pkg/assembly`; `cmd/agent` and `cmd/audit`
+  compose none.
+- **Before pushing, run the full `go test ./...`** and compare the result
+  with the failures listed under "Tests": those predate the work, anything
+  else is a regression. A change to fence admission also passes
+  `scripts/acceptance/fence-parity.sh` in the 4zrcin checkout, every verdict
+  identical to the baseline.
