@@ -66,9 +66,6 @@ type Hub struct {
 	correlationMu sync.RWMutex
 	correlations  map[string]*correlationLease
 
-	// scopeJudge is the optional test-range judge; nil keeps the proxy a pure
-	// capture/routing relay with byte-identical behavior. The exemption hook
-	// names the requester's own plumbing: forwarded unjudged and uncaptured.
 	scopeJudge    ScopeJudge
 	exemptMu      sync.Mutex
 	exempt        func(host string) bool

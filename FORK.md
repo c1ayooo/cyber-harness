@@ -109,10 +109,10 @@ are registered without a budget (已决 24). Figures are added lines against
 - **#25 the capture recipe announces itself in the hello**
   - hooks: `cmd/cyber-scan/agent_transport.go` (2)
 - **#21–#37 scope rules, proxy seam, instance fence** — the proxy side of seam G2
-  - hooks: `cmd/cyber-scan/profile.go` (26, over budget), `tools/proxy/config.go` (7), `tools/proxy/hub.go` (9), `tools/proxy/hub_traffic.go` (9), `tools/proxy/mitm.go` (15)
+  - hooks: `cmd/cyber-scan/profile.go` (26, over budget), `tools/proxy/config.go` (7), `tools/proxy/hub.go` (6), `tools/proxy/hub_traffic.go` (9), `tools/proxy/mitm.go` (15)
   - tests and docs: `tools/proxy/mitm_test.go`
 - **E3 round (2026-11-27, docs/19 appendix E)** — seams G1 and G4, the evidence switch, the judge block, SubmitReview (G3), the verdict sidecar hook, the Policy slot in the base composition
-  - hooks: `agent/session/dependencies.go` (3), `agent/session/protocol.go` (4), `agent/session/runtime.go` (17), `agent/session/session.go` (20), `cmd/cyber-scan/extensions.go` (30, over budget), `cmd/cyber-scan/profile.go` (26, over budget), `exts/guardrail/runtime.go` (9), `exts/observe/extension.go` (3), `exts/proxy/extension.go` (22, over budget), `pkg/config/options.go` (11), `pkg/harness/base.go` (11)
+  - hooks: `agent/session/dependencies.go` (3), `agent/session/protocol.go` (4), `agent/session/runtime.go` (17), `agent/session/session.go` (20), `cmd/cyber-scan/extensions.go` (30, over budget), `cmd/cyber-scan/profile.go` (26, over budget), `exts/guardrail/runtime.go` (9), `exts/observe/extension.go` (3), `exts/proxy/extension.go` (15), `pkg/config/options.go` (11), `pkg/harness/base.go` (11)
   - tests and docs: `docs/configuration.md`, `exts/observe/extension_test.go`
 - **fence section migration (已决 15/19/20)**
   - hooks: `cmd/cyber-scan/ioa_composition.go` (10), `pkg/config/resolved.go` (4), `pkg/config/sections.go` (14)
@@ -1413,8 +1413,8 @@ eviction semantics are verbatim.
 | upstream file | before | after |
 |---|---|---|
 | `tools/proxy/config.go` | 14 | 7 |
-| `tools/proxy/hub.go` | 7 | 9 |
-| `exts/proxy/extension.go` | 17 | 22, over budget |
+| `tools/proxy/hub.go` | 7 | 6 |
+| `exts/proxy/extension.go` | 17 | 15 |
 
 - `exts/4zfence/egressroutes` (new) owns the table: `Store` with
   `Set`/`Clear`/`Lookup`/`ClearAll`, capacity 256, ring eviction line for
@@ -1440,6 +1440,12 @@ eviction semantics are verbatim.
   route through the injected lookup, per-call passthrough still winning.
   `exts/proxy.Config` carries `SessionRoutes` and installs it beside the
   judge and the exemption.
+- Review pass on the lane's result: the three seam fields now sit at the end
+  of `exts/proxy.Config`, after a blank line, so the struct's upstream
+  lines are upstream's bytes again (the lane's first cut had them
+  re-padded and the file at 22); the `Hub` field comment moved to
+  `SetScopeJudge` in the fork file, leaving `hub.go` one import and the
+  four fork fields.
 - One subtlety worth recording: `Judge.Proxy` runs at composition time,
   before any extension loads, so `Extension.SessionRoutes()` cannot hand over
   the store itself. It returns a view that resolves the fence's table at call

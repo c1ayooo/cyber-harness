@@ -17,22 +17,21 @@ type Config struct {
 	WorkDir string
 	// Proxy is the upstream the host was started with. It is also the fallback
 	// the proxy commands report when no hub route applies.
-	Proxy string
-	// ScopeJudge is the request judge the composition installs (seam G2). The
-	// composition decides: a capture node passes the fence's judge; a host
-	// that wants an unjudged relay passes nil — the NoEgress precedent, where
-	// absence is an explicit composition value, not a silent lookup failure.
-	ScopeJudge proxytool.ScopeJudge
-	// RequestExemption names the hosts the proxy forwards unjudged and
-	// uncaptured — in the fork's composition, the fence's control-plane
-	// exemption. Nil exempts nothing.
+	Proxy   string
+	Capture bool
+	Storage cfg.TrafficOptions
+
+	// The seam values the composition installs (docs/19 appendix A) ride the
+	// config rather than being looked up: a missing judge here means the
+	// composition chose a judgeless relay, and it loads as one (the NoEgress
+	// precedent). ScopeJudge is the request judge (seam G2); RequestExemption
+	// names the hosts forwarded unjudged and uncaptured — in the fork, the
+	// fence's control-plane exemption, nil exempting nothing; SessionRoutes
+	// resolves the per-session egress binding — the fence's own route table,
+	// nil keeping every session on the node default chain.
+	ScopeJudge       proxytool.ScopeJudge
 	RequestExemption func(host string) bool
-	// SessionRoutes resolves the per-session egress binding — in the fork's
-	// composition, the fence extension's own route table. Nil means no
-	// per-session routing: every session keeps the node default chain.
-	SessionRoutes func(sessionID string) egress.Dial
-	Capture       bool
-	Storage       cfg.TrafficOptions
+	SessionRoutes    func(sessionID string) egress.Dial
 }
 
 // Extension owns one proxy Resource and publishes it as the Endpoint
@@ -60,9 +59,6 @@ func (e *Extension) Load(scope *extension.Scope) error {
 	}
 	e.resource = resource
 	hub := resource.Hub
-	// All three are composition decisions carried on the config, not lookups
-	// this extension second-guesses: a missing judge here means the
-	// composition chose a judgeless relay, and loads as one.
 	hub.SetScopeJudge(e.config.ScopeJudge)
 	hub.SetRequestExemption(e.config.RequestExemption)
 	hub.SetSessionRoutes(e.config.SessionRoutes)

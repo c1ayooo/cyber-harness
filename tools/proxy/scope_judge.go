@@ -143,8 +143,9 @@ func (h *Hub) exempted(host string) bool {
 	return hook(host)
 }
 
-// SetScopeJudge installs the test-range judge. Safe before Start; judging
-// reads it per request.
+// SetScopeJudge installs the optional test-range judge: nil keeps the proxy a
+// pure capture/routing relay with byte-identical behavior. Safe before Start;
+// judging reads it per request.
 func (h *Hub) SetScopeJudge(judge ScopeJudge) {
 	if h == nil {
 		return
