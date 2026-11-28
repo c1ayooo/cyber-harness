@@ -59,12 +59,12 @@ are registered without a budget (已决 24). Figures are added lines against
 `upstream/master`, from the check itself.
 
 - **#1 continued turn input to the inbox**
-  - hooks: `agent/session/session.go` (93, over budget)
+  - hooks: `agent/session/session.go` (20)
 - **#2 resolved context_window with token usage**
   - hooks: `agent/loop.go` (8), `agent/retry.go` (69, over budget)
   - tests and docs: `agent/loop_test.go`, `agent/retry_test.go`
 - **#3 per-session working directory** — includes the 2026-11-20 follow-up: the work dir is read on every turn, and curl creates a missing parent directory before writing
-  - hooks: `agent/agent.go` (27), `agent/loop.go` (8), `agent/session/protocol.go` (111, over budget), `agent/session/session.go` (93, over budget), `agent/types.go` (11), `tools/curl/client.go` (32), `tools/curl/cookies.go` (8), `tools/files/fs.go` (8), `tools/files/list.go` (8), `tools/files/range.go` (8), `tools/playwright/browser.go` (9), `tools/playwright/interact.go` (2), `tools/playwright/recorder.go` (1), `tools/playwright/session.go` (5), `tools/playwright/storage.go` (2)
+  - hooks: `agent/agent.go` (27), `agent/loop.go` (8), `agent/session/protocol.go` (4), `agent/session/session.go` (20), `agent/types.go` (11), `tools/curl/client.go` (32), `tools/curl/cookies.go` (8), `tools/files/fs.go` (8), `tools/files/list.go` (8), `tools/files/range.go` (8), `tools/playwright/browser.go` (9), `tools/playwright/interact.go` (2), `tools/playwright/recorder.go` (1), `tools/playwright/session.go` (5), `tools/playwright/storage.go` (2)
   - tests and docs: `tools/curl/client_test.go`, `tools/playwright/browser_test.go`
 - **#4 activate a slow but working endpoint**
   - hooks: `agent/provider/state.go` (30, over budget)
@@ -92,12 +92,12 @@ are registered without a budget (已决 24). Figures are added lines against
 - **#14 isolate configuration-precedence tests**
   - tests and docs: `pkg/config/loader_test.go`
 - **#15–#18 control-plane goal, recap off, external MCP, pluggable judges** — composition root
-  - hooks: `cmd/cyber-scan/config.go` (18), `cmd/cyber-scan/profile.go` (92, over budget)
+  - hooks: `cmd/cyber-scan/config.go` (18), `cmd/cyber-scan/profile.go` (26, over budget)
   - tests and docs: `cmd/cyber-scan/config_test.go`, `docs/configuration.md`, `docs/user/tools.md`
 - **#17 external MCP servers**
-  - hooks: `cmd/cyber-scan/extensions.go` (45, over budget), `cmd/cyber-scan/ioa_composition.go` (10)
+  - hooks: `cmd/cyber-scan/extensions.go` (30, over budget), `cmd/cyber-scan/ioa_composition.go` (10)
 - **#20 both fork extension namespaces**
-  - hooks: `agent/session/protocol.go` (111, over budget)
+  - hooks: `agent/session/protocol.go` (4)
 - **#22 the Hub becomes an embeddable library**
   - hooks: `cmd/cyber-harness/main.go` (5), `pkg/web/host/host.go` (14)
 - **#23 the capture node fences, audits and ships evidence**
@@ -109,13 +109,13 @@ are registered without a budget (已决 24). Figures are added lines against
 - **#25 the capture recipe announces itself in the hello**
   - hooks: `cmd/cyber-scan/agent_transport.go` (2)
 - **#21–#37 scope rules, proxy seam, instance fence** — the proxy side of seam G2
-  - hooks: `cmd/cyber-scan/profile.go` (92, over budget), `tools/proxy/config.go` (14), `tools/proxy/hub.go` (7), `tools/proxy/hub_traffic.go` (9), `tools/proxy/mitm.go` (15)
+  - hooks: `cmd/cyber-scan/profile.go` (26, over budget), `tools/proxy/config.go` (14), `tools/proxy/hub.go` (7), `tools/proxy/hub_traffic.go` (9), `tools/proxy/mitm.go` (15)
   - tests and docs: `tools/proxy/mitm_test.go`
 - **E3 round (2026-11-27, docs/19 appendix E)** — seams G1 and G4, the evidence switch, the judge block, SubmitReview (G3), the verdict sidecar hook, the Policy slot in the base composition
-  - hooks: `agent/session/dependencies.go` (3), `agent/session/protocol.go` (111, over budget), `agent/session/runtime.go` (49, over budget), `agent/session/session.go` (93, over budget), `cmd/cyber-scan/extensions.go` (45, over budget), `cmd/cyber-scan/profile.go` (92, over budget), `exts/guardrail/runtime.go` (9), `exts/observe/extension.go` (3), `exts/proxy/extension.go` (17), `pkg/config/options.go` (11), `pkg/harness/base.go` (11)
+  - hooks: `agent/session/dependencies.go` (3), `agent/session/protocol.go` (4), `agent/session/runtime.go` (17), `agent/session/session.go` (20), `cmd/cyber-scan/extensions.go` (30, over budget), `cmd/cyber-scan/profile.go` (26, over budget), `exts/guardrail/runtime.go` (9), `exts/observe/extension.go` (3), `exts/proxy/extension.go` (17), `pkg/config/options.go` (11), `pkg/harness/base.go` (11)
   - tests and docs: `docs/configuration.md`, `exts/observe/extension_test.go`
 - **fence section migration (已决 15/19/20)**
-  - hooks: `cmd/cyber-scan/ioa_composition.go` (10), `pkg/config/resolved.go` (27), `pkg/config/sections.go` (14)
+  - hooks: `cmd/cyber-scan/ioa_composition.go` (10), `pkg/config/resolved.go` (4), `pkg/config/sections.go` (14)
 - **#38 evaluator usage accounting**
   - hooks: `agent/evaluator/evaluator.go` (51), `agent/evaluator/loop.go` (42), `agent/provider/anthropic.go` (3), `agent/provider/openai.go` (42)
   - tests and docs: `agent/evaluator/loop_test.go`
@@ -1126,8 +1126,9 @@ The fork payload code leaves `agent/session` (docs/19 appendix A):
   tool env, work dir). The two blocks do not import each other.
 
 Wiring is one touch per composition root (`pkg/harness`, `cmd/cyber-scan`,
-`cmd/agent`, `cmd/audit`): append the two `TurnDecorators` lists and load
-`fence.New()`. Behavior is identical to the pre-seam inline application; the
+`cmd/agent`, `cmd/audit`): append the fence's `TurnDecorators`, call
+`zsession.Decorate` for the session block's decorators (turn and, since E4,
+open), and load `fence.New()`. Behavior is identical to the pre-seam inline application; the
 moved decorator tests follow their code. Rollback: drop the wiring lines and
 the blocks disappear from the composition.
 
@@ -1324,6 +1325,79 @@ Ticket 11 (docs/19 §5.2): the generator now writes the `//go:build
 `tools/proton/resources/resources_empty.go` supplies the `loadEmbeddedConfig`
 no-op under `-tags emptyresources`. The artifact and the twin land in one
 commit so both build recipes compile; `make resources` is back to zero diff.
+
+## E4: the six seam files shrink toward the hook budget (2026-11-28)
+
+docs/19 E4. Twenty modified upstream files were over the 20-added-line budget
+after the E3 round: fourteen fix-class patches and six that carried 4z logic
+grown in place. This round compresses the six with no behavior change in the
+product composition. Nothing is deleted that a test or the composition still
+reads: what leaves an upstream file lands in a fork-owned file next to the
+logic it belongs to.
+
+| upstream file | before | after |
+|---|---|---|
+| `agent/session/protocol.go` | 111 | 4 |
+| `agent/session/runtime.go` | 49 | 17 |
+| `agent/session/session.go` | 93 | 20 |
+| `pkg/config/resolved.go` | 27 | 4 |
+| `cmd/cyber-scan/profile.go` | 92 | 26, over budget |
+| `cmd/cyber-scan/extensions.go` | 45 | 30, over budget |
+
+- `protocol.go` carried the payload code from before seam G1: a URL matcher,
+  a JSON struct, a type alias and seven comments whose declarations had
+  already moved to the blocks. All gone. The one live piece — decoding the
+  WorkDir extension of an open request — is now 4zsession's
+  `openWorkDirDecorator`, registered with the turn decorators by
+  `zsession.Decorate`. `OpenAOPSession` and `RunAOPTurn` each keep a one-line
+  hook: they call `openDecoratedSession` / `runDecoratedTurn`
+  (`agent/session/decorators.go`) instead of `EnsureSession` / `RunSession`
+  directly, so a decorator's error still rejects the request with the entry
+  point's own `FAILED_PRECONDITION`.
+- `runtime.go`: the two new fields sit at gofmt alignment boundaries, so the
+  twenty struct lines the fork had re-padded are upstream's bytes again; a
+  comment block about fence hooks that live in `exts/4zfence` since E3 is
+  gone.
+- `session.go`: the four `RunInput` payload fields form their own section
+  after `Continue`; `applyOpenOptions` (`agent/session/open_options.go`) lands
+  the model-facing conversation id and the session workspace; `prepareTurn`
+  (`agent/session/turn_payloads.go`) lands the tool environment, the
+  workspace, the seed files and a continued turn's new input. `executeRun`
+  keeps one two-line hook, and upstream's `automatic || Continue` branch is
+  intact again.
+- `resolved.go`: the migration loop is `migrateDocument`
+  (`pkg/config/migration.go`), unchanged.
+- `profile.go` and `extensions.go` — the composition root, still over
+  budget. `assembly.Fence` reads the judge off the resolved configuration,
+  and `Judge.NeedsJEV` / `Judge.Proxy` answer the two questions the root
+  asked inline; `ControlPlaneExemption` takes the server URL, so the root's
+  host-extraction helper is gone. What remains is one line per composition
+  decision. `profile.go`: imports 3, judge and proxy 6, JEV 1, evidence 6,
+  IOA exclusion 2, recap 2, decorators 2, session/subagent split 4.
+  `extensions.go`: imports 3, judge block 3, engine recipe 10, subagent
+  exclusion 5, webshell 4, MCP 5. Squeezing further would mean hiding
+  decisions inside helpers built for the count.
+
+One deliberate difference outside the product: a composition that registers
+no open decorator — the upstream `cmd/agent`, `cmd/audit`, an embedder using
+`harness.New` bare — no longer honors a WorkDir extension on open. It already
+ignored every turn payload; the session-open workspace was the last fork
+payload those roots still applied inline. `cmd/cyber-scan` registers the
+decorator and is unchanged.
+
+The synthetic `http.request` tool name is defined once, where the calls are
+built (`proxy.ScopeCallToolName`); the fence reads it through the
+`scoperules` alias table like the rest of the seam.
+
+Operator decision (docs/19 已决 27): the fork does not submit these patches
+upstream. The fourteen fix-class files over budget stay registered here with
+their counts; what allowance they get is the operator's call.
+Tests: `go test ./...` — every touched package green (`agent/session`,
+`cmd/cyber-scan`, `exts/4zsession`, `exts/4zfence/...`, `pkg/assembly`,
+`pkg/config`, `tools/proxy`), plus the known machine-bound failures listed
+under Tests; `scripts/acceptance/fence-parity.sh` reports 16 identical
+verdicts; `make scan-capture` builds.
+Rollback: revert the commits.
 
 ## Superseded patches
 
