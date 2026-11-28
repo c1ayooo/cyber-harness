@@ -90,6 +90,16 @@ func (e *Extension) Load(scope *extension.Scope) error {
 		logger.Warnf("scanner engines init error=%q action=continue_without_scanners", err)
 		e.engines = nil
 	}
+	// docs/20 (4zrcin): the rule hot-reload brick borrows the live engine set.
+	// Engines that failed to initialize still provide an empty set, so the
+	// brick loads and reports instead of failing the node.
+	live := e.engines
+	if live == nil {
+		live = &engine.Set{}
+	}
+	if err := extension.Provide[*engine.Set](scope, live); err != nil {
+		return err
+	}
 
 	options := []scan.Option{scan.WithCrawler(e.config.Crawler)}
 	if !e.executionOnly {

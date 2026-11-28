@@ -2,6 +2,7 @@ package assembly
 
 import (
 	"github.com/chainreactors/cyber/core/extension"
+	rulesext "github.com/chainreactors/cyber/exts/4zrules"
 	"github.com/chainreactors/cyber/exts/gateway"
 	protonext "github.com/chainreactors/cyber/exts/proton"
 	scannerext "github.com/chainreactors/cyber/exts/scanner"
@@ -16,6 +17,7 @@ func Engines(input EnginesInput, workDir string) ([]extension.Extension, []gatew
 	discovery, feature := Discovery(input)
 	extensions := []extension.Extension{
 		scannerext.New(input.Scanner, workDir),
+		rulesext.New(input.Rules),
 		protonext.New(protonext.Config{Directory: workDir}),
 	}
 	extensions = append(extensions, discovery...)

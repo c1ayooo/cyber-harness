@@ -10,6 +10,7 @@ import (
 	"github.com/chainreactors/cyber/agent/provider"
 	agentsession "github.com/chainreactors/cyber/agent/session"
 	"github.com/chainreactors/cyber/core/telemetry"
+	rulesconfig "github.com/chainreactors/cyber/exts/4zrules/config"
 	"github.com/chainreactors/cyber/exts/gateway"
 	ioaclient "github.com/chainreactors/cyber/exts/ioa/client"
 	mcpext "github.com/chainreactors/cyber/exts/mcp"
@@ -26,6 +27,7 @@ type appConfig struct {
 	DataDir          string
 	Provider         provider.StartupConfig
 	Scanner          scannerext.Config
+	Rules            rulesconfig.Config
 	Recon            passiveconfig.Recon
 	ReconCredentials map[string]string
 	Gateway          cfg.Values
@@ -63,6 +65,10 @@ func configFromOption(option *cfg.Option, providerMode provider.StartupMode, ses
 	if err != nil {
 		return config{}, err
 	}
+	rules, err := rulesconfig.Read(option)
+	if err != nil {
+		return config{}, err
+	}
 	ioaConfig, err := ioaclient.ConfigFromOption(option)
 	if err != nil {
 		return config{}, err
@@ -95,6 +101,7 @@ func configFromOption(option *cfg.Option, providerMode provider.StartupMode, ses
 					Mode: hub.Mode, Proxy: hub.Proxy,
 				},
 			},
+			Rules: rules,
 			Recon: recon, ReconCredentials: passiveconfig.UncoverCredentials(envLookup(option)),
 			Gateway: services, ProxyService: proxyService,
 			TavilyKeys:        tavilyKeys(recon.TavilyKey, searchKeys),

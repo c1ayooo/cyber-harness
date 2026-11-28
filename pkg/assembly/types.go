@@ -10,6 +10,7 @@
 package assembly
 
 import (
+	rulesconfig "github.com/chainreactors/cyber/exts/4zrules/config"
 	passiveconfig "github.com/chainreactors/cyber/exts/passive/config"
 	scannerext "github.com/chainreactors/cyber/exts/scanner"
 )
@@ -20,6 +21,7 @@ import (
 type EnginesInput struct {
 	SkipEngines      bool
 	Scanner          scannerext.Config
+	Rules            rulesconfig.Config
 	Recon            passiveconfig.Recon
 	ReconCredentials map[string]string
 }

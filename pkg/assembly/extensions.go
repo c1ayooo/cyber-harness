@@ -55,7 +55,7 @@ func extensions(config appConfig, loop agent.Loop, workDir string, proxy *proxye
 	}
 	extensions = append(extensions, judge.Behind...)
 	engines, passiveBindings := Engines(EnginesInput{
-		SkipEngines: config.SkipEngines, Scanner: config.Scanner, Recon: config.Recon, ReconCredentials: config.ReconCredentials,
+		SkipEngines: config.SkipEngines, Scanner: config.Scanner, Rules: config.Rules, Recon: config.Recon, ReconCredentials: config.ReconCredentials,
 	}, workDir)
 	search := searchext.New(searchext.Options{TavilyKeys: config.TavilyKeys})
 	bindings := append([]gateway.Kind{proxy.Gateway(config.ProxyService)}, search.Gateway()...)
