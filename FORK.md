@@ -120,7 +120,7 @@ are registered without a budget (已决 24). Figures are added lines against
   - hooks: `agent/evaluator/evaluator.go` (20), `agent/evaluator/loop.go` (13), `agent/provider/anthropic.go` (3), `agent/provider/openai.go` (12)
   - tests and docs: `agent/evaluator/loop_test.go`
 - **#39 aopws close frame**
-  - hooks: `pkg/aopws/stream.go` (28, over budget)
+  - hooks: `pkg/aopws/stream.go` (20)
   - tests and docs: `pkg/aopws/stream_test.go`
 - **#40 ioa send refuses its own session**
   - hooks: `tools/ioa/commands.go` (19)
@@ -1421,7 +1421,7 @@ changed; behavior is identical.
 | `agent/evaluator/evaluator.go` | 51 | 20 |
 | `tools/neutron/neutron.go` | 65 | 15 |
 | `agent/retry.go` | 69 | 20 |
-| `pkg/aopws/stream.go` | 96 | 28, over budget |
+| `pkg/aopws/stream.go` | 96 | 20 |
 
 The declarations landed in `core/operation/toolenv.go`,
 `tools/terminal/toolenv.go`, `agent/provider/quota.go`,
@@ -1430,12 +1430,14 @@ The declarations landed in `core/operation/toolenv.go`,
 `agent/provider/openai_headers.go`, `agent/workdir.go`,
 `tools/neutron/coverage.go`, `agent/retry_conn.go` and `pkg/aopws/close.go`.
 
-Thirteen of the fourteen are at or under budget. `pkg/aopws/stream.go` stays at
-28: what remains is the call sites themselves — the `markFailure`
-instrumentation in `Recv`, `Send`, `ping` and `Close`, the four close-plan
-fields on `Stream` and the `errors` import — none of which can move without
-wrapping functions the rules forbid. `agent/evaluator/evaluator.go` and
-`agent/retry.go` sit exactly at 20; their remainder is the signature-changed
+The fourteen are at or under budget. `pkg/aopws/stream.go` came down to 28
+with the call sites alone left — the `markFailure` instrumentation in `Recv`,
+`Send`, `ping` and `Close`, the four close-plan fields on `Stream` and the
+`errors` import — and a review pass took it to 20: `Send` and `ping` carried
+the same three-line "a failed write is this side's failure" block, which is
+now one behavior-bearing helper, `wrote`, beside `markFailure` in
+`close.go`. `agent/evaluator/evaluator.go`, `agent/retry.go` and
+`pkg/aopws/stream.go` sit exactly at 20; their remainder is the signature-changed
 `Evaluate`/`call` bodies and the retry-branch call sites. The two other
 over-budget files, `cmd/cyber-scan/profile.go` and
 `cmd/cyber-scan/extensions.go`, are the first round's composition root and are

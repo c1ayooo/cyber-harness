@@ -135,11 +135,7 @@ func (s *Stream) Send(envelope *aop.Envelope) error {
 			return err
 		}
 	}
-	err = s.conn.WriteMessage(frame, data)
-	if err != nil {
-		s.markFailure(CloseWriteFailed)
-	}
-	return err
+	return s.wrote(s.conn.WriteMessage(frame, data))
 }
 
 func (s *Stream) Close() error {
@@ -197,11 +193,7 @@ func (s *Stream) ping() error {
 	if s.writeTimeout > 0 {
 		deadline = time.Now().Add(s.writeTimeout)
 	}
-	err := s.conn.WriteControl(websocket.PingMessage, nil, deadline)
-	if err != nil {
-		s.markFailure(CloseWriteFailed)
-	}
-	return err
+	return s.wrote(s.conn.WriteControl(websocket.PingMessage, nil, deadline))
 }
 
 var _ aop.EnvelopeStream = (*Stream)(nil)

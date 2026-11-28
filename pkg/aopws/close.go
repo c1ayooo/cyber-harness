@@ -46,6 +46,16 @@ func (s *Stream) markFailure(reason CloseReason) {
 	}
 }
 
+// wrote records a failed write as this side's failure and returns the error
+// unchanged: Send and ping both report through it, so a stream that dies on
+// a write names "write failed" on its close frame.
+func (s *Stream) wrote(err error) error {
+	if err != nil {
+		s.markFailure(CloseWriteFailed)
+	}
+	return err
+}
+
 // markPeerClose records that the peer started the close handshake.
 func (s *Stream) markPeerClose() {
 	s.stateMu.Lock()
