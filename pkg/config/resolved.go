@@ -49,32 +49,9 @@ func Get[T any](r *Resolved, key string) (T, error) {
 // Every declared section is validated, including sections omitted by the user.
 func (r *Sections) ResolveValues(file, cli Values, lookup func(string) (string, bool)) (*Resolved, error) {
 	r.Seal()
-	// DocumentMigration (set at composition) rewrites legacy sections in
-	// memory — the fence section's judge keys used to live in the guardrail
-	// section (docs/19 已决 19).
+	// The composition's DocumentMigration hook rewrites legacy sections first (migrateDocument).
 	if r.DocumentMigration != nil {
-		document := map[string]any{}
-		for key, section := range file {
-			if section != nil {
-				document[key] = section
-			}
-		}
-		for key, section := range cli {
-			if section != nil {
-				if _, exists := document[key]; !exists || document[key] == nil {
-					document[key] = section
-				}
-			}
-		}
-		r.DocumentMigration(document)
-		for key := range file {
-			delete(file, key)
-		}
-		for key, value := range document {
-			if section, ok := value.(map[string]any); ok {
-				file[key] = section
-			}
-		}
+		migrateDocument(r.DocumentMigration, file, cli)
 	}
 	result := &Resolved{cli: CloneValues(cli), values: Values{}, typed: map[string]any{}, sources: map[string]string{}}
 	for _, input := range []Values{file, cli} {
