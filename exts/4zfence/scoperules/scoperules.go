@@ -233,7 +233,7 @@ func hostMatches(pattern, host string) bool {
 	if pattern == "*" {
 		return true
 	}
-	// CIDR rows (fork patch 23a, docs/04): "10.0.0.0/8" matches the target's
+	// CIDR rows (fork patch 23a, 4zrcin docs/rules.md): "10.0.0.0/8" matches the target's
 	// resolved address — an IP-literal host is matched directly, a hostname is
 	// resolved (cached, bounded) first. The control plane's schema validates
 	// the same shapes (project/scope_rules.go), so the two sides stay in lock
@@ -346,7 +346,7 @@ func requestTarget(rawURL string) (host, path string) {
 // ---------------------------------------------------------------------------
 
 // Store owns the per-session table, the rotation park and the flow verdict
-// registry (docs/19 E3-4): no package-level session state. The fence
+// registry (4zdesign/19 E3-4): no package-level session state. The fence
 // extension creates one store, Provides it, installs it for the readers that
 // predate the contribution point (the proxy judge seam and the observe
 // sidecar read the package functions), and uninstalls it on Close.
@@ -430,7 +430,7 @@ func (s *Store) DropSession(sessionID string) {
 // The rotation park holds the sets of sessions closed by a rotation (/clear,
 // /compact, resume) for one continuation hop. The agent rotates by closing
 // the old session before opening its continuation, so the child's
-// SessionStart finds the parent already gone from the live table (docs/19
+// SessionStart finds the parent already gone from the live table (4zdesign/19
 // appendix E2-2): without the park, inheritance silently misses and the
 // child runs a turn unfenced. The park is bounded; its oldest entry is
 // forgotten when a session closes by rotation and never opens a child.
@@ -511,7 +511,7 @@ func (s *Store) InheritSessionRules(parentID, childID string) error {
 	s.storeMu.RUnlock()
 	if set == nil {
 		// The parent may have closed a rotation hop ahead of this open
-		// (docs/19 appendix E2-2); its set is in the rotation park.
+		// (4zdesign/19 appendix E2-2); its set is in the rotation park.
 		parked, ok := s.TakeParkedSession(parentID)
 		if !ok {
 			return nil

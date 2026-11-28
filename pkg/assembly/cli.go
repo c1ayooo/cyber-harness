@@ -65,7 +65,7 @@ type parsedCLI struct {
 // Exec runs the command for a process: it installs the interrupt handling,
 // runs the CLI and returns only after resources have closed. Process exit
 // belongs to the caller — the thin cmd/cyber-scan entry and an embedding
-// control plane's node verb both call it (4zrcin docs/19 P6).
+// control plane's node verb both call it (4zdesign/19 P6).
 func Exec(args []string, stdin io.Reader, stdout, stderr io.Writer) error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

@@ -16,7 +16,7 @@ func (rt *Runtime) OpenAOPSession(req *aop.OpenSessionRequest) *aop.OpenSessionR
 		response.Outcome = &aop.OpenSessionResponse_Rejected{Rejected: rejection("INVALID_ARGUMENT", "session_id is required")}
 		return response
 	}
-	// Seam G1 (docs/19 appendix A): the registered decorators (decorators.go) resolve the fork payloads first.
+	// Seam G1 (4zdesign/19 appendix A): the registered decorators (decorators.go) resolve the fork payloads first.
 	session, err := rt.openDecoratedSession(req, SessionOptions{ID: req.SessionId, ParentSessionID: req.ParentSessionId, ParentToolCallID: req.ParentToolCallId})
 	if err != nil {
 		response.Outcome = &aop.OpenSessionResponse_Rejected{Rejected: rejection("FAILED_PRECONDITION", err.Error())}
@@ -46,7 +46,7 @@ func (rt *Runtime) RunAOPTurn(ctx context.Context, req *aop.RunTurnRequest) *aop
 	if req.Input != nil {
 		message = protobuf.CloneOf(req.Input)
 	}
-	// Seam G1 (docs/19 appendix A): the registered decorators (decorators.go) resolve the fork payloads first.
+	// Seam G1 (4zdesign/19 appendix A): the registered decorators (decorators.go) resolve the fork payloads first.
 	_, err := rt.runDecoratedTurn(ctx, req, RunInput{
 		TurnID: req.TurnId, Message: message, Continue: req.ContinueSession,
 		MaxTurns: int(req.MaxTurns), EvalCriteria: options.EvalCriteria, EvalRounds: options.EvalRounds,

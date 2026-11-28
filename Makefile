@@ -138,7 +138,7 @@ help:
 	@echo "  ARSENAL_EMBED=1       Embed tools selected by ARSENAL_CONFIG"
 	@echo "  BIN_DIR=path          Binary output directory (default: $(BIN_DIR))"
 	@echo "  TEMPLATES_DIR=path    Rules checkout for make resources (default: the tools/templates submodule)"
-	@echo "  TAGS=tags             Tag string the 4zrcin shell forwards (see docs/19 §7)"
+	@echo "  TAGS=tags             Tag string the 4zrcin shell forwards (see 4zdesign/19 §7)"
 	@echo "  WEB_ADDR=host:port    Web listen address (default: $(WEB_ADDR))"
 	@echo "  WEB_TOKEN=token       Optional fixed Web access token"
 
@@ -159,7 +159,7 @@ harness-llm-subagent:
 check-architecture:
 	$(GO) test -count=1 ./core/extension ./core/registry ./exts
 
-# Red line 1's machine check (docs/19 §1): upstream-file changes must be
+# Red line 1's machine check (4zdesign/19 §1): upstream-file changes must be
 # registered in FORK.md and stay within the hook budget. Report mode until
 # the E3/E4 overages close; make check-fork STRICT=1 enforces.
 check-fork:
@@ -255,7 +255,7 @@ web: full
 all: standard agent full
 
 # The 4zrcin shell forwards its `harness`/`scan` targets here
-# (docs/19 §7 build convergence): the recipes are the shell Makefile's old
+# (4zdesign/19 §7 build convergence): the recipes are the shell Makefile's old
 # ones copied verbatim — same tag strings, same output file names — with the
 # output directory (BIN_DIR) and tag string (TAGS) handed in by the caller.
 TARGET_OS := $(shell $(GO) env GOOS)

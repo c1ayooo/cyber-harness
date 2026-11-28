@@ -3,7 +3,7 @@
 // command and an embedding control plane (the 4zrcin single binary, patch 22)
 // share one source of truth: the codec, the flag surface, the config store and
 // the management wiring are defined once, and a caller only overrides what it
-// owns — most importantly the listener (docs/04 M1).
+// owns — most importantly the listener (4zrcin docs/rules.md).
 package hubapp
 
 import (

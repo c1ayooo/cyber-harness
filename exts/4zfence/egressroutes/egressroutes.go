@@ -1,5 +1,5 @@
 // Package egressroutes is the fence extension's per-session egress table
-// (4zrcin.EgressProxy, docs/19 E3-4): one dialer per agent session, written
+// (4zrcin.EgressProxy, 4zdesign/19 E3-4): one dialer per agent session, written
 // by the control plane's per-turn payload and read by the proxy hub when a
 // tool call's egress lease resolves. It exists for the same reason
 // exts/4zfence/scoperules does — two layers need to agree per session without

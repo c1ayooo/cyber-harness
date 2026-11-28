@@ -21,7 +21,7 @@ type Config struct {
 	Capture bool
 	Storage cfg.TrafficOptions
 
-	// The seam values the composition installs (docs/19 appendix A) ride the
+	// The seam values the composition installs (4zdesign/19 appendix A) ride the
 	// config rather than being looked up: a missing judge here means the
 	// composition chose a judgeless relay, and it loads as one (the NoEgress
 	// precedent). ScopeJudge is the request judge (seam G2); RequestExemption

@@ -10,7 +10,7 @@ const recipeCapability = "scan-capture"
 
 // recipeCapabilities reads the recipe off the runtime option. A full node
 // reports no recipe marker: an absent capability tag means "full" on the
-// control plane (docs/04 §3.1 - the conservative default keeps today's
+// control plane (4zrcin docs/rules.md - the conservative default keeps today's
 // routing for every node launched without --capture-only).
 func recipeCapabilities(option *cfg.Option) []string {
 	if option.CaptureOnly {

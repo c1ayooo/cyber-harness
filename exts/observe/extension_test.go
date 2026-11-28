@@ -144,7 +144,7 @@ func TestObserveAttachesVerdictSidecarWithoutNesting(t *testing.T) {
 	}
 	// The sidecar must be a directly-readable TrafficVerdict extension: an
 	// Any-in-Any wrap hides the type URL and the control plane never sees the
-	// verdict (docs/19 appendix E2-1).
+	// verdict (4zdesign/19 appendix E2-1).
 	var raw *anypb.Any
 	for _, ext := range events[0].GetExtensions() {
 		if ext.GetTypeUrl() == payloads.TrafficVerdictExtensionURL {

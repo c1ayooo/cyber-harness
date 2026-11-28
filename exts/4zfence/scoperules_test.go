@@ -18,7 +18,7 @@ import (
 
 // testFence is the fence extension the package's tests read and write: the
 // turn decorators, the session hooks, the admission and the scope judge all
-// act on its own tables (docs/19 E3-4).
+// act on its own tables (4zdesign/19 E3-4).
 var testFence *Extension
 
 // installStores builds the test's fence extension with fresh scope, fence
@@ -187,7 +187,7 @@ func TestFenceLifecycleHandlers(t *testing.T) {
 // Session.rotate closes the old session before it opens the continuation
 // (agent/session rotate), so a rotation close must park the registrations
 // for the child's inheritance instead of dropping them — otherwise /clear,
-// /compact and resume each run one turn with the child unfenced (docs/19
+// /compact and resume each run one turn with the child unfenced (4zdesign/19
 // appendix E2-2, fork fix 已决 18). Non-rotation closes still drop.
 func TestFenceRotationCloseParksForContinuation(t *testing.T) {
 	installStores(t)

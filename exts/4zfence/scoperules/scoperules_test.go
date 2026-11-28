@@ -343,7 +343,7 @@ func TestInheritSessionRules(t *testing.T) {
 // session re-registering is never refused, and DropSession frees the slot so
 // a later session fits again.
 // drainSessionStore swaps in a fresh store so a capacity test starts from a
-// known state (docs/19 E3-4: no package-level table to empty).
+// known state (4zdesign/19 E3-4: no package-level table to empty).
 func drainSessionStore(t *testing.T) {
 	testStore = NewStore()
 	// The cleanup restores a fresh store for the tests that follow.

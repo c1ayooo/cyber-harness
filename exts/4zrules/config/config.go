@@ -1,5 +1,5 @@
 // Package rulesconfig is the rule hot-reload brick's own configuration
-// section (4zrcin docs/20): one key, the directory of instance rules the node
+// section (4zrcin docs/rules.md): one key, the directory of instance rules the node
 // watches. The package depends on nothing from the engine beyond the
 // configuration declarations, so a host can read the section without linking
 // the brick.

@@ -1,6 +1,6 @@
 package globalfence
 
-// The instance fence's sample set (4zrcin docs/19 P1-4's acceptance input):
+// The instance fence's sample set (4zdesign/19 P1-4's acceptance input):
 // a golden corpus of fence tables × commands/hosts → judgments, committed
 // and compared. P1-4 moves this package into exts/4zfence; the SAME golden
 // file must still pass — deny/allow/review precedence is the behavioral

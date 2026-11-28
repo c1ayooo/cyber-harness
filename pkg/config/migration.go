@@ -1,7 +1,7 @@
 package config
 
 // migrateDocument runs the composition's DocumentMigration hook over the file
-// and CLI values before they are resolved (docs/19 已决 19: the fence
+// and CLI values before they are resolved (4zdesign/19 已决 19: the fence
 // section's judge keys used to live in the guardrail section, and the legacy
 // spelling must keep reading).
 //

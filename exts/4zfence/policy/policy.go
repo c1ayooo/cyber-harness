@@ -1,4 +1,4 @@
-// Package policy is the fence's admission judge machinery (docs/19 E3-3):
+// Package policy is the fence's admission judge machinery (4zdesign/19 E3-3):
 // the pluggable judges — an OpenAI-compatible LLM, the JEV screen, and the
 // hybrid of both — moved out of the guardrail extension, which keeps only
 // the approval queue. Every implementation owns its provider transport and

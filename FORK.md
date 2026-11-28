@@ -17,6 +17,8 @@ The local `master` tracks `upstream/master` without local patches. Its
 checkout may lag the upstream commit already integrated into `tianwu/fixes`.
 The maintained fork uses merge commits and fast-forward updates.
 
+`4zdesign/NN` names an archived process document in [c1ayooo/4zdesign](https://github.com/c1ayooo/4zdesign), under `4zrcin/NN-….md`.
+
 ## Sync upstream
 
 Fetch the two remotes separately. Compare the published fork with upstream
@@ -48,7 +50,7 @@ branch.
 "## Superseded patches". The numbered entries describe each patch but often name a
 directory or use a brace list the check cannot match, so this index lists every
 modified upstream file by exact path. The budget is 20 added lines per upstream
-Go source file that is not a test (docs/19 red line 1); tests, docs and manifests
+Go source file that is not a test (4zdesign/19 red line 1); tests, docs and manifests
 are registered without a budget (已决 24). Figures are added lines against
 `upstream/master`, from the check itself.
 
@@ -64,7 +66,7 @@ are registered without a budget (已决 24). Figures are added lines against
   - hooks: `agent/provider/state.go` (15)
   - tests and docs: `agent/provider/state_test.go`
 - **#5 exclude agent tools via CYBER_EXCLUDE_TOOLS**
-  - moved to `pkg/assembly` (docs/19 P6): `cmd/cyber-scan/cli.go`
+  - moved to `pkg/assembly` (4zdesign/19 P6): `cmd/cyber-scan/cli.go`
 - **#6 native command invocation directories**
   - hooks: `tools/gogo/gogo.go` (10), `tools/katana/katana.go` (7), `tools/neutron/neutron.go` (15), `tools/proton/command.go` (3), `tools/scan/command.go` (1), `tools/spray/spray.go` (1), `tools/toolargs/resolve.go` (15), `tools/zombie/zombie.go` (1)
   - tests and docs: `tools/gogo/gogo_test.go`, `tools/neutron/neutron_test.go`, `tools/scan/command_test.go`
@@ -86,10 +88,10 @@ are registered without a budget (已决 24). Figures are added lines against
 - **#14 isolate configuration-precedence tests**
   - tests and docs: `pkg/config/loader_test.go`
 - **#15–#18 control-plane goal, recap off, external MCP, pluggable judges** — composition root
-  - moved to `pkg/assembly` (docs/19 P6): `cmd/cyber-scan/config.go`, `cmd/cyber-scan/profile.go`
+  - moved to `pkg/assembly` (4zdesign/19 P6): `cmd/cyber-scan/config.go`, `cmd/cyber-scan/profile.go`
   - tests and docs: `docs/configuration.md`, `docs/user/tools.md`
 - **#17 external MCP servers**
-  - moved to `pkg/assembly` (docs/19 P6): `cmd/cyber-scan/extensions.go`, `cmd/cyber-scan/ioa_composition.go`
+  - moved to `pkg/assembly` (4zdesign/19 P6): `cmd/cyber-scan/extensions.go`, `cmd/cyber-scan/ioa_composition.go`
 - **#20 both fork extension namespaces**
   - hooks: `agent/session/protocol.go` (4)
 - **#22 the Hub becomes an embeddable library**
@@ -100,11 +102,11 @@ are registered without a budget (已决 24). Figures are added lines against
   - hooks: none left — the tag plumbing this patch added to the generated resources (and the fork-added resource twins) is deleted now that capture is a runtime flag of the one scan binary; the resources files are upstream-identical again
   - manifests: `cmd/audit/go.mod`, `cmd/audit/go.sum`, `go.mod`
 - **#25 the capture recipe announces itself in the hello**
-  - moved to `pkg/assembly` (docs/19 P6): `cmd/cyber-scan/agent_transport.go`
+  - moved to `pkg/assembly` (4zdesign/19 P6): `cmd/cyber-scan/agent_transport.go`
 - **#21–#37 scope rules, proxy seam, instance fence** — the proxy side of seam G2
   - hooks: `tools/proxy/config.go` (7), `tools/proxy/hub.go` (6), `tools/proxy/hub_traffic.go` (9), `tools/proxy/mitm.go` (15)
   - tests and docs: `tools/proxy/mitm_test.go`
-- **E3 round (2026-11-27, docs/19 appendix E)** — seams G1 and G4, the evidence switch, the judge block, SubmitReview (G3), the verdict sidecar hook, the Policy slot in the base composition
+- **E3 round (2026-11-27, 4zdesign/19 appendix E)** — seams G1 and G4, the evidence switch, the judge block, SubmitReview (G3), the verdict sidecar hook, the Policy slot in the base composition
   - hooks: `agent/session/dependencies.go` (3), `agent/session/protocol.go` (4), `agent/session/runtime.go` (17), `agent/session/session.go` (20), `exts/guardrail/runtime.go` (9), `exts/observe/extension.go` (3), `exts/proxy/extension.go` (15), `pkg/config/options.go` (12), `pkg/harness/base.go` (11)
   - tests and docs: `docs/configuration.md`, `exts/observe/extension_test.go`
   - the options.go figure includes the P6 capture-mode flag (12; was 11 through the E3 round)
@@ -131,7 +133,7 @@ are registered without a budget (已决 24). Figures are added lines against
   - tests and docs: `README.md`, `README_CN.md`
 - **dependencies** — the chainreactors modules resolve to the c1ayooo forks; the audit module follows patch 24
   - manifests: `cmd/audit/go.mod`, `cmd/audit/go.sum`, `go.mod`, `go.sum`
-- **build convergence (docs/19 §7, P4)** — the engine/scan targets the shell forwards to, make resources, make check-fork
+- **build convergence (4zdesign/19 §7, P4)** — the engine/scan targets the shell forwards to, make resources, make check-fork
   - manifests: `Makefile`
 
 `scripts/check-fork.sh` itself lives in a directory upstream ignores
@@ -145,8 +147,8 @@ file whose directory is excluded; it is removed, and `.gitignore` is upstream ag
   - tests and docs: `.github/workflows/ci.yml`, `.github/workflows/scanner-regression.yml`, `pkg/internal/architecture/architecture_test.go`
 - **4ztemplates: the rules source is the fork's maintenance branch (2026-11-28)**
   - manifests: `.gitmodules`, `tools/templates`
-  - generated data: `tools/proton/resources/data/found_filter_dir.bin`, `tools/proton/resources/data/found_keys.bin`, `tools/proton/resources/data/found_spray.bin` (written by `make resources`, docs/19 §5.3)
-- **Rule hot reload borrows the live engine set (2026-11-28, 4zrcin docs/20)**
+  - generated data: `tools/proton/resources/data/found_filter_dir.bin`, `tools/proton/resources/data/found_keys.bin`, `tools/proton/resources/data/found_spray.bin` (written by `make resources`, 4zdesign/19 §5.3)
+- **Rule hot reload borrows the live engine set (2026-11-28, 4zrcin docs/rules.md)**
   - hooks: `exts/scanner/extension.go`
 - **fork rules appended to AGENTS.md (2026-11-28)**
   - tests and docs: `AGENTS.md`
@@ -157,7 +159,7 @@ file whose directory is excluded; it is removed, and `.gitignore` is upstream ag
 
 ### Upstream files moved into fork-owned packages
 
-Whole upstream files relocated into a fork-owned package (docs/19 P6). Their upstream
+Whole upstream files relocated into a fork-owned package (4zdesign/19 P6). Their upstream
 path is registered here so `scripts/check-fork.sh` can tell a deliberate move from an
 accidental deletion; the content is upstream's plus the registered hooks, byte for
 byte apart from the package clause. A merge with upstream follows the rename and lands
@@ -600,7 +602,7 @@ an upstream change on the new path.
 22. **`feat(web): the Hub becomes an embeddable library`** (2026-11-26)
     `pkg/web/host/host.go`, `pkg/web/hubapp/` (new), `cmd/cyber-harness/main.go`.
     The 4zrcin control plane embeds the Hub in-process (its single binary,
-    docs/04 M1), so the host must accept a listener the caller owns and the
+    4zrcin docs/rules.md), so the host must accept a listener the caller owns and the
     command's assembly must be importable. `webhost.Config` gains an optional
     `Listener`: when set, Serve accepts on it and ignores `Addr` (the 4zrcin
     console already owns a loopback listener; binding a second port would be a
@@ -622,7 +624,7 @@ an upstream change on the new path.
     `core/scoperules/`, `exts/guardrail/` (+ `tools/resources/guardrail_builtin.yaml`,
     `tools/resources/builtin_gen.go`, generated `guardrail_builtin_gen.go`),
     `core/artifactsync/` (new), `exts/observe/extension.go`.
-    The remote capture node's minimal capability set (docs/04 T3): fence
+    The remote capture node's minimal capability set (4zrcin docs/rules.md): fence
     judgment, guaranteed audit, evidence return.
 
     - **23a — CIDR rows** (`core/scoperules/hostMatches`): a rule host containing
@@ -662,7 +664,7 @@ an upstream change on the new path.
 25. **`feat(node): the capture recipe announces itself in the hello`** (2026-11-26)
     `cmd/cyber-scan/recipe_default.go` / `recipe_capture.go`, `agent_transport.go`.
 
-    docs/04 T5's capability routing input: the capture recipe appended
+    4zrcin docs/rules.md's capability routing input: the capture recipe appended
     `scan-capture` to the registration hello's capabilities; the full recipe
     appended nothing, so an absent marker keeps reading as full and every
     binary built before this change routes exactly as it did. The choice is
@@ -681,7 +683,7 @@ an upstream change on the new path.
     `tools/resources/` (two-file mode), `cmd/cyber-scan/` (recipe split), test
     forms.
 
-    - **Resources two-file mode** (docs/04 §3.2): `template.go` (the generated
+    - **Resources two-file mode** (4zrcin docs/rules.md): `template.go` (the generated
       472K engine-template bundle) gained a recipe build tag, and an empty
       twin `resources_empty.go` provided the same single private
       `loadEmbeddedConfig` returning nil for the stripped build — the public
@@ -692,7 +694,7 @@ an upstream change on the new path.
       from the stripped build (it asserts embedded-bundle behavior).
       Superseded: the recipes are runtime modes now and this plumbing is
       deleted.
-    - **Engine recipe boundary** (docs/04 §3.3): the scan-capture binary
+    - **Engine recipe boundary** (4zrcin docs/rules.md): the scan-capture binary
       compiled an empty engine block — `engineExtensions` had a full twin and
       an empty twin, and `discovery.go`/`scanner_catalog.go` gained empty
       capture twins, so the scanner/proton/discovery extension packages and
@@ -726,7 +728,7 @@ an upstream change on the new path.
     (`github.com/c1ayooo/cyber`), the branch name (`tianwu/fixes`) and the
     legacy `tianwu.*` type URLs stay as they are — patch 20 keeps both
     extension namespaces recognized. Patch numbers 22/23 are reserved for the
-    control plane's embedding work (webhost `Listener`, docs/03 §11 P5); 24
+    control plane's embedding work (webhost `Listener`, 4zdesign/03 §11 P5); 24
     is the egress proxy.
 
 26. **`feat(session): a turn seed materialises the case for nodes without a shared filesystem`** (2026-11-26)
@@ -956,7 +958,7 @@ an upstream change on the new path.
     loopback family counts as the platform; a public control-plane host
     matches exactly. Deliberate: a deny row naming the control plane cannot
     take effect through the proxy — the platform must always reach itself
-    (the fence is a statement about the target range; docs/01 §10.10 already
+    (the fence is a statement about the target range; 4zrcin docs/architecture.md §10.10 already
     defers node isolation).
     Tests: `go test ./tools/proxy ./exts/guardrail ./exts/proxy ./agent/session ./agent/subagent/... ./core/scoperules ./core/globalfence -count=1`
     (an exempted call forwards 200 with an empty flow store and no sidecar;
@@ -1004,7 +1006,7 @@ an upstream change on the new path.
 39. **`feat(aopws): a close frame with a fixed reason before the connection closes`** (2026-11-20)
     `pkg/aopws/stream.go`, `pkg/aopws/stream_test.go`.
     The commit carries no body; this entry is read from the control plane's
-    contract (4zrcin docs/01 §7). A turn whose connection drops before
+    contract (4zrcin docs/architecture.md §7). A turn whose connection drops before
     `turn_ended` fails, and the error has to say who closed it. The writer
     now sends one close frame carrying a fixed enumerated reason before it
     closes; the client keeps the code and the text instead of collapsing
@@ -1042,7 +1044,7 @@ an upstream change on the new path.
     A `#nosec G702` justification on the fixed `taskkill` fallback, and
     spelling or alignment in three tests. No behavior. Rollback: revert.
 
-43. **`refactor(mcp): the alias bash-conflict rule is one function`** (2026-11-28, 4zrcin P2 / docs/19 已决 20)
+43. **`refactor(mcp): the alias bash-conflict rule is one function`** (2026-11-28, 4zrcin P2 / 4zdesign/19 已决 20)
     `exts/mcp/extension.go`, fork-owned additions `exts/mcp/alias.go`, `exts/mcp/alias_test.go`.
     Cause: the rule lived only inside `Extension.Load`, so a control plane that
     edits MCP configuration (4zrcin's settings save) accepted aliases the scan
@@ -1101,7 +1103,7 @@ platform tags and build `cmd/cyber-harness` and `cmd/cyber-scan`. Pass the
 directory of a review worktree explicitly when checking an upstream merge.
 
 Record the fork commit with the build. Deployment and rollback
-use [4zrcin's deployment guide](https://github.com/c1ayooo/4zrcin/blob/main/docs/02-deploy.md).
+use [4zrcin's deployment guide](https://github.com/c1ayooo/4zrcin/blob/main/docs/deploy.md).
 
 ## Rule
 

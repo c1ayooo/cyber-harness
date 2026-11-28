@@ -1,7 +1,7 @@
 package fence
 
 // The fence judge's admission semantics (ported from the old guardrail
-// admission tests, docs/19 E3-3): the scope filter is a routing decision, a
+// admission tests, 4zdesign/19 E3-3): the scope filter is a routing decision, a
 // shadow judgment is recorded but never enforced, a safe-mode allow prefix
 // releases a judged call without a human, and the mode routes every other
 // risky judgment through the approval lifecycle. The policies are doubles:

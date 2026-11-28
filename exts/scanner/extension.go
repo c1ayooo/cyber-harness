@@ -90,7 +90,7 @@ func (e *Extension) Load(scope *extension.Scope) error {
 		logger.Warnf("scanner engines init error=%q action=continue_without_scanners", err)
 		e.engines = nil
 	}
-	// docs/20 (4zrcin): the rule hot-reload brick borrows the live engine set.
+	// 4zrcin docs/rules.md: the rule hot-reload brick borrows the live engine set.
 	// Engines that failed to initialize still provide an empty set, so the
 	// brick loads and reports instead of failing the node.
 	live := e.engines

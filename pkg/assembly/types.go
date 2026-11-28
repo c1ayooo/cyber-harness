@@ -1,4 +1,4 @@
-// Package assembly is the scan product's composition (4zrcin docs/19 P1-5,
+// Package assembly is the scan product's composition (4zdesign/19 P1-5,
 // P6): the whole cyber-scan command — CLI, modes, profile and the extension
 // graph it loads — together with the engine recipe and the judge block, in
 // one importable package. The `scan` binary's entry and an embedding control

@@ -1,6 +1,6 @@
 package scoperules
 
-// The request-admission seam (4zrcin docs/19 seam G2) is owned by the proxy
+// The request-admission seam (4zdesign/19 seam G2) is owned by the proxy
 // since the E3 revision: ScopeJudge/ScopeRequest/ScopeDecision and the
 // take-once verdict registry live in tools/proxy as pure additions to the
 // upstream package. This package keeps the historical spellings as aliases so
@@ -9,7 +9,7 @@ package scoperules
 // adapter, and the proxy depends on no product package.
 //
 // Import direction note: the E3 revision weighed owning the types here
-// (neutral ground, docs/19 P1-4c) against owning them in the seam. Ownership
+// (neutral ground, 4zdesign/19 P1-4c) against owning them in the seam. Ownership
 // moved to the seam; this import is the fence block depending on an upstream
 // seam, the direction red line 3 permits.
 

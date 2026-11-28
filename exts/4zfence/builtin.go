@@ -1,6 +1,6 @@
 package fence
 
-// The guaranteed audit (fork patch 23b, docs/04): a built-in corpus of
+// The guaranteed audit (fork patch 23b, 4zrcin docs/rules.md): a built-in corpus of
 // destructive and exfiltration command patterns is audited unconditionally —
 // before the policy nil-check, the scope filter and the mode logic — so a
 // capture node without any provider still records the audit rows the control

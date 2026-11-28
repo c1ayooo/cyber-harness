@@ -1,4 +1,4 @@
-// Package rules is the rule hot-reload brick (4zrcin docs/20). It watches a
+// Package rules is the rule hot-reload brick (4zrcin docs/rules.md). It watches a
 // directory of instance rules and adds what changed to the scanner's live
 // engines, so a node picks up new fingerprints and POCs on the next tool call
 // instead of on the next start.

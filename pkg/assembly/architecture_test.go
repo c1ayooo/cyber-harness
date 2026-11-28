@@ -70,7 +70,7 @@ func TestReusableLayersDoNotDependOnDistributionFeatures(t *testing.T) {
 
 func TestCompositionUsesNoInitRegistration(t *testing.T) {
 	root := repositoryRoot(t)
-	// The composition lives in pkg/assembly since 4zrcin docs/19 P6; the
+	// The composition lives in pkg/assembly since 4zdesign/19 P6; the
 	// command directory keeps only the process shell.
 	for _, relative := range []string{"cmd/cyber-scan", "pkg/assembly"} {
 		directory := filepath.Join(root, filepath.FromSlash(relative))

@@ -10,7 +10,7 @@ import (
 	filepb "github.com/chainreactors/cyber/aop/file"
 )
 
-// The snapshot machinery below is owned by 4zevidence (docs/19 E5): it began
+// The snapshot machinery below is owned by 4zevidence (4zdesign/19 E5): it began
 // as upstream observe's TakeSnapshot/DiffSnapshots/FileOptions, which this
 // package first reused via import. The import direction was wrong — evidence
 // only needs the pure functions, not observe's extension — so the functions

@@ -232,7 +232,7 @@ func denied(reason string) toolhooks.Admission {
 }
 
 // SubmitReview hands a call the caller already judged `review` to this
-// runtime's ordinary approval lifecycle (registered fork hook, docs/19 seam
+// runtime's ordinary approval lifecycle (registered fork hook, 4zdesign/19 seam
 // G3: a second judge composes its own admission but must not rebuild the
 // pending queue, the RPC surface and the console bindings that already
 // exist here). Rollback: delete this method, the fence holds its own queue.

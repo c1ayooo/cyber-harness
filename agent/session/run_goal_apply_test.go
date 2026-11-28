@@ -1,6 +1,6 @@
 package session
 
-// The runtime applies the composition's turn decorators (seam G1, docs/19
+// The runtime applies the composition's turn decorators (seam G1, 4zdesign/19
 // appendix A): this test drives RunAOPTurn through a runtime whose
 // TurnDecorators are the 4zsession block's, and checks the evaluator's goal
 // and pacing come from the control-plane extension.

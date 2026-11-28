@@ -74,7 +74,7 @@ type Counts struct {
 	Pocs    int `json:"pocs"`
 }
 
-// State is what the brick writes back for the console (4zrcin docs/20 §5.2).
+// State is what the brick writes back for the console (4zrcin docs/rules.md).
 // It reports what the node did: a file counts as applied only once the
 // engines accepted it.
 type State struct {

@@ -1,12 +1,12 @@
 // Package 4zevidence owns the evidence-return contract for remote nodes
-// (4zrcin docs/19 P1-2a, fork patches 23c/27/28): changed files under a
+// (4zdesign/19 P1-2a, fork patches 23c/27/28): changed files under a
 // process's case directory — and in-band write/create/edit content — ship to
 // the control plane as 4zrcin.Artifact sidecars riding Event_Extension, so a
 // node without a shared filesystem still delivers its evidence.
 //
 // It was extracted from exts/observe so observe could return to its upstream
 // form. The snapshot machinery (TakeSnapshot/DiffSnapshots/FileOptions) is
-// owned here (snapshot.go, docs/19 E5): reusing observe's copy via import
+// owned here (snapshot.go, 4zdesign/19 E5): reusing observe's copy via import
 // left evidence depending on an extension it does not compose, so the pure
 // functions moved into this package and observe keeps its own upstream copy.
 //
@@ -56,7 +56,7 @@ type Extension struct {
 var _ extension.Extension = (*Extension)(nil)
 
 // Options configures the extension. Enabled gates composition: a capture node
-// composes it, everything else omits the line (docs/04 §3.3's recipe
+// composes it, everything else omits the line (4zrcin docs/rules.md's recipe
 // boundary).
 type Options struct {
 	Enabled bool
