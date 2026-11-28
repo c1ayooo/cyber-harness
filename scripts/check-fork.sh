@@ -11,8 +11,9 @@
 #   hook      upstream *.go that is not a test  — registered, and the added
 #             lines stay within BUDGET
 #   test/doc  *_test.go, or .md/.golden/.yaml/.yml — registered, no budget
-#   manifest  go.mod / go.sum / Makefile / .gitignore / .goreleaser.yml /
-#             editions.env (any directory) — registered per entry, no budget
+#   manifest  go.mod / go.sum / Makefile / .gitmodules / .gitignore /
+#             .goreleaser.yml / editions.env (any directory) — registered per
+#             entry, no budget
 #   moved     an upstream file that is deleted or renamed in the fork (a whole
 #             file moved into a fork-owned package, 4zrcin docs/19 P6) — its
 #             upstream path must be registered, no budget. A rename is found
@@ -43,7 +44,7 @@ registered=$(sed -n '/^## Local patches/,/^## Superseded patches/p' FORK.md |
 
 is_manifest() {
   case "$(basename "$1")" in
-    go.mod|go.sum|Makefile|.gitignore|.goreleaser.yml|editions.env) return 0 ;;
+    go.mod|go.sum|Makefile|.gitmodules|.gitignore|.goreleaser.yml|editions.env) return 0 ;;
   esac
   return 1
 }

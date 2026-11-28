@@ -147,6 +147,8 @@ file whose directory is excluded; it is removed, and `.gitignore` is upstream ag
 - **P6 scan assembly moved (2026-11-28)**
   - hooks: `cmd/cyber-scan/main.go`
   - tests and docs: `.github/workflows/ci.yml`, `.github/workflows/scanner-regression.yml`, `pkg/internal/architecture/architecture_test.go`
+- **4ztemplates: the rules source is the fork's maintenance branch (2026-11-28)**
+  - manifests: `.gitmodules`
 
 ### Upstream files moved into fork-owned packages
 
@@ -1573,6 +1575,34 @@ under the default recipe and `-tags "emptyresources captureonly"` under
 the capture recipe, all green; both scan binaries build and answer
 `--version`; full `go test ./...` green except the failures under Tests.
 Rollback: revert the commits — a pure move reverts as a pure move.
+
+## 4ztemplates: the rules come from the fork's maintenance branch (2026-11-28)
+
+4zrcin docs/19 §5, 杠杆五 and P4's last item. The submodule at
+`tools/templates` now clones from `c1ayooo/templates` — the fork of
+`chainreactors/templates` — and names its maintenance branch, `4z/rules`.
+The branch is upstream `master` plus whatever rules turn out to be ours,
+the way this repo's `tianwu/fixes` is upstream plus additions; the fork's
+`master` stays a mirror of upstream and carries nothing of ours. The
+branch exists and is pushed; it holds no rule of ours yet.
+
+The pinned commit does not move: it is still `cc5dd3f6`, which is in the
+branch's history, so `make resources` regenerates from the submodule with
+zero diff and every embedded rule is what it was. Upstream's `master` is
+11 commits past the pin — 296 files under `found/`, `services/`,
+`spray/` and `zombie/`, none under `fingers/` or `neutron/` and none of
+the three top-level YAML files. Taking those 11 commits is a rules
+upgrade: checkout the branch tip in the submodule, `make resources`,
+commit the three proton files that change (docs/19 §5.2 measured them)
+and run the proton regression. It is a separate step, not taken here.
+
+`.gitmodules` is the only upstream file this touches, and the check reads
+it as a manifest. A clone made before this change keeps the old URL in
+its local config: `git submodule sync tools/templates` moves it.
+Tests: `git submodule update --init tools/templates` from a fresh
+worktree checks out the pin from the fork; `make resources` exits 0 with
+a clean tree.
+Rollback: revert the commit — the submodule's own history is untouched.
 
 ## Superseded patches
 
