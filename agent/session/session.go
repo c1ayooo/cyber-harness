@@ -35,10 +35,7 @@ type SessionOptions struct {
 	ParentToolCallID string
 	AgentName        string
 	Messages         []*aop.Message
-	// WorkDir is the workspace file and shell tools resolve relative paths
-	// against for this session. Empty keeps the agent process directory. It is
-	// per session on purpose: one agent serves many runs, each with its own
-	// case directory (set by the control plane on OpenSessionRequest).
+	// WorkDir is the session's workspace; empty keeps the agent process directory.
 	WorkDir string
 	// HistorySnapshot marks Messages as a new persisted transcript snapshot.
 	// Ordinary continuations keep the in-memory context and refer to their
@@ -88,22 +85,13 @@ type RunInput struct {
 	MaxTurns     int
 	EvalCriteria string
 	EvalRounds   string
-	// EvalGoal is the evaluator's goal when a control plane sent one instead of
-	// reusing the executor's input message. Empty derives the goal from Message.
+	Continue     bool
+	// Control-plane payloads (seam G4): the turn decorators fill them and
+	// prepareTurn lands them. EvalGoal is the evaluator's own goal; empty derives it from Message.
 	EvalGoal string
-	Continue bool
-	// ToolEnv is the per-turn environment a control plane attached (KEY=VALUE),
-	// merged into every tool subprocess this turn starts. Empty for a turn that
-	// sent none, so nothing from a prior turn leaks into it.
-	ToolEnv []string
-	// WorkDir is the workspace a control plane attached to this turn. It fills an
-	// empty session workspace (a resumed turn after a host restart) and is
-	// refused when it disagrees with one the session already has.
-	WorkDir string
-	// Seed is the case files a control plane without a shared filesystem sends
-	// with this turn (fork patch 26). They are written under the workspace
-	// before the turn runs.
-	Seed []CaseSeedFile
+	ToolEnv  []string
+	WorkDir  string
+	Seed     []CaseSeedFile
 
 	automatic bool
 }
@@ -617,12 +605,9 @@ func (rt *Runtime) OpenSession(ctx context.Context, options SessionOptions) (*Se
 		WithSessionID(id).
 		WithAgentName(agentName).
 		WithBus(rt.config.Events)
-	agentCfg.ModelSessionID = logicalID
+	applyOpenOptions(&agentCfg, options, logicalID)
 	agentCfg.ParentSessionID = options.ParentSessionID
 	agentCfg.ParentToolCallID = options.ParentToolCallID
-	if options.WorkDir != "" {
-		agentCfg.WorkDir = options.WorkDir
-	}
 	agentCfg.LoopScheduler = scheduler
 	agentCfg.Lifetime = sessionCtx
 	ag := agent.NewAgent(agentCfg)
@@ -1201,9 +1186,8 @@ func (s *Session) rotate(ctx context.Context, reason SessionCloseReason, parentS
 	}
 	newID := rt.nextContinuationID(logicalID)
 	continuation, err := rt.OpenSession(ctx, SessionOptions{
-		ID: newID, LogicalID: logicalID, TaskID: oldState.taskID, ParentSessionID: parentSessionID,
-		SingleTask: oldState.singleTask,
-		AgentName:  agentName, Messages: messages, HistorySnapshot: reason == SessionCloseCompacted || reason == SessionCloseResumed, Config: &config, providers: providers,
+		ID: newID, LogicalID: logicalID, TaskID: oldState.taskID, ParentSessionID: parentSessionID, SingleTask: oldState.singleTask,
+		AgentName: agentName, Messages: messages, HistorySnapshot: reason == SessionCloseCompacted || reason == SessionCloseResumed, Config: &config, providers: providers,
 	})
 	if err != nil {
 		return nil, err
@@ -1357,37 +1341,6 @@ func hasRunInput(content []*aop.Content) bool {
 	return false
 }
 
-// sameWorkspace compares two workspace paths the way the host's tools do: case
-// and separator differences are not a real change (Windows accepts both).
-func sameWorkspace(a, b string) bool {
-	normalize := func(p string) string {
-		p = strings.TrimSpace(strings.ReplaceAll(p, `\`, "/"))
-		return strings.TrimRight(p, "/")
-	}
-	return strings.EqualFold(normalize(a), normalize(b))
-}
-
-// applyTurnWorkDir gives a session without a workspace the one its control plane
-// still names — the resumed turn after a host restart, where the session was
-// re-created and never re-opened. A session that already has a different
-// workspace is refused: the tools' relative paths would silently start landing
-// somewhere else mid-run.
-func applyTurnWorkDir(a *agent.Agent, dir string) error {
-	dir = strings.TrimSpace(dir)
-	if a == nil || dir == "" {
-		return nil
-	}
-	current := strings.TrimSpace(a.WorkDir())
-	if current == "" {
-		a.SetWorkDir(dir)
-		return nil
-	}
-	if !sameWorkspace(current, dir) {
-		return fmt.Errorf("session already runs in workspace %q; the turn asked for %q", current, dir)
-	}
-	return nil
-}
-
 func (s *sessionState) executeRun(ctx context.Context, turnID string, input RunInput) (result *agent.Result, err error) {
 	// A replaceable loop may panic. Convert that failure at the session task
 	// boundary so the ordinary completion path releases the Run and queue.
@@ -1398,33 +1351,10 @@ func (s *sessionState) executeRun(ctx context.Context, turnID string, input RunI
 		}
 	}()
 	s.refreshProvider()
-	// A control plane may attach a per-turn tool environment; carry it on the run
-	// context so every tool call this turn makes inherits it, without mutating the
-	// shared BashTool base environment (that would leak one session's token to
-	// another on the same host).
-	ctx = operation.ContextWithToolEnv(ctx, input.ToolEnv)
-	if err := applyTurnWorkDir(s.agent, input.WorkDir); err != nil {
+	if ctx, err = s.prepareTurn(ctx, input); err != nil {
 		return nil, err
 	}
-	// The seed lands after the workspace is settled and before the turn runs:
-	// a remote node reads the same case tree a shared filesystem would have
-	// given it (fork patch 26).
-	if err := applyCaseSeed(s.agent, input.Seed); err != nil {
-		return nil, err
-	}
-	if input.automatic {
-		return s.agent.Continue(ctx, agent.WithTurnID(turnID), agent.WithRunMaxTurns(input.MaxTurns))
-	}
-	if input.Continue {
-		// A continued turn carries its new input as a user message. The agent's
-		// Continue drains the inbox; without this push the message is dropped and
-		// a session whose last message is assistant rejects the turn with
-		// "cannot continue from message role: assistant" (seen on every steer
-		// after a canceled run). The push is safe here: setActive(true) already
-		// happened, so it does not kick a second run.
-		if input.Message != nil {
-			_ = s.inbox.Push(inboxpkg.FromAOPMessage(input.Message, inboxpkg.OriginUser))
-		}
+	if input.automatic || input.Continue {
 		return s.agent.Continue(ctx, agent.WithTurnID(turnID), agent.WithRunMaxTurns(input.MaxTurns))
 	}
 	if input.EvalCriteria == "" {
@@ -1448,8 +1378,7 @@ func (s *sessionState) executeRun(ctx context.Context, turnID string, input RunI
 	if input.EvalCriteria != "" {
 		config := s.agent.ConfigSnapshot()
 		evalConfig := evaluator.NewLoopConfigWithInput(config.Provider, config.Model, config.Logger, config.PromptResolver, message, input.EvalCriteria, input.EvalRounds)
-		// The turn message stays the executor's first input; only the goal the
-		// evaluator judges changes when the control plane sent its own.
+		// Only the goal the evaluator judges changes; the turn message stays the executor's input.
 		if input.EvalGoal != "" {
 			evalConfig.Goal = input.EvalGoal
 		}

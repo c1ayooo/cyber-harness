@@ -33,30 +33,31 @@ type Runtime struct {
 	nodeName         string
 	promptTarget     prompt.Target
 	commandName      string
-	// startedAt is the session's creation time, not the current wall clock.
-	// The system prompt is rebuilt at the start of every run; using time.Now()
-	// there changed the system bytes on every wake and invalidated the provider's
-	// prefix cache. Current time belongs in the new user turn, after history.
-	startedAt       time.Time
-	loadedSkills    []prompt.LoadedSkill
-	heartbeat       time.Duration
-	agentConfig     agent.Config
-	resumeMessages  []*aop.Message
-	resumeSessionID string
-	ctx             context.Context
-	cancel          context.CancelFunc
-	mu              sync.RWMutex
-	sessions        map[string]*sessionState
-	runs            map[string]*Run
-	closeOnce       sync.Once
-	closeDone       chan struct{}
-	closeErr        error
-	lifecycle       sync.Mutex
-	loaded          bool
-	closing         bool
-	wg              sync.WaitGroup
-	operations      sync.WaitGroup
-	maxPending      int
+	loadedSkills     []prompt.LoadedSkill
+	heartbeat        time.Duration
+	agentConfig      agent.Config
+	resumeMessages   []*aop.Message
+	resumeSessionID  string
+	ctx              context.Context
+	cancel           context.CancelFunc
+	mu               sync.RWMutex
+	sessions         map[string]*sessionState
+	runs             map[string]*Run
+	closeOnce        sync.Once
+	closeDone        chan struct{}
+	closeErr         error
+	lifecycle        sync.Mutex
+	loaded           bool
+	closing          bool
+	wg               sync.WaitGroup
+	operations       sync.WaitGroup
+	maxPending       int
+
+	// startedAt is the session's creation time, not the current wall clock:
+	// the system prompt is rebuilt at the start of every run, and a clock
+	// reading in it changed the system bytes on every wake and invalidated the
+	// provider's prefix cache. Current time belongs in the new user turn.
+	startedAt time.Time
 }
 
 type Config struct {
@@ -67,13 +68,7 @@ type Config struct {
 	Events     *events.Stream
 
 	// Capabilities are borrowed from their owning extensions.
-	Hooks *hooks.Registry
-	// OpenSessionDecorators / TurnDecorators are the seam-G1 request
-	// decorators (docs/19 appendix A): applied in order by
-	// OpenAOPSession / RunAOPTurn, an error rejecting the request. Empty by
-	// default — upstream behavior.
-	OpenSessionDecorators []OpenSessionDecorator
-	TurnDecorators        []RunTurnDecorator
+	Hooks                 *hooks.Registry
 	Tools                 coretool.Executor
 	CommandRegistry       coretool.CommandExecutor
 	Skills                *skills.Store
@@ -87,6 +82,10 @@ type Config struct {
 	PrimarySessionID      string
 	PromptResolver        prompt.Resolver
 	PromptTarget          prompt.Target
+	// Request decorators (seam G1, decorators.go), run in order by
+	// OpenAOPSession and RunAOPTurn; an error rejects the request. Empty keeps upstream behavior.
+	OpenSessionDecorators []OpenSessionDecorator
+	TurnDecorators        []RunTurnDecorator
 	// CommandName identifies the command-focused worker session (e.g. a
 	// single-command run); empty for a general conversational session.
 	CommandName string
@@ -243,17 +242,6 @@ func (rt *Runtime) start(ctx, lifetime context.Context) error {
 	if err := ctx.Err(); err != nil {
 		return err
 	}
-	// The fence tables (project scope rules, instance fence) hold only live
-	// sessions (fork fix P1-0): a child session inherits its parent's
-	// registrations on open — the SessionStart hook is FailClosed, so an
-	// inheritance failure fails the open instead of starting the child
-	// unfenced — and every close drops them, freeing capacity for the next
-	// session. This covers subagent children (whose ids never see a
-	// RunTurnRequest, fork patch 33) and AOP sessions alike.
-	// The subscriptions live with the hooks registry (closed with the runtime),
-	// so the returned subscriptions are not tracked.
-	// The fence session hooks (inherit on open, drop on close) belong to the
-	// composition's fence extension, not the runtime.
 	rt.loaded = true
 	return nil
 }
