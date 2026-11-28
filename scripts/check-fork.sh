@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Red line 1's machine check (docs/19 §1, appendix E4): every change to an
+# Red line 1's machine check (4zdesign/19 §1, appendix E4): every change to an
 # upstream-preexisting file must be registered in FORK.md, and every
 # registered hook stays within the per-file added-line budget.
 #
@@ -17,7 +17,7 @@
 #   generated a regenerated data file (tools/*/resources/data/*.bin, written
 #             by make resources from the rules repo) — registered, no budget
 #   moved     an upstream file that is deleted or renamed in the fork (a whole
-#             file moved into a fork-owned package, 4zrcin docs/19 P6) — its
+#             file moved into a fork-owned package, 4zrcin 4zdesign/19 P6) — its
 #             upstream path must be registered, no budget. A rename is found
 #             by similarity, the way a merge follows it
 #
@@ -100,7 +100,7 @@ while IFS=$'\t' read -r added deleted path; do
 done < <(git diff --numstat "$UPSTREAM...HEAD" --diff-filter=M | sort -rn)
 
 # Upstream files deleted or renamed in the fork: registered by their upstream
-# path (docs/19 P6 — the scan command moved into pkg/assembly as whole files).
+# path (4zdesign/19 P6 — the scan command moved into pkg/assembly as whole files).
 while IFS=$'\t' read -r status from to; do
   [[ "$from" == *.pb.go ]] && continue
   [[ -n "$to" ]] || to="(deleted)"
