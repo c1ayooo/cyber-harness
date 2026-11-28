@@ -8,7 +8,9 @@ import "strings"
 // gateways that put the same phrase in message, and Chinese "额度已用尽" /
 // "余额不足" bodies. Retrying these is pointless — the balance does not refill
 // inside a retry budget — so the agent must fail fast and let the control plane
-// stop or switch credentials (Tianwu D67/D95).
+// stop or switch credentials (Tianwu D67/D95). Callers may only hold the
+// error's text — a gateway wrapper that lost the *APIError type — so gating the
+// plain-text form at the retry layer is part of the same contract.
 func QuotaExhaustedMessage(msg string) bool {
 	msg = strings.ToLower(msg)
 	for _, marker := range []string{
