@@ -13,6 +13,8 @@ package fence
 import (
 	"context"
 	"encoding/json"
+	"fmt"
+	"math/rand"
 	"strings"
 	"testing"
 
@@ -162,4 +164,95 @@ func TestCommandFieldTracksBashDecode(t *testing.T) {
 			t.Errorf("%s: bash executes %q but the fence does not judge a command", payload, args.Command)
 		}
 	}
+}
+
+// foldedCommandKey spells "command" with every letter independently folded,
+// now and then as the escaped spelling of the same key or as a near-miss
+// (a trailing or leading space, a different word) that must not match.
+func foldedCommandKey(rng *rand.Rand) string {
+	switch rng.Intn(12) {
+	case 0:
+		return `"co\u006dmand"`
+	case 1:
+		return `"command "`
+	case 2:
+		return `" command"`
+	case 3:
+		return `"commmand"`
+	}
+	var b strings.Builder
+	b.WriteByte('"')
+	for _, c := range "command" {
+		if rng.Intn(2) == 0 {
+			c = 'C' - 'c' + c
+		}
+		b.WriteRune(c)
+	}
+	b.WriteByte('"')
+	return b.String()
+}
+
+// commandValue is mostly a command text (plain, padded, quoted, non-ASCII) and
+// now and then a value the tool's own decode refuses.
+func commandValue(rng *rand.Rand) string {
+	switch rng.Intn(14) {
+	case 0:
+		return `"   "`
+	case 1:
+		return "123"
+	case 2:
+		return `["rm","-rf","/"]`
+	case 3:
+		return `{"nested":"x"}`
+	case 4:
+		return "null"
+	case 5:
+		return "true"
+	}
+	texts := []string{"rm -rf /", "echo hi", "  ls -la  ", "curl http://127.0.0.1/", "echo \"quoted\"", "echo \\n newline", "echo \u4e2d\u6587", "\tleading tab"}
+	raw, _ := json.Marshal(texts[rng.Intn(len(texts))])
+	return string(raw)
+}
+
+// The hand-written payload table above covers the shapes that were thought of.
+// This one covers the shapes that were not: twenty-odd thousand generated
+// argument objects — keys folded at random, repeated in random order, mixed
+// with sibling fields, refusal values and near-miss keys — each decoded by the
+// bash tool's own type. The seed is fixed, so a failure reproduces. On the
+// exact-key lookup this fails on its first executable payload.
+func TestCommandFieldRandomPayloadsTrackBashDecode(t *testing.T) {
+	rng := rand.New(rand.NewSource(20261128))
+	compared := 0
+	for i := 0; i < 60000; i++ {
+		var parts []string
+		for k := rng.Intn(5) + 1; k > 0; k-- {
+			switch rng.Intn(5) {
+			case 1:
+				parts = append(parts, fmt.Sprintf(`"wait":%d`, rng.Intn(60)))
+			case 2:
+				parts = append(parts, fmt.Sprintf(`"timeout":%d`, rng.Intn(600)))
+			case 3:
+				parts = append(parts, `"note":"just text"`)
+			default:
+				parts = append(parts, foldedCommandKey(rng)+":"+commandValue(rng))
+			}
+		}
+		payload := "{" + strings.Join(parts, ",") + "}"
+		var args terminal.BashArgs
+		if err := json.Unmarshal([]byte(payload), &args); err != nil || strings.TrimSpace(args.Command) == "" {
+			continue // the tool refuses this payload, or has no command to run
+		}
+		compared++
+		call := commandCall(payload)
+		if got := commandText(call); got != args.Command {
+			t.Fatalf("payload %s: the fence reads %q, bash executes %q", payload, got, args.Command)
+		}
+		if !commandLikeCall(call) {
+			t.Fatalf("payload %s: bash executes %q but the fence judges no command", payload, args.Command)
+		}
+	}
+	if compared < 15000 {
+		t.Fatalf("only %d generated payloads were executable; the generator got too narrow", compared)
+	}
+	t.Logf("compared %d executable payloads", compared)
 }
