@@ -15,9 +15,7 @@ package fence
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"strings"
 
 	aop "github.com/chainreactors/cyber/aop"
 	"github.com/chainreactors/cyber/core/operation"
@@ -119,26 +117,13 @@ func (e *Extension) emitDecision(ctx context.Context, decision protobuf.Message,
 
 // commandLikeCall reports whether a tool call IS a command — its arguments
 // are a bare command string, or an object carrying one of the documented
-// command fields (fork patch 35). Everything else is a different shape of
-// work: a write tool whose content quotes a blocked command is a document.
+// command fields under the encoding/json key-matching rules (fork patch 35).
+// Everything else is a different shape of work: a write tool whose content
+// quotes a blocked command is a document.
 func commandLikeCall(call *aop.ToolCall) bool {
 	if call == nil {
 		return false
 	}
-	raw := call.GetArguments().GetData()
-	var value any
-	if json.Unmarshal(raw, &value) != nil {
-		return false
-	}
-	switch typed := value.(type) {
-	case string:
-		return strings.TrimSpace(typed) != ""
-	case map[string]any:
-		for _, key := range []string{"command", "cmd", "script", "input", "code"} {
-			if text, ok := typed[key].(string); ok && strings.TrimSpace(text) != "" {
-				return true
-			}
-		}
-	}
-	return false
+	_, ok := commandField(call.GetArguments().GetData())
+	return ok
 }

@@ -928,7 +928,10 @@ an upstream change on the new path.
     whose content quoted a blocked command held the call for review — every report mentioning
     `rm -rf /` became a pending approval. A red line is a statement about commands; `Admit` now
     judges the command lists only when the call IS one — a bare string argument, or an object
-    carrying one of the documented command fields (`command`/`cmd`/`script`/`input`/`code`).
+    carrying one of the documented command fields (`command`/`cmd`/`script`/`input`/`code`,
+    matched the way encoding/json fills a tool's own field: keys fold case, a later key
+    overrides an earlier one — the exact-key lookup this entry first shipped let
+    `{"Command":"rm -rf /"}` execute past every red line; closed r10 lane D).
     The guaranteed builtin audit stays unconditional (it records, it does not judge).
     Tests: same command (the write-tool negative through `Admit` — no denial, no events — beside
     the bare-string positive; the existing command fence dance keeps passing).
