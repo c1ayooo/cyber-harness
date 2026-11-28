@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/chainreactors/cyber/agent"
+	"github.com/chainreactors/cyber/aop/payloads"
 )
 
 // Turn seed (fork patch 26): a control plane on a machine that does not share
@@ -22,6 +23,10 @@ const (
 	SeedFilesLimit = 256
 	SeedTotalLimit = 64 << 20
 )
+
+// CaseSeedFile is the payload contract's seed file (aop/payloads): one file
+// the control plane materializes in the workspace before the turn runs.
+type CaseSeedFile = payloads.CaseSeedFile
 
 // applyCaseSeed writes the seed files under the agent's workspace. Every
 // failure is fatal to the turn: a half-applied seed would let the model read a

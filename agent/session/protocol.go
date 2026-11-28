@@ -6,93 +6,9 @@ import (
 	"strings"
 
 	aop "github.com/chainreactors/cyber/aop"
-	"github.com/chainreactors/cyber/aop/payloads"
 	types "github.com/chainreactors/cyber/core/types"
 	protobuf "google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/types/known/anypb"
 )
-
-// workDirExtensionURL is the Tianwu fork's per-session workspace extension on
-// OpenSessionRequest. The AOP schema has no session work dir (a session runs in
-// the agent process directory), so a control plane that owns a per-run case
-// directory sends it here instead of editing the shared schema. The value is
-// JSON: {"work_dir":"<absolute path>","single_task":true}. The optional
-// scheduling flag uses the runtime's existing SingleTask mailbox policy.
-//
-// Patch 20 (2026-11-25): the control plane renamed its fork namespace from
-// tianwu.* to 4zrcin.*, so every extension it sends now carries the new type
-// URL while this file still matched only the old one — the host silently
-// ignored WorkDir/ToolEnv/RunGoal again. Both spellings are accepted for the
-// same payload; the old URL keeps pre-rename control planes working.
-// extensionWithURL returns the first extension whose type URL matches one of
-// the given fork URLs. Fork payloads have carried two namespaces across the
-// tianwu → 4zrcin rename; matching by list keeps both generations working.
-func extensionWithURL(extensions []*anypb.Any, urls []string) *anypb.Any {
-	for _, extension := range extensions {
-		if extension == nil {
-			continue
-		}
-		for _, url := range urls {
-			if extension.GetTypeUrl() == url {
-				return extension
-			}
-		}
-	}
-	return nil
-}
-
-// sessionWorkDir returns the workspace a control plane attached to this open
-// request. Empty means "use the agent's own working directory", which keeps old
-// control planes working.
-func sessionWorkspace(req *aop.OpenSessionRequest) payloads.WorkDirPayload {
-	if req == nil {
-		return payloads.WorkDirPayload{}
-	}
-	if value, ok := payloads.ParseWorkDir(payloads.ExtensionWithURL(req.GetExtensions(), payloads.WorkDirURLs)); ok {
-		value.WorkDir = strings.TrimSpace(value.WorkDir)
-		if value.WorkDir != "" || value.SingleTask {
-			return value
-		}
-	}
-	return payloads.WorkDirPayload{}
-}
-
-// runGoalExtensionURLs lists every type URL the RunGoal payload has been
-// published under (see the WorkDir namespace note above).
-
-// caseSeedExtensionURLs lists every type URL the CaseSeed payload has been
-// published under (same fork namespace generations as WorkDir). The payload is
-// {"files":[{"path":".zrcin/context.json","mode":420,"data":"<base64>"}]};
-// paths are relative to the turn's workspace.
-
-// CaseSeedFile is one file of a turn seed (fork patch 26).
-// CaseSeedFile is the payload contract's seed file (aop/payloads): one file
-// the control plane materializes in the workspace before the turn runs.
-type CaseSeedFile = payloads.CaseSeedFile
-
-// toolEnvExtensionURLs lists every type URL the ToolEnv payload has been
-// published under (see the WorkDir namespace note above).
-
-// scopeRulesExtensionURLs is the control plane's per-turn test-range rule set
-// (manifest scope_rules JSON). The proxy's scope judge reads what this
-// registers; a set that fails to parse is logged and ignored — the request
-// pipeline stays record-only rather than judging on garbage.
-
-// globalFenceExtensionURLs is the control plane's instance-wide red lines
-// (spec #1 工单3): command patterns that never execute and domains that are
-// never reached, on every project the instance drives — judged before the
-// project fence, so a project allowlisting a denied domain still cannot reach
-// it. Same per-turn carriage and both-namespace recognition as ScopeRules.
-
-// egressProxyExtensionURLs is the control plane's per-turn egress proxy (the
-// project manifest "proxy" JSON: enabled/scheme/host/port/username/password
-// plus the normalized dial url). The proxy hub reads what this registers; an
-// unparsable endpoint is logged and cleared — the session falls back to the
-// node default chain rather than routing on garbage.
-
-type toolEnvExtension struct {
-	Env map[string]string `json:"env"`
-}
 
 func (rt *Runtime) OpenAOPSession(req *aop.OpenSessionRequest) *aop.OpenSessionResponse {
 	response := &aop.OpenSessionResponse{}
@@ -100,19 +16,8 @@ func (rt *Runtime) OpenAOPSession(req *aop.OpenSessionRequest) *aop.OpenSessionR
 		response.Outcome = &aop.OpenSessionResponse_Rejected{Rejected: rejection("INVALID_ARGUMENT", "session_id is required")}
 		return response
 	}
-	options := SessionOptions{
-		ID: req.SessionId, ParentSessionID: req.ParentSessionId, ParentToolCallID: req.ParentToolCallId,
-		WorkDir: sessionWorkspace(req).WorkDir, SingleTask: sessionWorkspace(req).SingleTask,
-	}
-	// Seam G1 (docs/19 appendix A): registered request decorators turn the
-	// fork payloads into session options; an error rejects the open.
-	if rt != nil && len(rt.config.OpenSessionDecorators) > 0 {
-		if err := applyOpenSessionDecorators(context.Background(), rt.config.OpenSessionDecorators, req, &options); err != nil {
-			response.Outcome = &aop.OpenSessionResponse_Rejected{Rejected: rejection("FAILED_PRECONDITION", err.Error())}
-			return response
-		}
-	}
-	session, err := rt.EnsureSession(options)
+	// Seam G1 (docs/19 appendix A): the registered decorators (decorators.go) resolve the fork payloads first.
+	session, err := rt.openDecoratedSession(req, SessionOptions{ID: req.SessionId, ParentSessionID: req.ParentSessionId, ParentToolCallID: req.ParentToolCallId})
 	if err != nil {
 		response.Outcome = &aop.OpenSessionResponse_Rejected{Rejected: rejection("FAILED_PRECONDITION", err.Error())}
 		return response
@@ -141,20 +46,11 @@ func (rt *Runtime) RunAOPTurn(ctx context.Context, req *aop.RunTurnRequest) *aop
 	if req.Input != nil {
 		message = protobuf.CloneOf(req.Input)
 	}
-	input := RunInput{
+	// Seam G1 (docs/19 appendix A): the registered decorators (decorators.go) resolve the fork payloads first.
+	_, err := rt.runDecoratedTurn(ctx, req, RunInput{
 		TurnID: req.TurnId, Message: message, Continue: req.ContinueSession,
 		MaxTurns: int(req.MaxTurns), EvalCriteria: options.EvalCriteria, EvalRounds: options.EvalRounds,
-	}
-	// Seam G1 (docs/19 appendix A): registered turn decorators turn the fork
-	// payloads (fence rules, work dir, case seed, …) into the run input. An
-	// error rejects the turn with FAILED_PRECONDITION — a payload that claims
-	// to have landed cannot silently not have.
-	decorators := rt.config.TurnDecorators
-	if err := applyTurnDecorators(ctx, decorators, req, &input); err != nil {
-		response.Outcome = &aop.RunTurnResponse_Rejected{Rejected: rejection("FAILED_PRECONDITION", err.Error())}
-		return response
-	}
-	_, err := rt.RunSession(ctx, req.SessionId, input)
+	})
 	if err != nil {
 		response.Outcome = &aop.RunTurnResponse_Rejected{Rejected: rejection("FAILED_PRECONDITION", err.Error())}
 		return response
@@ -183,8 +79,6 @@ func (rt *Runtime) CloseAOPSession(ctx context.Context, req *aop.CloseSessionReq
 		response.Outcome = &aop.CloseSessionResponse_Rejected{Rejected: rejection("INVALID_ARGUMENT", "session_id is required")}
 		return response
 	}
-	// Closing the session emits SessionEnd, where the composition's fence
-	// extension drops this session's registrations and proxy binding.
 	if err := rt.CloseSession(ctx, req.SessionId, SessionCloseReason(req.Reason)); err != nil {
 		response.Outcome = &aop.CloseSessionResponse_Rejected{Rejected: rejection("FAILED_PRECONDITION", err.Error())}
 		return response

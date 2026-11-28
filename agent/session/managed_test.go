@@ -15,6 +15,10 @@ import (
 func TestAOPManagedMailboxWaitsForExplicitTurnAndPreservesPolicyOnRotation(t *testing.T) {
 	provider := &runtimeSemanticProvider{}
 	rt := newBareRuntime(t, nil, provider)
+	// The managed policy rides the open request: a registered open decorator
+	// (seam G1) lands it in the options, and the runtime must carry it across
+	// rotation. The WorkDir payload's own decoding is 4zsession's (its tests).
+	rt.config.OpenSessionDecorators = []OpenSessionDecorator{managedOpenDecorator}
 	response := rt.OpenAOPSession(&aop.OpenSessionRequest{SessionId: "managed", Extensions: []*anypb.Any{{TypeUrl: payloads.WorkDirExtensionURL, Value: []byte(`{"single_task":true}`)}}})
 	if response.GetAccepted() == nil {
 		t.Fatalf("open: %v", response.GetRejected())
@@ -63,6 +67,16 @@ func TestAOPManagedMailboxWaitsForExplicitTurnAndPreservesPolicyOnRotation(t *te
 	if provider.callCount() != 2 {
 		t.Fatal("managed session could not continue explicitly")
 	}
+}
+
+// managedOpenDecorator stands in for the 4zsession decorator this package
+// cannot import (the block imports agent/session): the WorkDir extension's
+// single_task flag selects the managed mailbox.
+func managedOpenDecorator(req *aop.OpenSessionRequest, options *SessionOptions) error {
+	if value, ok := payloads.ParseWorkDir(payloads.ExtensionWithURL(req.GetExtensions(), payloads.WorkDirURLs)); ok {
+		options.SingleTask = value.SingleTask
+	}
+	return nil
 }
 
 func TestManagedActiveSessionStillAdmitsPeerMail(t *testing.T) {

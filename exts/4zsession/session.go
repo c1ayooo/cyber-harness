@@ -25,6 +25,49 @@ func TurnDecorators() []agentsession.RunTurnDecorator {
 	}
 }
 
+// Decorate registers the block's request decorators (seam G1) on a session
+// runtime config. Decorators already on the config — the fence's, which the
+// composition appends first — stay ahead of these.
+func Decorate(config *agentsession.Config) {
+	config.TurnDecorators = append(config.TurnDecorators, TurnDecorators()...)
+	config.OpenSessionDecorators = append(config.OpenSessionDecorators, OpenSessionDecorators()...)
+}
+
+// OpenSessionDecorators returns the decorators that resolve an open-session
+// request into session options.
+func OpenSessionDecorators() []agentsession.OpenSessionDecorator {
+	return []agentsession.OpenSessionDecorator{openWorkDirDecorator}
+}
+
+// openWorkDirDecorator lands the workspace a control plane attached to the
+// open request: the per-run case directory the session's file and shell tools
+// resolve against, with the scheduling flag that selects the runtime's
+// SingleTask mailbox policy. The AOP schema has no session work dir (a session
+// runs in the agent process directory), so a control plane that owns a case
+// directory sends it here instead of editing the shared schema. Empty keeps
+// the agent's own working directory, which keeps old control planes working;
+// options an earlier decorator already set are left alone.
+func openWorkDirDecorator(req *aop.OpenSessionRequest, options *agentsession.SessionOptions) error {
+	if value := openWorkDir(req); value.WorkDir != "" || value.SingleTask {
+		options.WorkDir, options.SingleTask = value.WorkDir, value.SingleTask
+	}
+	return nil
+}
+
+// openWorkDir decodes the WorkDir extension of an open request.
+func openWorkDir(req *aop.OpenSessionRequest) payloads.WorkDirPayload {
+	if req == nil {
+		return payloads.WorkDirPayload{}
+	}
+	if value, ok := payloads.ParseWorkDir(payloads.ExtensionWithURL(req.GetExtensions(), payloads.WorkDirURLs)); ok {
+		value.WorkDir = strings.TrimSpace(value.WorkDir)
+		if value.WorkDir != "" || value.SingleTask {
+			return value
+		}
+	}
+	return payloads.WorkDirPayload{}
+}
+
 // runGoalDecorator separates the evaluator's goal from the executor's turn
 // message; its own extension wins over AgentRunOptions.eval_rounds.
 func runGoalDecorator(req *aop.RunTurnRequest, input *agentsession.RunInput) error {

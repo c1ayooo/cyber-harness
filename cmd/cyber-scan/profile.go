@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -25,8 +24,6 @@ import (
 	"github.com/chainreactors/cyber/core/proc"
 	coretool "github.com/chainreactors/cyber/core/tool"
 	evidenceext "github.com/chainreactors/cyber/exts/4zevidence"
-	fenceext "github.com/chainreactors/cyber/exts/4zfence"
-	fenceconfig "github.com/chainreactors/cyber/exts/4zfence/config"
 	zsession "github.com/chainreactors/cyber/exts/4zsession"
 	guardrailext "github.com/chainreactors/cyber/exts/guardrail"
 	inboxext "github.com/chainreactors/cyber/exts/inbox"
@@ -128,32 +125,11 @@ func buildCyberScanProfile(config config) (*cyberScanProfile, error) {
 	}
 	// Screening is selected explicitly and independently of acceleration.
 	guardrailValue := *guardrailConfig
-	// The fence section carries the judge knobs (docs/19 已决 15); its provider
-	// overrides the guardrail section's when it names a judge.
-	fenceConfig := fenceconfig.Config{}
-	if fenceValue, fenceErr := cfg.Get[*fenceconfig.Config](resolved, fenceconfig.ConfigKey); fenceErr == nil && fenceValue != nil {
-		fenceConfig = *fenceValue
-		if fenceConfig.Provider == "" {
-			fenceConfig.Provider = string(guardrailValue.Provider)
-		}
-	}
-
-	// The judge block is the product composition's own decision (docs/19 E3-2):
-	// the fence loads ahead of the guardrail so its tool.before admission is
-	// consulted first; the bind hook behind it hands it the guardrail runtime
-	// for the approval lifecycle. The guardrail itself stays in the base
-	// composition, fed by the guardrail section.
-	judge := assembly.Policy(fenceConfig, guardrailValue.Rules)
-	proxyExtension := proxyext.New(proxyext.Config{
+	judge := assembly.Fence(resolved, guardrailValue)
+	proxyExtension := judge.Proxy(proxyext.Config{
 		WorkDir: workDir, Proxy: config.Base.Scanner.Resources.Proxy,
-		// The judge is the fence's; the exemption names whatever server URL
-		// this node serves (fork patch 36) — its bookkeeping calls always
-		// work, unjudged and uncaptured. Empty for a profile without an agent
-		// server (the Web service profile).
-		ScopeJudge:       fenceext.NewScopeJudge(judge.Fence),
-		RequestExemption: fenceext.ControlPlaneExemption(controlPlaneHost(config.Option)),
-		Capture:          capture, Storage: config.Base.TrafficStorage,
-	})
+		Capture: capture, Storage: config.Base.TrafficStorage,
+	}, config.Option.ServerURL)
 	graph, err := extensions(config.Base, loop, workDir, proxyExtension, guardrailValue, judge)
 	if err != nil {
 		return nil, fmt.Errorf("construct Cyber application: %w", err)
@@ -163,14 +139,7 @@ func buildCyberScanProfile(config config) (*cyberScanProfile, error) {
 	// first. The observers follow it: they subscribe to hooks and to the event
 	// stream, both of which fire at run time rather than during load.
 	values := []extension.Extension{nodeext.New()}
-	// The LLM-only judge has no JEV dependency. JEV and hybrid need the shared
-	// client because hybrid escalates low-confidence/review judgments to JEV.
-	effectiveProvider := fenceConfig.Provider
-	if effectiveProvider == "" {
-		effectiveProvider = string(guardrailValue.Provider)
-	}
-	guardrailNeedsJEV := effectiveProvider == "jev" || effectiveProvider == "hybrid"
-	if guardrailNeedsJEV || (jevConfig.Mode != "" && jevConfig.Mode != "off") {
+	if judge.NeedsJEV() || (jevConfig.Mode != "" && jevConfig.Mode != "off") {
 		if strings.TrimSpace(jevConfig.APIKey) == "" {
 			return nil, fmt.Errorf("JEV requires jev.api_key or TYPESAFE_API_KEY")
 		}
@@ -202,18 +171,15 @@ func buildCyberScanProfile(config config) (*cyberScanProfile, error) {
 		values = append(values, observer)
 	}
 	var observeKinds []observeext.Kind
-	// Evidence is 4zevidence's own switch (docs/19 E5): the artifacts kind
-	// does not exist in upstream observe, which reverted to its upstream form,
-	// so the flag no longer carries it.
-	evidenceEnabled := config.Option.Evidence
 	for item := range strings.SplitSeq(config.Option.Observe, ",") {
-		if item = strings.TrimSpace(item); item == "" {
-			continue
+		if item = strings.TrimSpace(item); item != "" {
+			observeKinds = append(observeKinds, observeext.Kind(item))
 		}
-		observeKinds = append(observeKinds, observeext.Kind(item))
 	}
 	// Export existing operation facts whenever any OTel signal is configured.
-	if otelEnabled && len(observeKinds) == 0 && !evidenceEnabled {
+	// Evidence is 4zevidence's own switch (docs/19 E5): it takes the observe
+	// export's place, so the default kinds do not apply.
+	if otelEnabled && len(observeKinds) == 0 && !config.Option.Evidence {
 		observeKinds = []observeext.Kind{observeext.Tools, observeext.Commands, observeext.Processes}
 	}
 	if len(observeKinds) > 0 {
@@ -223,7 +189,7 @@ func buildCyberScanProfile(config config) (*cyberScanProfile, error) {
 		}
 		values = append(values, observer)
 	}
-	if evidenceEnabled {
+	if config.Option.Evidence {
 		values = append(values, evidenceext.New(evidenceext.Options{Enabled: true}))
 	}
 	// Install session tools and source hooks before starting the active router.
@@ -233,8 +199,6 @@ func buildCyberScanProfile(config config) (*cyberScanProfile, error) {
 	if config.Option.Command == cfg.RunModeInbox && config.Session != nil {
 		dir := cfg.InboxStateDir(config.Option, workDir)
 		var record func(context.Context, inbox.Message) error
-		// CYBER_EXCLUDE_TOOLS=ioa also removes handoff recording: with the IOA
-		// extension excluded there is no collaboration to record through.
 		if config.IOA != nil && !toolExcluded("ioa") {
 			record = func(ctx context.Context, m inbox.Message) error {
 				if collaboration == nil {
@@ -273,11 +237,6 @@ func buildCyberScanProfile(config config) (*cyberScanProfile, error) {
 		}})
 		p.router = router.Router()
 	}
-	// CYBER_EXCLUDE_TOOLS=ioa removes the agent-visible IOA surface (commands,
-	// prompt section, handoff recording, console bindings) while leaving every
-	// IOA server the host runs untouched: the Web host's /ioa transport is a
-	// separate extension installed by the caller, and a host that only uses it
-	// as a message bus must keep working.
 	if config.IOA != nil && !toolExcluded("ioa") {
 		bundle, diagnostics := ioaclient.Skills()
 		if len(diagnostics) > 0 {
@@ -302,22 +261,15 @@ func buildCyberScanProfile(config config) (*cyberScanProfile, error) {
 		values = append(values, ioaclient.NewConsole(ioaclient.ConsoleConfig{Space: config.IOA.Space, Endpoint: config.IOA.URL}))
 	}
 	if config.Session != nil {
-		// The recap worker is intentionally not installed. It makes one extra
-		// summarization model call after every turn and does not report that
-		// call in token usage, so a control-plane that accounts per-run spend
-		// and pauses on quota would undercount it. Tianwu reviews work through
-		// its decision log and handoff receipts instead. Embedders that want
-		// recaps can still compose exts/recap explicitly.
+		// No recap worker (FORK.md #16): its unreported model call would skew per-run spend accounting.
 		values = append(values, ptyext.New())
 		agentConfig := *config.Session
 		agentConfig.BaseSkills = append([]string{"cyber"}, agentConfig.BaseSkills...)
 		agentConfig.NodeName = nodeName
 		agentConfig = sessionext.ConfigFromOption(config.Option, agentConfig)
 		agentConfig.TurnDecorators = append(agentConfig.TurnDecorators, judge.Fence.TurnDecorators()...)
-		agentConfig.TurnDecorators = append(agentConfig.TurnDecorators, zsession.TurnDecorators()...)
+		zsession.Decorate(&agentConfig)
 		values = append(values, sessionext.New(agentConfig))
-		// CYBER_EXCLUDE_TOOLS=subagent removes the model-facing delegation tool;
-		// the Subagent capability (when installed) stays for other extensions.
 		if !toolExcluded("subagent") {
 			values = append(values, subagentext.NewTools())
 		}
@@ -544,21 +496,4 @@ func (p *cyberScanProfile) CommitProvider(ctx context.Context, config provider.P
 		return fmt.Errorf("provider controller is unavailable")
 	}
 	return p.providerController.Reload(ctx, config, commit)
-}
-
-// controlPlaneHost extracts the host of the profile's agent server URL — the
-// control plane this node serves and the one host the fence must never gate
-// (fork patch 36). An empty or unparseable URL exempts nothing.
-func controlPlaneHost(option *cfg.Option) string {
-	if option == nil {
-		return ""
-	}
-	raw := strings.TrimSpace(option.ServerURL)
-	if raw == "" {
-		return ""
-	}
-	if parsed, err := url.Parse(raw); err == nil {
-		return strings.ToLower(parsed.Hostname())
-	}
-	return ""
 }

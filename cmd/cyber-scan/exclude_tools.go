@@ -18,9 +18,15 @@ import (
 // has not asked for this gets a different tool surface.
 //
 // Recognized names: "subagent" (the native delegation tool) and "ioa" (the IOA
-// collaboration surface: client commands, prompt section and console bindings).
-// "ioa" never removes an IOA server: hosts that run one (the Web host) keep their
-// message transport.
+// collaboration surface: client commands, prompt section, inbox handoff
+// recording and console bindings — with the extension excluded there is no
+// collaboration to record through). "ioa" never removes an IOA server: hosts
+// that run one (the Web host) keep their message transport.
+//
+// Excluding "subagent" removes only the model-facing tool. The Subagent
+// capability stays installed where other extensions need it: the scan engines
+// install scanner subagent definitions and borrow it, so extensions.go keeps
+// the capability whenever the engine block is composed.
 const excludeToolsEnv = "CYBER_EXCLUDE_TOOLS"
 
 // excludedTools parses CYBER_EXCLUDE_TOOLS into a lower-cased set. It reads the

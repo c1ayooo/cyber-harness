@@ -19,7 +19,7 @@ func TestControlPlaneExemptionIsPlatformPlumbing(t *testing.T) {
 	// The test target lives on 127.0.0.1; naming that host as the control
 	// plane exempts the whole loopback family — the executor's API base and
 	// the scan share one node, spelled 127.0.0.1, localhost and ::1.
-	exempt := ControlPlaneExemption("127.0.0.1")
+	exempt := ControlPlaneExemption("http://127.0.0.1:8080")
 	if !exempt("127.0.0.1") || !exempt("localhost") || !exempt("[::1]") || !exempt(" 127.0.0.1 ") {
 		t.Fatalf("loopback family not exempt")
 	}
@@ -27,14 +27,21 @@ func TestControlPlaneExemptionIsPlatformPlumbing(t *testing.T) {
 		t.Fatalf("unrelated host exempt")
 	}
 	// A different node's control plane does not leak: empty exempts nothing,
-	// and a named non-loopback host matches only itself.
+	// and a named non-loopback host matches only itself. A URL without a host
+	// (or one that does not parse) exempts nothing either.
 	none := ControlPlaneExemption("")
 	if none("127.0.0.1") {
 		t.Fatalf("empty control plane exempted a host")
 	}
-	named := ControlPlaneExemption("ctrl.example")
+	named := ControlPlaneExemption("https://ctrl.example/")
 	if !named("ctrl.example") || named("other.example") || named("localhost") {
 		t.Fatalf("named control plane matched the wrong hosts")
+	}
+	if hostless := ControlPlaneExemption("file:///opt/data"); hostless("file") || hostless("") {
+		t.Fatalf("a URL without a host exempted something")
+	}
+	if mixed := ControlPlaneExemption(" HTTPS://Ctrl.Example:443 "); !mixed("ctrl.example") {
+		t.Fatalf("URL case and padding changed the control plane")
 	}
 }
 

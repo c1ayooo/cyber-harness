@@ -54,27 +54,16 @@ func extensions(config appConfig, loop agent.Loop, workDir string, proxy *proxye
 	if err != nil {
 		return nil, err
 	}
-	// Behind the base: the bind hands the fence the guardrail runtime the
-	// base just installed (docs/19 E3-2).
 	extensions = append(extensions, judge.Behind...)
 	engines, passiveBindings := assembly.Engines(assembly.EnginesInput{
-		SkipEngines:      config.SkipEngines,
-		Scanner:          config.Scanner,
-		Recon:            config.Recon,
-		ReconCredentials: config.ReconCredentials,
+		SkipEngines: config.SkipEngines, Scanner: config.Scanner, Recon: config.Recon, ReconCredentials: config.ReconCredentials,
 	}, workDir)
 	search := searchext.New(searchext.Options{TavilyKeys: config.TavilyKeys})
 	bindings := append([]gateway.Kind{proxy.Gateway(config.ProxyService)}, search.Gateway()...)
 	bindings = append(bindings, passiveBindings...)
 	extensions = append(extensions, gateway.New(config.Gateway, bindings...))
-	// The loop installation publishes agent.Loop, so it precedes every
-	// extension that runs against one.
+	// The loop installation publishes agent.Loop before its consumers.
 	extensions = append(extensions, okfext.New(prompt.MainSystem, scan.ScannerSystemTarget), loopext.New(loop))
-	// CYBER_EXCLUDE_TOOLS removes the model-facing subagent tool (profile.go
-	// skips subagentext.NewTools). The Point itself is only dropped when no
-	// engine extension is composed: the scan engines install scanner subagent
-	// definitions and borrow the Subagent capability, so dropping it there would
-	// break their composition rather than expose a tool.
 	if !toolExcluded("subagent") || !config.SkipEngines {
 		extensions = append(extensions, subagentext.New())
 	}
@@ -82,14 +71,12 @@ func extensions(config appConfig, loop agent.Loop, workDir string, proxy *proxye
 
 	// Webshell management (4zrcin docs/18): one ledger in the control plane,
 	// two executors. The tools run a shell from this host and read the ledger
-	// over the run's own identity, so a capture node that never gets a shell
-	// call pays nothing and every turn without identity makes them unavailable.
+	// over the run's own identity, so a capture node pays nothing for a call it never gets.
 	extensions = append(extensions, webshellext.New(webshellext.Config{NodeID: cfg.DefaultNodeID}))
 
 	// The engine block is the recipe boundary (docs/04 §3.3): the scan-capture
-	// build (-tags captureonly) compiles an empty twin, so the scanner, proton
-	// and discovery extension packages — and with them the gogo/spray/zombie/
-	// neutron/katana tool chains — never enter that binary. The traffic proxy
+	// build (-tags captureonly) compiles an empty twin, so the engine packages
+	// and their tool chains never enter that binary (pkg/assembly). The proxy
 	// and guardrail above are the capture recipe's actual payload.
 	extensions = append(extensions, engines...)
 	if optionalToolEnabled(config.OptionalTools, "search") {
@@ -110,8 +97,7 @@ func extensions(config appConfig, loop agent.Loop, workDir string, proxy *proxye
 		extensions = append(extensions, record)
 	}
 	// External MCP servers are operator configuration, not a distribution
-	// capability: an empty section keeps the graph identical to a build that
-	// never linked this extension.
+	// capability: an empty section leaves the graph unchanged (mcp_test.go).
 	if len(config.MCP.MCPServers) > 0 {
 		extensions = append(extensions, mcpext.New(config.MCP.MCPServers))
 	}
