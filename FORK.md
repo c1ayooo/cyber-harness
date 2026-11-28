@@ -1737,9 +1737,10 @@ loads the full module graph, which brings back a stale `genproto` that
 collides with the split one, and go.work has no exclude directive.
 
 Tests: the sdk branch carries `neutron/additions_test.go` and
-`fingers/additions_test.go`; run them from this repo, since the sdk's own
-dependencies only resolve through the fork replaces:
-`go test github.com/chainreactors/sdk/neutron github.com/chainreactors/sdk/fingers`.
+`fingers/additions_test.go`. They run in the sdk checkout on its own
+(`go test ./fingers ./neutron`, against the upstream chainreactors versions)
+and from this repo against the pinned commit, which is the run that matters
+here: `go test github.com/chainreactors/sdk/neutron github.com/chainreactors/sdk/fingers`.
 In `exts/4zrules`, sixteen tests cover the brick, clean under `-race`;
 `TestAnAddedFingerprintAndPOCAreSelectedByTheScanPipeline` runs the scan
 pipeline's own selection over what the block loaded, which is the proof that
