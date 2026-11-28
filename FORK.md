@@ -109,10 +109,10 @@ are registered without a budget (已决 24). Figures are added lines against
 - **#25 the capture recipe announces itself in the hello**
   - hooks: `cmd/cyber-scan/agent_transport.go` (2)
 - **#21–#37 scope rules, proxy seam, instance fence** — the proxy side of seam G2
-  - hooks: `cmd/cyber-scan/profile.go` (26, over budget), `tools/proxy/config.go` (14), `tools/proxy/hub.go` (7), `tools/proxy/hub_traffic.go` (9), `tools/proxy/mitm.go` (15)
+  - hooks: `cmd/cyber-scan/profile.go` (26, over budget), `tools/proxy/config.go` (7), `tools/proxy/hub.go` (9), `tools/proxy/hub_traffic.go` (9), `tools/proxy/mitm.go` (15)
   - tests and docs: `tools/proxy/mitm_test.go`
 - **E3 round (2026-11-27, docs/19 appendix E)** — seams G1 and G4, the evidence switch, the judge block, SubmitReview (G3), the verdict sidecar hook, the Policy slot in the base composition
-  - hooks: `agent/session/dependencies.go` (3), `agent/session/protocol.go` (4), `agent/session/runtime.go` (17), `agent/session/session.go` (20), `cmd/cyber-scan/extensions.go` (30, over budget), `cmd/cyber-scan/profile.go` (26, over budget), `exts/guardrail/runtime.go` (9), `exts/observe/extension.go` (3), `exts/proxy/extension.go` (17), `pkg/config/options.go` (11), `pkg/harness/base.go` (11)
+  - hooks: `agent/session/dependencies.go` (3), `agent/session/protocol.go` (4), `agent/session/runtime.go` (17), `agent/session/session.go` (20), `cmd/cyber-scan/extensions.go` (30, over budget), `cmd/cyber-scan/profile.go` (26, over budget), `exts/guardrail/runtime.go` (9), `exts/observe/extension.go` (3), `exts/proxy/extension.go` (22, over budget), `pkg/config/options.go` (11), `pkg/harness/base.go` (11)
   - tests and docs: `docs/configuration.md`, `exts/observe/extension_test.go`
 - **fence section migration (已决 15/19/20)**
   - hooks: `cmd/cyber-scan/ioa_composition.go` (10), `pkg/config/resolved.go` (4), `pkg/config/sections.go` (14)
@@ -1397,6 +1397,65 @@ Tests: `go test ./...` — every touched package green (`agent/session`,
 `pkg/config`, `tools/proxy`), plus the known machine-bound failures listed
 under Tests; `scripts/acceptance/fence-parity.sh` reports 16 identical
 verdicts; `make scan-capture` builds.
+Rollback: revert the commits.
+
+## E4 round 2: the session-route table is the fence extension's own (2026-11-28)
+
+docs/19 E4 round 2, ticket A. The per-session egress registry — the table
+that says which project proxy each agent session dials through (4zrcin
+EgressProxy, patch 24) — was package-global state in `core/egress`, written by
+`exts/4zfence` and read by the proxy hub, sharing the file with the fork's
+`Dial` contract type. This round moves the table into the fence extension's
+own store, the same shape the E3 round gave the scope rules and the instance
+fence. No behavior change: the payloads, the log lines, the capacity and the
+eviction semantics are verbatim.
+
+| upstream file | before | after |
+|---|---|---|
+| `tools/proxy/config.go` | 14 | 7 |
+| `tools/proxy/hub.go` | 7 | 9 |
+| `exts/proxy/extension.go` | 17 | 22, over budget |
+
+- `exts/4zfence/egressroutes` (new) owns the table: `Store` with
+  `Set`/`Clear`/`Lookup`/`ClearAll`, capacity 256, ring eviction line for
+  line. `core/egress` keeps only the contract type `Dial`, in the fork-owned
+  `core/egress/dial.go`; `sessionroute.go` and its test are deleted, and the
+  package holds no mutable state at all.
+- The fence extension creates the store at `Load` beside the rule tables,
+  Provides it for consumers that can borrow, and clears it at `Close`. The
+  entry points reach it through `stores()`, now three-valued.
+  `turnEgressProxy` is a method of the extension writing its own store, and
+  refuses the turn with `ErrNotLoaded` when the extension holds no store —
+  the same contract as `turnScopeRules` / `turnGlobalFence` — instead of
+  registering into a table nobody owns. `dropOnClose` clears the session's
+  route from the same store. A rotation close still clears the route without
+  parking it, unlike the rule tables: routes ride every turn, so the
+  continuation re-binds from its own payload and a cleared route is the node
+  default.
+- The seam follows the scope-judge precedent: `tools/proxy` still imports
+  nothing of `exts/4zfence`. The `Hub` gains one field and the fork file
+  `scope_judge.go` gains `SetSessionRoutes`, written like `SetScopeJudge`
+  (this moved the per-session routing comment out of the upstream
+  `config.go`, halving its additions); `Hub.egress` resolves the session's
+  route through the injected lookup, per-call passthrough still winning.
+  `exts/proxy.Config` carries `SessionRoutes` and installs it beside the
+  judge and the exemption.
+- One subtlety worth recording: `Judge.Proxy` runs at composition time,
+  before any extension loads, so `Extension.SessionRoutes()` cannot hand over
+  the store itself. It returns a view that resolves the fence's table at call
+  time — the lazy pattern `NewScopeJudge` already uses. While the extension
+  holds no table (before `Load`, after `Close`) every lookup yields nil and
+  the hub walks the node default chain, exactly its answer to "no route for
+  this session".
+Tests: the moved cases keep their assertions — the `tools/proxy` cases
+install routes through `hub.SetSessionRoutes` backed by an in-test map, the
+`exts/4zfence` cases through the store `installStores` now builds with the
+other two. New cases: the store-less turn refuses with `ErrNotLoaded`, and a
+`pkg/assembly` end-to-end proves the lookup `Judge.Proxy` installs reads and
+writes the store the fence loaded and provided (the bound session dials
+through it, the cleared session falls back). `go test ./...` green except the
+known machine-bound failures under Tests; `gofmt`/`go vet` clean; the capture
+recipe (`emptyresources captureonly`) builds.
 Rollback: revert the commits.
 
 ## Superseded patches
