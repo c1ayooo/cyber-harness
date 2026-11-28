@@ -83,28 +83,15 @@ func (o judgeOptions) allowedPrefix(ev toolhooks.CallEvent) bool {
 	return false
 }
 
-// commandText extracts the command-ish text from a tool call's arguments.
-// It recognizes the documented bash/subagent command fields first, then falls
-// back to the raw argument string. Matching stays a literal prefix test.
+// commandText extracts the command-ish text from a tool call's arguments by
+// the same rules the command tools decode with (commandField), falling back
+// to the raw argument string. Matching stays a literal prefix test.
 func commandText(call *aop.ToolCall) string {
 	if call == nil {
 		return ""
 	}
-	raw := call.GetArguments().GetData()
-	var value any
-	if json.Unmarshal(raw, &value) == nil {
-		switch typed := value.(type) {
-		case string:
-			return typed
-		case map[string]any:
-			for _, key := range []string{"command", "cmd", "script", "input", "code"} {
-				if text, ok := typed[key].(string); ok && strings.TrimSpace(text) != "" {
-					return text
-				}
-			}
-		}
-	}
-	return string(raw)
+	text, _ := commandField(call.GetArguments().GetData())
+	return text
 }
 
 // judge is the policy stage of the fence admission: one invocation, judged by
