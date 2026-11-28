@@ -110,7 +110,7 @@ endif
 RECORD_PREFIX := $(if $(CYBER_RECORD_PREFIX),$(CYBER_RECORD_PREFIX),$(PROJECT_ROOT)/.cache/native/record/$(RECORD_PLATFORM)_$(RECORD_ARCH))
 RECORD_BUILD_ENV := CGO_LDFLAGS="-L$(RECORD_PREFIX)/lib $(RECORD_EXTRA_LDFLAGS)"
 
-.PHONY: help prepare frontend proto-gen standard agent full record record-native web-build web-run web all clean harness harness-llm check-architecture check-fork embed-resources resources ldflags engine scan scan-capture
+.PHONY: help prepare frontend proto-gen standard agent full record record-native web-build web-run web all clean harness harness-llm check-architecture check-fork embed-resources resources ldflags engine scan
 
 help:
 	@echo "cyber-scan build targets:"
@@ -132,7 +132,6 @@ help:
 	@echo "  make all              Build cyber-scan, agent and cyber-harness"
 	@echo "  make engine           Build cyber-harness for the 4zrcin shell (forwarded harness target)"
 	@echo "  make scan             Build cyber-scan for the 4zrcin shell (forwarded harness target)"
-	@echo "  make scan-capture     Build the capture-only cyber-scan for the 4zrcin shell"
 	@echo ""
 	@echo "Variables:"
 	@echo "  EMBED=1               Generate and embed resources instead of loading them"
@@ -255,7 +254,7 @@ web: full
 
 all: standard agent full
 
-# The 4zrcin shell forwards its `harness`/`scan-capture` targets here
+# The 4zrcin shell forwards its `harness`/`scan` targets here
 # (docs/19 §7 build convergence): the recipes are the shell Makefile's old
 # ones copied verbatim — same tag strings, same output file names — with the
 # output directory (BIN_DIR) and tag string (TAGS) handed in by the caller.
@@ -270,9 +269,5 @@ scan:
 	$(GO) build -tags "$(filter-out full,$(TAGS))" -o "$(BIN_DIR)/cyber-scan$(EXE)" ./cmd/cyber-scan
 	@echo "Built scan edition: $(BIN_DIR)/cyber-scan$(EXE)"
 
-scan-capture:
-	$(GO) build -tags "$(filter-out full,$(TAGS)) emptyresources captureonly" -o "$(BIN_DIR)/cyber-scan-capture$(EXE)" ./cmd/cyber-scan
-	@echo "Built scan-capture edition: $(BIN_DIR)/cyber-scan-capture$(EXE)"
-
 clean:
-	rm -f "$(STANDARD_BIN)" "$(FULL_BIN)" "$(RECORD_BIN)" "$(AGENT_BIN)" "$(BIN_DIR)/cyber-scan-capture$(EXE)"
+	rm -f "$(STANDARD_BIN)" "$(FULL_BIN)" "$(RECORD_BIN)" "$(AGENT_BIN)"
