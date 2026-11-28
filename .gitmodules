@@ -1,6 +1,7 @@
 [submodule "templates"]
 	path = tools/templates
-	url = https://github.com/chainreactors/templates.git
+	url = https://github.com/c1ayooo/templates.git
+	branch = 4z/rules
 [submodule "web/frontend/cyber-ui"]
 	path = web/frontend/cyber-ui
 	url = https://github.com/chainreactors/cyber-ui.git
