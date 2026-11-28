@@ -36,7 +36,7 @@ func declareResources(cli *hostcli.Registry, agentOptions *cfg.AgentOptions) *cf
 	resources := resource.New()
 	sections := cfg.NewSections()
 	// The fence section's judge keys used to live in the guardrail section
-	// (docs/19 已决 19): recognize the legacy spelling on every read.
+	// (4zdesign/19 已决 19): recognize the legacy spelling on every read.
 	sections.DocumentMigration = func(document map[string]any) {
 		fenceconfig.MigrateDocument(document)
 	}

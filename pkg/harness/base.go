@@ -33,7 +33,7 @@ type BaseConfig struct {
 	Provider     provider.StartupConfig
 	Logger       telemetry.Logger
 	Guardrail    guardrailext.Config
-	// Policy is the judge block the product root composes explicitly (docs/19
+	// Policy is the judge block the product root composes explicitly (4zdesign/19
 	// E3-2), loaded ahead of the guardrail so a fence's tool.before admission
 	// is consulted first. Nil composes none: an embedding host that skips it
 	// gets upstream's base.
@@ -75,7 +75,7 @@ func BaseExtensions(c BaseConfig) ([]extension.Extension, error) {
 		coretool.NewCommandRegistry(),
 		coretool.NewToolRegistry(),
 	}
-	// The product's judge block loads ahead of the guardrail (docs/19 E3-2).
+	// The product's judge block loads ahead of the guardrail (4zdesign/19 E3-2).
 	entries = append(entries, c.Policy...)
 	return append(entries,
 		guardrailext.New(c.Guardrail),

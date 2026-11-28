@@ -22,7 +22,7 @@ type Config struct {
 	Addr string
 	// Listener is optional. When set, Serve accepts on it instead of opening
 	// Addr — a control plane that embeds the host in-process passes a
-	// listener it already owns (the 4zrcin single binary, docs/04 M1) and
+	// listener it already owns (the 4zrcin single binary, 4zrcin docs/rules.md) and
 	// Addr is ignored. Serve still closes it on return.
 	Listener   net.Listener
 	Static     fs.FS

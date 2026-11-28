@@ -144,7 +144,7 @@ func mergeFields(dst, src map[string]any) {
 func (r *Sections) Normalize(document map[string]any) (Values, error) {
 	// DocumentMigration (set at composition) rewrites legacy sections in
 	// memory before declaration filtering — the fence section's judge keys
-	// used to live in the guardrail section (docs/19 已决 19).
+	// used to live in the guardrail section (4zdesign/19 已决 19).
 	if r.DocumentMigration != nil {
 		r.DocumentMigration(document)
 	}

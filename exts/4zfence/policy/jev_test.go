@@ -3,7 +3,7 @@ package policy
 // The JEV stage's vendor token usage becomes an AOP usage fact under the
 // guardrail emitter — the control plane's token accounting reads these. A
 // response without usage emits none. Ported with the stage from the old
-// guardrail admission tests (docs/19 E3-3): the reporter moved, so does its
+// guardrail admission tests (4zdesign/19 E3-3): the reporter moved, so does its
 // test.
 
 import (

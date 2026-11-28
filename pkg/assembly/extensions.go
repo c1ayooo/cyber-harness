@@ -68,12 +68,12 @@ func extensions(config appConfig, loop agent.Loop, workDir string, proxy *proxye
 	}
 	extensions = append(extensions, arsenal)
 
-	// Webshell management (4zrcin docs/18): one ledger in the control plane,
+	// Webshell management (4zrcin docs/webshell.md): one ledger in the control plane,
 	// two executors. The tools run a shell from this host and read the ledger
 	// over the run's own identity, so a capture node pays nothing for a call it never gets.
 	extensions = append(extensions, webshellext.New(webshellext.Config{NodeID: cfg.DefaultNodeID}))
 
-	// The engine block is the recipe boundary (docs/04 §3.3): --capture-only
+	// The engine block is the recipe boundary (4zrcin docs/rules.md): --capture-only
 	// skips it entirely, so the proxy and guardrail above are the capture
 	// mode's actual payload.
 	extensions = append(extensions, engines...)

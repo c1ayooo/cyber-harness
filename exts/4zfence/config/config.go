@@ -1,5 +1,5 @@
 // Package fenceconfig is the fence's own configuration section (已决 15/20,
-// 4zrcin docs/19): the admission judge's knobs live under the `fence` key —
+// 4zdesign/19): the admission judge's knobs live under the `fence` key —
 // who judges (none/jev/llm/hybrid), how verdicts enforce (mode), what happens
 // when the judge fails (on_error), shadow observation, and the OpenAI-
 // compatible judge endpoint. The section's struct and validation are the

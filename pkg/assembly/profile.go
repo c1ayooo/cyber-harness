@@ -176,7 +176,7 @@ func buildCyberScanProfile(config config) (*cyberScanProfile, error) {
 		}
 	}
 	// Export existing operation facts whenever any OTel signal is configured.
-	// Evidence is 4zevidence's own switch (docs/19 E5): it takes the observe
+	// Evidence is 4zevidence's own switch (4zdesign/19 E5): it takes the observe
 	// export's place, so the default kinds do not apply.
 	if otelEnabled && len(observeKinds) == 0 && !config.Option.Evidence {
 		observeKinds = []observeext.Kind{observeext.Tools, observeext.Commands, observeext.Processes}

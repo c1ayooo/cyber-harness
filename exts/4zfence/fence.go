@@ -1,4 +1,4 @@
-// Package fence is the 4zfence building block (4zrcin docs/19 P1-4): the
+// Package fence is the 4zfence building block (4zdesign/19 P1-4): the
 // instance fence, the project scope rules, and the egress binding — the
 // control plane's per-turn policy payloads, their registration tables (the
 // scoperules, globalfence and egressroutes subpackages), and the
@@ -53,13 +53,13 @@ type Extension struct {
 	subs      []*hooks.Subscription
 	stream    *events.Stream
 	guardrail *guardrailext.Runtime
-	// The judge (docs/19 E3-3): the fence section's knobs and the policy they
+	// The judge (4zdesign/19 E3-3): the fence section's knobs and the policy they
 	// select; policy is nil for provider none.
 	fence    fenceconfig.Config
 	jevRules guardrailext.Rules
 	policy   policy.Policy
 	options  judgeOptions
-	// The tables (docs/19 E3-4): extension-owned stores, created at Load,
+	// The tables (4zdesign/19 E3-4): extension-owned stores, created at Load,
 	// provided for consumers that can borrow, and reached by the fence's own
 	// entry points — the turn decorators, the session hooks and the scope
 	// judge — through stores(). Close clears them.
@@ -105,7 +105,7 @@ func (e *Extension) Load(scope *extension.Scope) error {
 	}
 	e.policy = policy
 	e.options = newJudgeOptions(e.fence)
-	// The session tables live in this extension's stores (docs/19 E3-4): they
+	// The session tables live in this extension's stores (4zdesign/19 E3-4): they
 	// are created here, cleared at Close, and never outlive the extension
 	// that owns them. The Provide is the contribution point for consumers
 	// that can borrow them.
@@ -140,7 +140,7 @@ func (e *Extension) Load(scope *extension.Scope) error {
 }
 
 // Close releases the hook subscriptions and clears the stores: no session's
-// rules or parked sets survive the extension that owned them (docs/19 E3-4).
+// rules or parked sets survive the extension that owned them (4zdesign/19 E3-4).
 func (e *Extension) Close(_ context.Context) error {
 	e.mu.Lock()
 	defer e.mu.Unlock()
@@ -198,7 +198,7 @@ func (e *Extension) SessionRoutes() func(sessionID string) egress.Dial {
 var ErrNotLoaded = errors.New("fence extension is not loaded: no session tables to register with")
 
 // Declare registers the fence's configuration section (the judge knobs;
-// docs/19 已决 15). The section's struct and validation are fenceconfig's —
+// 4zdesign/19 已决 15). The section's struct and validation are fenceconfig's —
 // the shell's settings writer shares them through the engine module.
 func Declare(resources *resource.Registry) error {
 	_, err := resource.Add[cfg.Section](resources, cfg.Section{
@@ -213,7 +213,7 @@ func Declare(resources *resource.Registry) error {
 // TurnDecorators returns the fence's turn decorators in application order:
 // the scope rules and the instance fence register first (the proxy judges
 // this turn's requests against them), then the egress binding. They are bound
-// to this extension, so they register with its own tables (docs/19 E3-4).
+// to this extension, so they register with its own tables (4zdesign/19 E3-4).
 func (e *Extension) TurnDecorators() []agentsession.RunTurnDecorator {
 	return []agentsession.RunTurnDecorator{e.fenceRulesDecorator, e.egressProxyDecorator}
 }
@@ -245,7 +245,7 @@ func (e *Extension) inheritOnOpen(_ context.Context, ev agenthooks.SessionEvent)
 // /compact, resume). Their SessionEnd fires before the child's SessionStart,
 // so the registrations park for one hop instead of dropping — otherwise the
 // child's inheritance silently misses and it runs a turn unfenced
-// (docs/19 appendix E2-2).
+// (4zdesign/19 appendix E2-2).
 var rotatingReasons = map[string]bool{
 	string(agentsession.SessionCloseCleared):   true,
 	string(agentsession.SessionCloseCompacted): true,

@@ -12,7 +12,7 @@ import (
 )
 
 // verdictSidecar takes the scope judge's verdict for one flow (registered
-// fork hook, docs/19 patches 21/30/33): the seam registry in tools/proxy keys
+// fork hook, 4zdesign/19 patches 21/30/33): the seam registry in tools/proxy keys
 // by flow id and this take consumes it exactly once. The Any is pre-built
 // with the control plane's type URL so the JSON verdict stays the extension's
 // payload.

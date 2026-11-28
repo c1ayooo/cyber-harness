@@ -1,6 +1,6 @@
 package fence
 
-// The fence's own tool admission (4zrcin docs/19 P1-4): the guaranteed audit
+// The fence's own tool admission (4zdesign/19 P1-4): the guaranteed audit
 // (fork patch 23b) and the instance fence red lines judge on a tool.before
 // hook registered ahead of the guardrail extension, so a red line denies —
 // or holds on the ordinary approval lifecycle via guardrail's SubmitReview
@@ -45,7 +45,7 @@ func (e *Extension) admit(ctx context.Context, ev toolhooks.CallEvent) (toolhook
 	// The instance fence: only command-like calls are judged (fork patch 35) —
 	// a pattern is a statement about commands, and a write tool whose content
 	// quotes "rm -rf /" is a document, not one. Other calls skip the red lines
-	// but still reach the policy judge (docs/19 E3-3).
+	// but still reach the policy judge (4zdesign/19 E3-3).
 	if commandLikeCall(ev.Call) {
 		if _, globals, _ := e.stores(); globals != nil {
 			if rule, hit := globals.JudgeCommand(operation.InvocationFromContext(ctx).SessionID, commandText(ev.Call)); hit {
@@ -53,7 +53,7 @@ func (e *Extension) admit(ctx context.Context, ev toolhooks.CallEvent) (toolhook
 			}
 		}
 	}
-	// The policy judge (docs/19 E3-3) runs last: a red line denies — or holds
+	// The policy judge (4zdesign/19 E3-3) runs last: a red line denies — or holds
 	// — before any model judge sees the invocation.
 	return e.judge(ctx, ev, e.options)
 }

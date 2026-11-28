@@ -1,6 +1,6 @@
 package scoperules
 
-// The fence sample set (4zrcin docs/19 P1-4's acceptance input): a golden
+// The fence sample set (4zdesign/19 P1-4's acceptance input): a golden
 // corpus of rule sets × requests → verdicts, committed and compared
 // byte-for-byte. P1-4 moves this package into exts/4zfence; the SAME golden
 // file must still pass there — verdict-for-verbatim is the behavioral

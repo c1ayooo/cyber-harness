@@ -101,7 +101,7 @@ func TestFenceProviderAndJEVNeed(t *testing.T) {
 // table: the lookup it installs reads the store the fence loaded and
 // provided, so a route the fence registered for a live session serves that
 // session's calls, and a cleared route falls back to the node default — the
-// package-global registry is gone (docs/19 E4 round 2).
+// package-global registry is gone (4zdesign/19 E4 round 2).
 func TestJudgeProxySessionRoutesShareTheFenceTable(t *testing.T) {
 	target := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)

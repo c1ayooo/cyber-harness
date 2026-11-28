@@ -1,6 +1,6 @@
 package session
 
-// Request decorators are the upstream seam G1 (4zrcin docs/19 appendix A).
+// Request decorators are the upstream seam G1 (4zdesign/19 appendix A).
 // A control plane attaches fork payloads (WorkDir, RunGoal, CaseSeed, scope
 // rules, …) to the AOP requests' own `extensions []*anypb.Any`. This package
 // only runs the decorators a composition registered: the payload contract and

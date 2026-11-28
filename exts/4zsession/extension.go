@@ -7,7 +7,7 @@ import (
 
 // InputDecorators is the extension-level contribution: the input-enrichment
 // decorators a composition appends to the session runtime. A step toward the
-// G1 contribution point (docs/19 appendix E3); the RuntimeConfig wiring keeps
+// G1 contribution point (4zdesign/19 appendix E3); the RuntimeConfig wiring keeps
 // consuming TurnDecorators() for now.
 type InputDecorators []agentsession.RunTurnDecorator
 

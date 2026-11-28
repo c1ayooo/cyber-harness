@@ -16,7 +16,7 @@ import (
 	sdktypes "github.com/chainreactors/sdk/pkg/types"
 )
 
-// docs/20 (4zrcin) step 1. A running Set picks up rules that are added in
+// 4zrcin docs/rules.md step 1. A running Set picks up rules that are added in
 // place, so the rule hot-reload brick never rebuilds a node. Each test pins
 // one sdk behaviour the brick relies on: when the sdk changes one of them the
 // matching assertion turns red here before the brick can miss silently.

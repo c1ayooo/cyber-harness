@@ -10,7 +10,7 @@ import (
 )
 
 // Judge is the 4z judge block a product root adds around the guardrail the
-// base composition installs (docs/19 E3-2).
+// base composition installs (4zdesign/19 E3-2).
 //
 // Ahead loads before that guardrail, so the fence's tool.before admission
 // (audit + red lines) is consulted first. Behind loads after it and hands the
@@ -24,7 +24,7 @@ type Judge struct {
 }
 
 // Fence reads the judge off the resolved configuration: the fence section
-// carries the judge knobs (docs/19 已决 15), and its provider overrides the
+// carries the judge knobs (4zdesign/19 已决 15), and its provider overrides the
 // guardrail section's when it names a judge — so a deployment that filled only
 // the guardrail section keeps its provider. A configuration without a fence
 // section judges with the fence defaults.

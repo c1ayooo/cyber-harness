@@ -2,7 +2,7 @@
 
 // builtin_gen.go compiles the built-in high-risk command corpus
 // (guardrail_builtin.yaml) into a Go file the guardrail runtime embeds. Fork
-// patch 23b (docs/04): the guaranteed audit corpus must always ship in the
+// patch 23b (4zrcin docs/rules.md): the guaranteed audit corpus must always ship in the
 // binary — the audit duty is not a capability, no build tag or mode strips it.
 //
 // Patterns are compiled at generation time: an invalid regex fails here, not

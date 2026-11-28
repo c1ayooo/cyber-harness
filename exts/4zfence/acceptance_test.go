@@ -1,6 +1,6 @@
 package fence
 
-// The fence acceptance corpus (4zrcin docs/19 P1-4 acceptance): every sample
+// The fence acceptance corpus (4zdesign/19 P1-4 acceptance): every sample
 // drives the FULL admission path — the fence's tool.before admission for the
 // tool calls (guaranteed audit, red lines, review holds) and the fence's
 // scope judge for the proxied requests — and prints one stable verdict line

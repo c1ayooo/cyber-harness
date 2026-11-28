@@ -158,7 +158,7 @@ func unavailableScannerError(name string) error {
 
 func runDirectScannerMode(ctx context.Context, newProfile func(profile.Request) (profile.Profile, error), option *cfg.Option, rest []string, logger telemetry.Logger, outputTask *taskcli.Output) (runErr error) {
 	if option.CaptureOnly && !cfg.IsScannerHelpRequest(rest) && productScannerAvailable(rest[0]) {
-		// A capture node carries no scan engines (docs/04 §3.3): the catalog
+		// A capture node carries no scan engines (4zrcin docs/rules.md): the catalog
 		// above stays full for parsing and help, the refusal sits here, right
 		// before an execution would load a profile.
 		return fmt.Errorf("%s needs the scan engines, which a capture node does not assemble: drop --capture-only or use a full node", rest[0])

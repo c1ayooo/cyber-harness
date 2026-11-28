@@ -1,6 +1,6 @@
 package fence
 
-// The fence's policy judge (docs/19 E3-3): the judging half of the old
+// The fence's policy judge (4zdesign/19 E3-3): the judging half of the old
 // guardrail admission — the scope filter, the policy evaluation, the shadow
 // and safe-mode releases — moved here, so the fence is the sole judge and
 // the guardrail runtime stays only the approval queue. Review holds ride the

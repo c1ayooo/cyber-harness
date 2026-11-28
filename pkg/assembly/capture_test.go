@@ -1,6 +1,6 @@
 package assembly
 
-// The capture mode is a runtime switch on the one scan binary (4zrcin docs/19
+// The capture mode is a runtime switch on the one scan binary (4zdesign/19
 // P6 step 3): --capture-only assembles no engine block and announces
 // scan-capture in the registration hello, and the scanner commands refuse to
 // run. Without the switch every surface is today's full node.

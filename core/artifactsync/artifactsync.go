@@ -1,6 +1,6 @@
 // Package artifactsync carries run evidence from the node's case directory
 // back to the control plane as 4zrcin.Artifact sidecars (fork patch 23c,
-// docs/04). Remote scan nodes share no filesystem with the hub: the evidence
+// 4zrcin docs/rules.md). Remote scan nodes share no filesystem with the hub: the evidence
 // bytes travel inside the Envelope stream instead, and the control plane lands
 // them in the central case directory. Old hubs ignore the unknown sidecar and
 // old nodes never send it, so the two sides can upgrade independently.

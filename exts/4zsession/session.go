@@ -1,4 +1,4 @@
-// Package zsession is the 4zsession building block (4zrcin docs/19 P1-4):
+// Package zsession is the 4zsession building block (4zdesign/19 P1-4):
 // the fork payload decorators that enrich a turn's input — the evaluator's
 // goal, the case seed files, the tool environment, and the workspace. The
 // fence-side payloads (scope rules, global fence, egress proxy) live in the

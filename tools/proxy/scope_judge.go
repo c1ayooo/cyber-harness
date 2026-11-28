@@ -1,4 +1,4 @@
-// The scope-judge seam (G2, 4zrcin docs/19 appendix A): the proxy exposes a
+// The scope-judge seam (G2, 4zdesign/19 appendix A): the proxy exposes a
 // judge interface and delegates each request's verdict to whoever implements
 // it — in the fork's composition, the fence's request judge. This file is a
 // pure addition relative to upstream: the seam types, the take-once verdict
