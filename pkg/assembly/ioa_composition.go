@@ -7,6 +7,7 @@ import (
 	"github.com/chainreactors/cyber/core/resource"
 	fenceext "github.com/chainreactors/cyber/exts/4zfence"
 	fenceconfig "github.com/chainreactors/cyber/exts/4zfence/config"
+	rulesext "github.com/chainreactors/cyber/exts/4zrules"
 	"github.com/chainreactors/cyber/exts/gateway"
 	guardrailext "github.com/chainreactors/cyber/exts/guardrail"
 	ioaclient "github.com/chainreactors/cyber/exts/ioa/client"
@@ -70,6 +71,7 @@ func declareResources(cli *hostcli.Registry, agentOptions *cfg.AgentOptions) *cf
 	mustDeclare(fenceext.Declare(resources))
 	mustDeclare(jevext.Declare(resources))
 	mustDeclare(scannerext.Declare(resources))
+	mustDeclare(rulesext.Declare(resources))
 	mustDeclare(passiveconfig.Declare(resources))
 	schemas := append(passiveconfig.Sections(), proxyext.ClashSection())
 	schemas = append(schemas, searchext.Sections()...)

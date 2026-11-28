@@ -152,6 +152,8 @@ file whose directory is excluded; it is removed, and `.gitignore` is upstream ag
 - **4ztemplates: the rules source is the fork's maintenance branch (2026-11-28)**
   - manifests: `.gitmodules`
   - generated data: `tools/proton/resources/data/found_filter_dir.bin`, `tools/proton/resources/data/found_keys.bin`, `tools/proton/resources/data/found_spray.bin` (written by `make resources`, docs/19 §5.3)
+- **Rule hot reload borrows the live engine set (2026-11-28, 4zrcin docs/20)**
+  - hooks: `exts/scanner/extension.go`
 
 ### Upstream files moved into fork-owned packages
 
@@ -1669,6 +1671,77 @@ worktree checks out the pin from the fork; `make resources` exits 0 with
 a clean tree.
 Rollback: revert the commit — the submodule's own history is untouched.
 
+
+## Rule hot reload: the scanner provides the live engine set (2026-11-28)
+
+4zrcin docs/20. A node used to read its rules once, at start: the fingerprints
+and POCs compiled into the binary, plus whatever `cyberhub` had cached. Adding
+a rule meant regenerating, rebuilding and redistributing `scan`. The sdk fork
+already had the in-place path (`AddPocs`, `AddFingers` and `Reload`), and the
+tools read the engines on every call, so what was missing was a way to reach
+the live engines after they were built.
+
+The scanner extension now `Provide`s its `*engine.Set` right after the engines
+are initialized — ten added lines in `exts/scanner/extension.go`, the only
+upstream file this touches. An engine set that failed to initialize still
+provides an empty one, so a consumer loads and reports instead of failing the
+node. `e.engines` itself is not touched, so the tool constructors and the
+availability report see exactly what they saw before.
+
+The consumer is a new block, `exts/4zrules` (docs/19 §2). It watches the
+directory named by `CYBER_RULES_DIR` and adds what changed to the engines it
+borrowed, only while no scan call is in flight. The logic lives in the block;
+the composition root appends it after the scanner in `pkg/assembly`. It takes
+no hook of its own: `tool.started` and `tool.completed` are upstream points.
+The block imports `tools/scan/engine` and the sdk, the same kind of exception
+as `tools/proxy` and `tools/resources` (docs/19 red line 3): the provided type
+is defined there.
+
+Tests: `tools/scan/engine/hot_proof_test.go` pins the sdk behaviour the block
+relies on; `exts/4zrules` covers load, the idle gate, rejected files, a
+rewritten POC, a removed file, the node's report and the empty library, and
+runs clean under `-race`. `TestTheScannerProvidesTheEngineSet` loads the
+scanner and the block together, so the ten lines are exercised.
+Rollback: drop the block from `Engines()` — the node is back to reading its
+rules once, at start. The hook can stay; nothing else borrows the set.
+
+**The same day, a rewrite and a removal became hot as well.** In the first
+cut `AddPocs` only appended, so a rewritten POC and a removed file waited for
+a restart. The sdk's fork, the repository `c1ayooo/4zgears`, grew the two methods
+that were missing, on branch `feat/rules-hot-reload` at the commit this repo
+pins (`dcad8620f5e9`; the module path stays `github.com/chainreactors/sdk`): `RemovePocs` drops templates by id from the running set and
+the configuration, and `RemoveFingers` drops fingerprints by name from the
+configuration (the caller reloads). Neither compiles anything, which is the
+point: `Template.Compile` appends to the request lists, so a compiled template
+is never compiled twice. A built-in that an instance file covered is put back
+from the node's own copy of the rules it started with, parsed again.
+
+The block now keeps, per file, what it loaded and the text it loaded from. A
+rewrite takes the old version out and adds the new one; a removal takes it
+out; a file the engines refuse leaves the previous version running and says so
+in its reason. An instance POC with a built-in id takes the built-in's place,
+as an instance fingerprint with a built-in name already did.
+
+**go.mod, one line, plus two in go.sum.** The sdk resolve is the pushed
+commit: `github.com/chainreactors/sdk => github.com/c1ayooo/4zgears
+v0.3.4-0.20261128085002-6d95d1bd74c1` (was `github.com/c1ayooo/sdk
+v0.3.4-0.20260708104745-dcad8620f5e9`). The shell's go.mod carries the same
+line. While the branch was still unpushed that line read `../4zgears`, a
+sibling checkout. A workspace file was tried before that and does not work
+here: workspace mode
+loads the full module graph, which brings back a stale `genproto` that
+collides with the split one, and go.work has no exclude directive.
+
+Tests: the sdk branch carries `neutron/additions_test.go` and
+`fingers/additions_test.go`; run them from this repo, since the sdk's own
+dependencies only resolve through the fork replaces:
+`go test github.com/chainreactors/sdk/neutron github.com/chainreactors/sdk/fingers`.
+In `exts/4zrules`, sixteen tests cover the brick, clean under `-race`;
+`TestAnAddedFingerprintAndPOCAreSelectedByTheScanPipeline` runs the scan
+pipeline's own selection over what the block loaded, which is the proof that
+an added rule is not merely present but picked.
+Rollback of this half: `git checkout go.mod go.sum` and revert the block to the
+first cut; the sdk methods are additive and can stay.
 
 ## Superseded patches
 

@@ -393,7 +393,7 @@ replace (
 	github.com/chainreactors/proton => github.com/c1ayooo/proton v0.3.3-0.20260707162538-471f99ea6131
 	github.com/chainreactors/proxyclient => github.com/c1ayooo/proxyclient v1.1.1-0.20260728110701-74504679dc47
 	github.com/chainreactors/proxyclient/extra => github.com/c1ayooo/proxyclient/extra v0.0.0-20260527160727-36cf133952c3
-	github.com/chainreactors/sdk => github.com/c1ayooo/sdk v0.3.4-0.20260708104745-dcad8620f5e9
+	github.com/chainreactors/sdk => github.com/c1ayooo/4zgears v0.3.4-0.20261128085002-6d95d1bd74c1
 	github.com/chainreactors/sdk/gogo => github.com/c1ayooo/sdk/gogo v0.0.0-20260708104745-dcad8620f5e9
 	github.com/chainreactors/sdk/spray => github.com/c1ayooo/sdk/spray v0.0.0-20260708104745-dcad8620f5e9
 	github.com/chainreactors/sdk/zombie => github.com/c1ayooo/sdk/zombie v0.0.0-20260708104745-dcad8620f5e9
