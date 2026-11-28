@@ -1,10 +1,4 @@
-//go:build !captureonly
-
 package assembly
-
-// The direct scanner mode only exists in the full recipe: the capture binary
-// has no scan subcommand to parse (docs/04 §3.3), so this test does not apply
-// there.
 
 import (
 	"bytes"

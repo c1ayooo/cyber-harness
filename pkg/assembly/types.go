@@ -2,13 +2,11 @@
 // P6): the whole cyber-scan command — CLI, modes, profile and the extension
 // graph it loads — together with the engine recipe and the judge block, in
 // one importable package. The `scan` binary's entry and an embedding control
-// plane's node verb both call Exec, so the node is assembled once.
-//
-// The capture twin (engines_capture.go, -tags captureonly) compiles an empty
-// form: none of the engine packages behind these extensions enter that
-// binary, and the passive gateway bindings cross back as data (nil there).
-// The input types reference only config structs that compile in both
-// recipes; the heavy tool chains stay behind the tagged files.
+// plane's node verb both call Exec, so the node is assembled once. The
+// capture recipe is a runtime mode of that one binary: --capture-only leaves
+// Engines unassembled and the passive gateway bindings cross back as data
+// (nil there); the scanner catalog stays full so parsing and help are the
+// same in both modes.
 package assembly
 
 import (

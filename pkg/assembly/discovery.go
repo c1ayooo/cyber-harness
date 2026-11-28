@@ -1,5 +1,3 @@
-//go:build !captureonly
-
 package assembly
 
 import (

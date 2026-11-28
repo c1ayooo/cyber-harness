@@ -73,10 +73,9 @@ func extensions(config appConfig, loop agent.Loop, workDir string, proxy *proxye
 	// over the run's own identity, so a capture node pays nothing for a call it never gets.
 	extensions = append(extensions, webshellext.New(webshellext.Config{NodeID: cfg.DefaultNodeID}))
 
-	// The engine block is the recipe boundary (docs/04 §3.3): the scan-capture
-	// build (-tags captureonly) compiles an empty twin, so the engine packages
-	// and their tool chains never enter that binary (pkg/assembly). The proxy
-	// and guardrail above are the capture recipe's actual payload.
+	// The engine block is the recipe boundary (docs/04 §3.3): --capture-only
+	// skips it entirely, so the proxy and guardrail above are the capture
+	// mode's actual payload.
 	extensions = append(extensions, engines...)
 	if optionalToolEnabled(config.OptionalTools, "search") {
 		extensions = append(extensions, search)

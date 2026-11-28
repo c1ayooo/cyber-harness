@@ -1,4 +1,4 @@
-//go:build !record && !captureonly
+//go:build !record
 
 package assembly
 

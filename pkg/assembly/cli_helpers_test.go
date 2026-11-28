@@ -1,7 +1,6 @@
 package assembly
 
-// CLI test helpers shared by every recipe's test files: the capture build's
-// tests use them too, so they live outside the !captureonly test files.
+// CLI test helpers shared by the package's test files.
 
 import (
 	"strings"
