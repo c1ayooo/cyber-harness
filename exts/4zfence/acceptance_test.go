@@ -204,7 +204,7 @@ func acceptanceHTTPCall(sample acceptanceSample) *aop.ToolCall {
 		value = map[string]any{"method": sample.Method, "url": sample.URL}
 	}
 	data, _ := json.Marshal(value)
-	return &aop.ToolCall{Name: "http.request", Arguments: &aop.EncodedValue{Data: data}}
+	return &aop.ToolCall{Name: scoperules.ScopeCallToolName, Arguments: &aop.EncodedValue{Data: data}}
 }
 
 // waitAcceptanceReview blocks until the runtime publishes the pending review

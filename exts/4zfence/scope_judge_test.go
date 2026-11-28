@@ -54,7 +54,7 @@ func scopeCall(t *testing.T, flowID, method, url string) *aop.ToolCall {
 	if err != nil {
 		t.Fatal(err)
 	}
-	return &aop.ToolCall{Name: httpRequestToolName, Arguments: &aop.EncodedValue{Data: arguments}}
+	return &aop.ToolCall{Name: scoperules.ScopeCallToolName, Arguments: &aop.EncodedValue{Data: arguments}}
 }
 
 func scopeRequest(sessionID string, call *aop.ToolCall) scoperules.ScopeRequest {
@@ -149,7 +149,7 @@ func TestJudgeScopeRequestReviewHoldsAndResolves(t *testing.T) {
 		}
 		_ = extension.UnmarshalTo(&review)
 	}
-	if review.State != guardrailext.ReviewState_REVIEW_STATE_PENDING || review.GetCall().GetName() != httpRequestToolName {
+	if review.State != guardrailext.ReviewState_REVIEW_STATE_PENDING || review.GetCall().GetName() != scoperules.ScopeCallToolName {
 		t.Fatalf("review state = %v call = %q", review.GetState(), review.GetCall().GetName())
 	}
 
@@ -332,7 +332,7 @@ func scopeCallPassive(t *testing.T, flowID, method, url string) *aop.ToolCall {
 	if err != nil {
 		t.Fatal(err)
 	}
-	return &aop.ToolCall{Name: httpRequestToolName, Arguments: &aop.EncodedValue{Data: arguments}}
+	return &aop.ToolCall{Name: scoperules.ScopeCallToolName, Arguments: &aop.EncodedValue{Data: arguments}}
 }
 
 // The decision carries the verdict verbatim (fork patch 33): the proxy's

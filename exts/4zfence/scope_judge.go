@@ -53,11 +53,6 @@ var _ scoperules.ScopeJudge = (*ScopeJudge)(nil)
 // events a tool interception does, because those are the verdicts an operator
 // must see and answer. Shadow judges and publishes but never holds or refuses.
 
-// The synthetic tool name every scope-rule HTTP verdict carries, so a journal
-// row reads like any other guardrail interception. Defined here as the single
-// documented value; the proxy builds its calls with the same name.
-const httpRequestToolName = "http.request"
-
 // JudgeScopeRequest implements proxy.ScopeJudge.
 func (j *ScopeJudge) JudgeScopeRequest(req scoperules.ScopeRequest) scoperules.ScopeDecision {
 	if j == nil || req.Call == nil || req.Invocation.SessionID == "" {

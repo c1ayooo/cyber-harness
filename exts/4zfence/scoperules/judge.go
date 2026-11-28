@@ -30,6 +30,10 @@ type ScopeDecision = proxy.ScopeDecision
 // ScopeVerdict is the judge's verdict as the wire sees it.
 type ScopeVerdict = proxy.ScopeVerdict
 
+// ScopeCallToolName is the name the proxy gives the synthetic tool call a
+// judge verdict refers to.
+const ScopeCallToolName = proxy.ScopeCallToolName
+
 // RecordVerdict / TakeVerdict are the seam's take-once verdict registry: the
 // judge's answers key by flow id, the sidecar consumer takes each exactly
 // once.

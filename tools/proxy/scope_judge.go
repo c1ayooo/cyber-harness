@@ -180,7 +180,7 @@ func (a *captureAddon) judgeRequest(f *mitmproxy.Flow) (ScopeVerdict, bool) {
 	if correlation.invocation.SessionID == "" {
 		return ScopeVerdict{}, false
 	}
-	call := &aop.ToolCall{Name: scopeCallToolName, Arguments: &aop.EncodedValue{Data: scopeRequestArguments(f)}}
+	call := &aop.ToolCall{Name: ScopeCallToolName, Arguments: &aop.EncodedValue{Data: scopeRequestArguments(f)}}
 	req := ScopeRequest{Invocation: correlation.invocation, Call: call, Operation: correlation.operation}
 	// A CONNECT tunnel is judged host-form only: the tunnel setup carries no
 	// method or path, and the decrypted inner requests carry the full judgment
@@ -212,9 +212,10 @@ func (a *captureAddon) judgeRequest(f *mitmproxy.Flow) (ScopeVerdict, bool) {
 	return verdict, true
 }
 
-// scopeCallToolName is the synthetic tool name the scope judge's calls carry.
-// The judge's journal rows read like any other interception of this tool.
-const scopeCallToolName = "http.request"
+// ScopeCallToolName is the synthetic tool name the scope judge's calls carry,
+// so a judge's journal rows read like any other interception of this tool.
+// It is defined here, where the calls are built; a judge takes it from here.
+const ScopeCallToolName = "http.request"
 
 // verdictOf returns the decision's own verdict, or the historical three-field
 // reconstruction when the judge did not carry one.
