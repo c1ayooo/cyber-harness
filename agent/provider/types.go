@@ -23,29 +23,24 @@ const (
 // back into aop types; nothing upstream of this package sees vendor JSON.
 
 type ChatCompletionRequest struct {
-	Purpose        string        // Host-only request purpose; never serialized to the provider.
-	Timeout        time.Duration // Host-only request fallback; zero uses the provider configuration.
-	Model          string
-	Messages       []*aop.Message
-	Tools          []*aop.ToolDefinition
-	MaxTokens      int
-	Temperature    *float64
-	Stream         bool
-	CacheRetention CacheRetention
-	SessionID      string
-	// ConversationID is the logical routing identity across session rotation.
-	// SessionID retains its existing provider prompt-cache semantics.
-	ConversationID  string
+	Purpose         string        // Host-only request purpose; never serialized to the provider.
+	Timeout         time.Duration // Host-only request fallback; zero uses the provider configuration.
+	Model           string
+	Messages        []*aop.Message
+	Tools           []*aop.ToolDefinition
+	MaxTokens       int
+	Temperature     *float64
+	Stream          bool
+	CacheRetention  CacheRetention
+	SessionID       string
+	ConversationID  string // Logical routing identity across session rotation; SessionID retains its existing provider prompt-cache semantics.
 	ReasoningEffort string // Optional inference hint; empty uses the provider default.
 	JSONOutput      bool   // Request a JSON object from adapters that support structured output.
 }
 
 type ChatCompletionResponse struct {
-	ID string
-	// Model is the model the endpoint reports having served the request. It can
-	// differ from the requested name when the endpoint routes, so callers that
-	// need to explain a missing usage field can record it.
-	Model   string
+	ID      string
+	Model   string // The model the endpoint reports having served the request; it can differ from the requested name when the endpoint routes, so callers that need to explain a missing usage field can record it.
 	Choices []Choice
 	Usage   *aop.TokenUsage
 	Error   *APIError
