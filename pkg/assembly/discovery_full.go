@@ -19,10 +19,3 @@ func Discovery(input EnginesInput) ([]extension.Extension, *passiveext.Extension
 	})
 	return []extension.Extension{katanaext.New(), feature}, feature
 }
-
-func intValue(value *int) int {
-	if value != nil {
-		return *value
-	}
-	return 0
-}

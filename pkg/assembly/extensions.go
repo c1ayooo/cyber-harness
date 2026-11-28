@@ -1,0 +1,108 @@
+package assembly
+
+import (
+	"os"
+	"path/filepath"
+	"slices"
+
+	webshellext "github.com/c1ayooo/4zwebshell/extension"
+	"github.com/chainreactors/cyber/agent"
+	"github.com/chainreactors/cyber/agent/prompt"
+	"github.com/chainreactors/cyber/core/extension"
+	loopext "github.com/chainreactors/cyber/exts/agent"
+	arsenalext "github.com/chainreactors/cyber/exts/arsenal"
+	"github.com/chainreactors/cyber/exts/gateway"
+	guardrailext "github.com/chainreactors/cyber/exts/guardrail"
+	mcpext "github.com/chainreactors/cyber/exts/mcp"
+	okfext "github.com/chainreactors/cyber/exts/okf"
+	proxyext "github.com/chainreactors/cyber/exts/proxy"
+	searchext "github.com/chainreactors/cyber/exts/search"
+	subagentext "github.com/chainreactors/cyber/exts/subagent"
+	terminalext "github.com/chainreactors/cyber/exts/terminal"
+	cfg "github.com/chainreactors/cyber/pkg/config"
+	harness "github.com/chainreactors/cyber/pkg/harness"
+	"github.com/chainreactors/cyber/tools/scan"
+)
+
+// extensions returns the product's extensions in load order. Gateway binds
+// configuration to the existing owners before their consumers are loaded.
+func extensions(config appConfig, loop agent.Loop, workDir string, proxy *proxyext.Extension, guardrailConfig guardrailext.Config, judge Judge) ([]extension.Extension, error) {
+	config.DataDir = cfg.ResolveDataDir(config.DataDir)
+	config.Scanner.Resources.CacheDir = filepath.Join(config.DataDir, "cache")
+
+	bundle, err := EmbeddedBundle()
+	if err != nil {
+		return nil, err
+	}
+	arsenal, err := arsenalext.New(filepath.Join(config.DataDir, "arsenal"), ToolSpec.ManagerOption(bundle))
+	if err != nil {
+		return nil, err
+	}
+	childEnv := map[string]string{"PATH": arsenal.BinPath() + string(os.PathListSeparator) + os.Getenv("PATH")}
+
+	extensions, err := harness.BaseExtensions(harness.BaseConfig{
+		Guardrail:  guardrailConfig,
+		Policy:     judge.Ahead,
+		Directory:  workDir,
+		SkillPaths: config.CLISkillPaths,
+		Terminal:   terminalext.Config{Environment: childEnv},
+		Provider:   config.Provider,
+		Logger:     config.Logger,
+		Egress:     proxy,
+	})
+	if err != nil {
+		return nil, err
+	}
+	extensions = append(extensions, judge.Behind...)
+	engines, passiveBindings := Engines(EnginesInput{
+		SkipEngines: config.SkipEngines, Scanner: config.Scanner, Recon: config.Recon, ReconCredentials: config.ReconCredentials,
+	}, workDir)
+	search := searchext.New(searchext.Options{TavilyKeys: config.TavilyKeys})
+	bindings := append([]gateway.Kind{proxy.Gateway(config.ProxyService)}, search.Gateway()...)
+	bindings = append(bindings, passiveBindings...)
+	extensions = append(extensions, gateway.New(config.Gateway, bindings...))
+	// The loop installation publishes agent.Loop before its consumers.
+	extensions = append(extensions, okfext.New(prompt.MainSystem, scan.ScannerSystemTarget), loopext.New(loop))
+	if !toolExcluded("subagent") || !config.SkipEngines {
+		extensions = append(extensions, subagentext.New())
+	}
+	extensions = append(extensions, arsenal)
+
+	// Webshell management (4zrcin docs/18): one ledger in the control plane,
+	// two executors. The tools run a shell from this host and read the ledger
+	// over the run's own identity, so a capture node pays nothing for a call it never gets.
+	extensions = append(extensions, webshellext.New(webshellext.Config{NodeID: cfg.DefaultNodeID}))
+
+	// The engine block is the recipe boundary (docs/04 §3.3): the scan-capture
+	// build (-tags captureonly) compiles an empty twin, so the engine packages
+	// and their tool chains never enter that binary (pkg/assembly). The proxy
+	// and guardrail above are the capture recipe's actual payload.
+	extensions = append(extensions, engines...)
+	if optionalToolEnabled(config.OptionalTools, "search") {
+		extensions = append(extensions, search)
+	}
+	browser, err := browserExtension(config, workDir)
+	if err != nil {
+		return nil, err
+	}
+	if browser != nil {
+		extensions = append(extensions, browser)
+	}
+	record, err := recordExtension(config, workDir)
+	if err != nil {
+		return nil, err
+	}
+	if record != nil {
+		extensions = append(extensions, record)
+	}
+	// External MCP servers are operator configuration, not a distribution
+	// capability: an empty section leaves the graph unchanged (mcp_test.go).
+	if len(config.MCP.MCPServers) > 0 {
+		extensions = append(extensions, mcpext.New(config.MCP.MCPServers))
+	}
+	return extensions, nil
+}
+
+func optionalToolEnabled(selected []string, name string) bool {
+	return len(selected) == 0 || slices.Contains(selected, name)
+}

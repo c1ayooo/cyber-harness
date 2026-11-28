@@ -275,7 +275,7 @@ jobs:
         run: grep -Ev '^[[:space:]]*(#|$)' editions.env >> "$GITHUB_ENV"
 
       - name: Run Windows package tests
-        run: go test -count=1 ./agent/... ./cmd/cyber-scan/... ./pkg/web/...
+        run: go test -count=1 ./agent/... ./cmd/cyber-scan/... ./pkg/assembly/... ./pkg/web/...
 
       - name: Set up Node.js for bootstrap tests
         uses: actions/setup-node@v7
@@ -287,12 +287,12 @@ jobs:
         run: npm run test:bootstrap
 
       - name: Compile and test the scanner CLI without cgo on Windows
-        run: go test -count=1 -tags "$env:STANDARD_TAGS" ./cmd/cyber-scan
+        run: go test -count=1 -tags "$env:STANDARD_TAGS" ./cmd/cyber-scan ./pkg/assembly
         env:
           CGO_ENABLED: "0"
 
       - name: Compile and test the scanner CLI with cgo on Windows
-        run: go test -count=1 -tags "$env:STANDARD_TAGS" ./cmd/cyber-scan
+        run: go test -count=1 -tags "$env:STANDARD_TAGS" ./cmd/cyber-scan ./pkg/assembly
         env:
           CGO_ENABLED: "1"
 
@@ -323,7 +323,7 @@ jobs:
       - name: Run remaining full-tag unit variants
         run: |
           go test -tags "$STANDARD_CAPS_TAGS" -count=1 -timeout 5m \
-            ./cmd/cyber-scan ./agent/skills ./tools/passive ./tools/scan/engine
+            ./pkg/assembly ./agent/skills ./tools/passive ./tools/scan/engine
           go test -tags "$FULL_CAPS_TAGS" -count=1 -timeout 5m \
             -run '^TestCrawler(ProfilesAreExplicitlyComposed|FiltersAndDeduplicatesTargets)$' \
             ./tools/scan
@@ -336,7 +336,7 @@ jobs:
           go test -race -tags "$FULL_CAPS_TAGS" -count=1 -timeout 5m \
             -run '^TestReflexV2' ./exts/jev
           go test -race -tags "$STANDARD_CAPS_TAGS" -count=1 -timeout 5m \
-            -run '^TestJEVProfile' ./cmd/cyber-scan
+            -run '^TestJEVProfile' ./pkg/assembly
 
       - name: Compile browser-backed full-tag suites
         run: |
@@ -348,7 +348,7 @@ jobs:
       - name: Run full server CSTX integration
         run: |
           CGO_ENABLED=0 go test -tags "$STANDARD_CAPS_TAGS" -count=1 -timeout 5m \
-            ./cmd/cyber-scan ./pkg/web/api ./pkg/web/service
+            ./pkg/assembly ./pkg/web/api ./pkg/web/service
 
   headless-record-replay-e2e:
     runs-on: ubuntu-22.04

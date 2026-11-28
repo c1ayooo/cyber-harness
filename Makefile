@@ -69,7 +69,7 @@ endif
 
 # Tool payloads are independent of scanner template embedding.
 ARSENAL_EMBED ?= 0
-ARSENAL_CONFIG ?= cmd/cyber-scan/bundle.yaml
+ARSENAL_CONFIG ?= pkg/assembly/bundle.yaml
 AUDIT_ARSENAL_CONFIG ?= cmd/audit/bundle.yaml
 ARSENAL_GOOS := $(shell $(GO) env GOOS)
 ARSENAL_GOARCH := $(shell $(GO) env GOARCH)

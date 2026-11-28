@@ -1,0 +1,108 @@
+package assembly
+
+import (
+	"context"
+	"sync"
+
+	"github.com/chainreactors/cyber/core/resource"
+	fenceext "github.com/chainreactors/cyber/exts/4zfence"
+	fenceconfig "github.com/chainreactors/cyber/exts/4zfence/config"
+	"github.com/chainreactors/cyber/exts/gateway"
+	guardrailext "github.com/chainreactors/cyber/exts/guardrail"
+	ioaclient "github.com/chainreactors/cyber/exts/ioa/client"
+	ioaserver "github.com/chainreactors/cyber/exts/ioa/server"
+	jevext "github.com/chainreactors/cyber/exts/jev"
+	mcpext "github.com/chainreactors/cyber/exts/mcp"
+	proxyext "github.com/chainreactors/cyber/exts/proxy"
+	hostcli "github.com/chainreactors/cyber/pkg/cli"
+	cfg "github.com/chainreactors/cyber/pkg/config"
+
+	passiveconfig "github.com/chainreactors/cyber/exts/passive/config"
+	recordext "github.com/chainreactors/cyber/exts/record"
+	scannerext "github.com/chainreactors/cyber/exts/scanner"
+	searchext "github.com/chainreactors/cyber/exts/search"
+	sessionext "github.com/chainreactors/cyber/exts/session"
+	flags "github.com/jessevdk/go-flags"
+)
+
+// defaultSections is the declaration graph of a host that contributes no CLI
+// parser of its own. It is identical on every call and sealed before it is
+// returned -- Add is refused and nothing else writes -- so the nine callers
+// that only read it share one instead of rebuilding six Declares apiece.
+var defaultSections = sync.OnceValue(func() *cfg.Sections { return declareResources(nil, nil) })
+
+func declareResources(cli *hostcli.Registry, agentOptions *cfg.AgentOptions) *cfg.Sections {
+	resources := resource.New()
+	sections := cfg.NewSections()
+	// The fence section's judge keys used to live in the guardrail section
+	// (docs/19 已决 19): recognize the legacy spelling on every read.
+	sections.DocumentMigration = func(document map[string]any) {
+		fenceconfig.MigrateDocument(document)
+	}
+	localCLI := cli == nil
+	if cli == nil {
+		cli = hostcli.New(flags.NewParser(&cliOptions{}, flags.None))
+	}
+	if _, err := resource.Define[hostcli.Contribution](resources, cli); err != nil {
+		panic(err)
+	}
+	if _, err := resource.Define[cfg.Section](resources, sections); err != nil {
+		panic(err)
+	}
+	if _, err := resource.Define[cfg.Connection](resources, sections.ConnectionPoint()); err != nil {
+		panic(err)
+	}
+	mustDeclare := func(err error) {
+		if err != nil {
+			panic(err)
+		}
+	}
+	mustDeclare(ioaclient.Declare(resources, func(registry *hostcli.Registry) error {
+		return ioaclient.RegisterCLI(registry, runIOAClientCommand)
+	}))
+	mustDeclare(ioaserver.Declare(resources, func(registry *hostcli.Registry) error {
+		return ioaserver.RegisterCLI(registry, func(ctx context.Context, option ioaserver.Options, env hostcli.Environment) error {
+			return runIOAServe(ctx, option, env.Logger)
+		})
+	}))
+	mustDeclare(recordext.Declare(resources))
+	mustDeclare(guardrailext.Declare(resources))
+	mustDeclare(fenceext.Declare(resources))
+	mustDeclare(jevext.Declare(resources))
+	mustDeclare(scannerext.Declare(resources))
+	mustDeclare(passiveconfig.Declare(resources))
+	schemas := append(passiveconfig.Sections(), proxyext.ClashSection())
+	schemas = append(schemas, searchext.Sections()...)
+	mustDeclare(gateway.Declare(resources, schemas...))
+	mustDeclare(resourceAddReconFlags(resources))
+	mustDeclare(searchext.Declare(resources))
+	mustDeclare(mcpext.Declare(resources))
+	if agentOptions != nil {
+		mustDeclare(sessionext.Declare(resources, agentOptions))
+	}
+	resources.Freeze()
+	if localCLI {
+		mustDeclare(cli.Seal())
+	}
+	sections.Seal()
+	return sections
+}
+
+func finalizeOptions(option *cfg.Option, action *hostcli.Action) {
+	serving := action != nil && action.Persistent
+	option.Sections = defaultSections()
+	if serving {
+		if fields := option.Extensions[ioaclient.ConfigKey]; fields != nil {
+			if option.Extensions[ioaserver.ConfigKey] == nil {
+				option.Extensions[ioaserver.ConfigKey] = map[string]any{}
+			}
+			for _, name := range []string{"url", "token"} {
+				value, present := fields[name]
+				if _, set := option.Extensions[ioaserver.ConfigKey][name]; present && !set {
+					option.Extensions[ioaserver.ConfigKey][name] = value
+				}
+			}
+			delete(option.Extensions, ioaclient.ConfigKey)
+		}
+	}
+}
