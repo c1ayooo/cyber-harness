@@ -103,8 +103,7 @@ are registered without a budget (已决 24). Figures are added lines against
 - **#23 the capture node fences, audits and ships evidence**
   - hooks: `tools/resources/resources.go` (8)
 - **#24 the capture recipe: resources and engines compile out**
-  - hooks: `tools/proton/resources/template.go` (2), `tools/resources/template.go` (2), `tools/resources/templates_gen.go` (4)
-  - tests and docs: `tools/resources/resources_test.go`
+  - hooks: none left — the tag plumbing this patch added to the generated resources (and the fork-added resource twins) is deleted since the P6 capture-mode entry; the resources files are upstream-identical again
   - manifests: `cmd/audit/go.mod`, `cmd/audit/go.sum`, `go.mod`
 - **#25 the capture recipe announces itself in the hello**
   - moved to `pkg/assembly` (docs/19 P6): `cmd/cyber-scan/agent_transport.go`
@@ -112,8 +111,9 @@ are registered without a budget (已决 24). Figures are added lines against
   - hooks: `tools/proxy/config.go` (7), `tools/proxy/hub.go` (6), `tools/proxy/hub_traffic.go` (9), `tools/proxy/mitm.go` (15)
   - tests and docs: `tools/proxy/mitm_test.go`
 - **E3 round (2026-11-27, docs/19 appendix E)** — seams G1 and G4, the evidence switch, the judge block, SubmitReview (G3), the verdict sidecar hook, the Policy slot in the base composition
-  - hooks: `agent/session/dependencies.go` (3), `agent/session/protocol.go` (4), `agent/session/runtime.go` (17), `agent/session/session.go` (20), `exts/guardrail/runtime.go` (9), `exts/observe/extension.go` (3), `exts/proxy/extension.go` (15), `pkg/config/options.go` (11), `pkg/harness/base.go` (11)
+  - hooks: `agent/session/dependencies.go` (3), `agent/session/protocol.go` (4), `agent/session/runtime.go` (17), `agent/session/session.go` (20), `exts/guardrail/runtime.go` (9), `exts/observe/extension.go` (3), `exts/proxy/extension.go` (15), `pkg/config/options.go` (12), `pkg/harness/base.go` (11)
   - tests and docs: `docs/configuration.md`, `exts/observe/extension_test.go`
+  - the options.go figure includes the P6 capture-mode flag (12; was 11 through the E3 round)
 - **fence section migration (已决 15/19/20)**
   - hooks: `pkg/config/resolved.go` (4), `pkg/config/sections.go` (14)
 - **#38 evaluator usage accounting**
@@ -655,10 +655,11 @@ an upstream change on the new path.
 25. **`feat(node): the capture recipe announces itself in the hello`** (2026-11-26)
     `cmd/cyber-scan/recipe_default.go` / `recipe_capture.go`, `agent_transport.go`.
 
-    docs/04 T5's capability routing input: `-tags captureonly` appends
+    docs/04 T5's capability routing input: the capture recipe appended
     `scan-capture` to the registration hello's capabilities; the full recipe
-    appends nothing, so an absent marker keeps reading as full and every
-    binary built before this change routes exactly as it did. The control
+    appended nothing, so an absent marker keeps reading as full and every
+    binary built before this change routes exactly as it did. Since the P6
+    capture-mode entry the choice is the `--capture-only` flag, per launch. The control
     plane (zrcin 15c4830..) consumes the marker through ListAgents →
     nodeProber.Health → the fleet badge, and keeps implicit dispatch (an
     intent that names no node) off capture-only nodes while honouring an
@@ -674,35 +675,40 @@ an upstream change on the new path.
     forms.
 
     - **Resources two-file mode** (docs/04 §3.2): `template.go` (the generated
-      472K engine-template bundle) gains `//go:build !emptyresources`; its
-      empty twin `resources_empty.go` (`//go:build emptyresources`) provides
-      the same single private `loadEmbeddedConfig` returning nil — the public
-      surface (`Init/Set/Config`) is untouched and every consumer compiles
-      unchanged. The generator emits the tag, so re-syncing cannot drop it.
-      `guardrail_builtin_gen.go` stays tag-free: the guaranteed audit corpus
-      ships in every binary form. `resources_test.go` is `!emptyresources`
-      (it asserts embedded-bundle behavior).
+      472K engine-template bundle) gained a recipe build tag, and an empty
+      twin `resources_empty.go` provided the same single private
+      `loadEmbeddedConfig` returning nil for the stripped build — the public
+      surface (`Init/Set/Config`) untouched and every consumer compiling
+      unchanged. The generator emitted the tag, so re-syncing could not drop
+      it. `guardrail_builtin_gen.go` stayed tag-free: the guaranteed audit
+      corpus ships in every binary form. `resources_test.go` was excluded
+      from the stripped build (it asserts embedded-bundle behavior).
+      Superseded by the P6 capture-mode entry: the recipes are runtime modes
+      now and this plumbing is deleted.
     - **Engine recipe boundary** (docs/04 §3.3): the scan-capture binary
-      (`-tags captureonly`) compiles an empty engine block — `engineExtensions`
-      has a full twin (`extensions_engines.go`) and an empty twin
-      (`extensions_capture.go`), and `discovery.go`/`scanner_catalog.go` gain
-      empty capture twins, so the scanner/proton/discovery extension packages
-      and the gogo/spray/zombie/neutron/katana chains behind them never link.
-      Measured: full scan 185 MB -> capture 158 MB (-15%). The traffic proxy,
-      the guardrail (with the guaranteed audit) and the evidence sidecars stay.
-      The hub connection still resolves through `CYBER_CYBERHUB_*` env/config;
-      the CLI flag groups owned by the engine extensions are compiled out with
-      them (a T5 acceptance item if a flag surface is needed on capture nodes).
+      compiled an empty engine block — `engineExtensions` had a full twin and
+      an empty twin, and `discovery.go`/`scanner_catalog.go` gained empty
+      capture twins, so the scanner/proton/discovery extension packages and
+      the gogo/spray/zombie/neutron/katana chains behind them never linked
+      into that build. Measured at the time: full scan 185 MB -> capture
+      158 MB (-15%). The traffic proxy, the guardrail (with the guaranteed
+      audit) and the evidence sidecars stay. The hub connection still
+      resolves through `CYBER_CYBERHUB_*` env/config; the CLI flag groups
+      owned by the engine extensions were compiled out with them. Superseded
+      by the P6 capture-mode entry: the empty block is a runtime skip now
+      (`--capture-only`), the binary keeps its size from the linker-level
+      twins' removal, and the flag surface is the full catalog in both modes.
     - **Test forms**: the CLI/scanner-catalog test files that assert the full
-      recipe's surface carry `!captureonly` (the capture binary genuinely has
-      no `scan` subcommand or scanner catalog); shared test helpers moved to an
-      untagged `cli_helpers_test.go`; `TestScannerManifestTags` unchanged (the
-      noconsole smoke stays build-only, as the gate designed). Also fixed the
-      pre-existing `cmd/audit` module's stale go.sum (its own module; a tidy
-      was missing after the fingers bump).
-    Tests: default, `emptyresources`, and `emptyresources+captureonly` forms
-    green for the touched packages; full tree builds in all three. Rollback:
-    revert — the default build never changes.
+      recipe's surface were excluded from the capture build (that binary
+      genuinely had no `scan` subcommand or scanner catalog); shared test
+      helpers moved to an untagged `cli_helpers_test.go`;
+      `TestScannerManifestTags` unchanged (the noconsole smoke stays
+      build-only, as the gate designed). Also fixed the pre-existing
+      `cmd/audit` module's stale go.sum (its own module; a tidy was missing
+      after the fingers bump).
+    Tests: green for the touched packages in every build form of the time;
+    full tree built in all three. Rollback: revert — the default build never
+    changes.
 
 25. **`docs(fork): the control plane is zrcin`** (2026-11-26)
     `FORK.md` only — no harness code changes.
@@ -1331,18 +1337,16 @@ compares. No generated product is touched by hand — only the Makefile and
 this registration.
 Tests: `make -n resources` prints the two directives verbatim except `-t`;
 `make resources` exits 0 with a clean `git status` on both output trees;
-`head -1 tools/resources/template.go` still `//go:build !emptyresources`;
-`make scan-capture BIN_DIR=/tmp/rs` builds; `make -n embed-resources`
-unchanged.
+`make scan BIN_DIR=/tmp/rs` builds; `make -n embed-resources` unchanged.
 Rollback: revert the commit — the Makefile and this entry are the whole diff.
 
-Ticket 11 (docs/19 §5.2): the generator now writes the `//go:build
-!emptyresources` tag itself, so the committed
-`tools/proton/resources/template.go` carries the tag — the one-time diff the
-`resources` target surfaced — and a new file
-`tools/proton/resources/resources_empty.go` supplies the `loadEmbeddedConfig`
-no-op under `-tags emptyresources`. The artifact and the twin land in one
-commit so both build recipes compile; `make resources` is back to zero diff.
+Ticket 11 (docs/19 §5.2, since superseded by the P6 capture-mode entry): the
+generator wrote the recipe build tag itself, so the committed
+`tools/proton/resources/template.go` carried it — the one-time diff the
+`resources` target surfaced — and a twin file supplied the
+`loadEmbeddedConfig` no-op for the stripped build. The artifact and the twin
+landed in one commit so both build recipes compiled; `make resources` was
+back to zero diff. The P6 entry deletes both sides of that plumbing.
 
 ## E4: the six seam files shrink toward the hook budget (2026-11-28)
 
@@ -1523,7 +1527,7 @@ other two. New cases: the store-less turn refuses with `ErrNotLoaded`, and a
 writes the store the fence loaded and provided (the bound session dials
 through it, the cleared session falls back). `go test ./...` green except the
 known machine-bound failures under Tests; `gofmt`/`go vet` clean; the capture
-recipe (`emptyresources captureonly`) builds.
+recipe of the time built.
 Rollback: revert the commits.
 
 ## P6: the scan command's assembly is importable (2026-11-28)
@@ -1569,10 +1573,55 @@ that were over the hook budget, `cmd/cyber-scan/profile.go` (26) and
 `extensions.go` (30), are fork-owned now: no upstream file is over budget.
 
 Tests: `go test ./pkg/assembly ./cmd/cyber-scan ./pkg/internal/architecture`
-under the default recipe and `-tags "emptyresources captureonly"` under
-the capture recipe, all green; both scan binaries build and answer
+under the default recipe and under the capture recipe of the time, all
+green; both scan binaries build and answer
 `--version`; full `go test ./...` green except the failures under Tests.
 Rollback: revert the commits — a pure move reverts as a pure move.
+
+## P6: capture is a runtime mode of the one scan binary (2026-11-28)
+
+4zrcin docs/19 P6, step 3 (lane B). The capture recipe stops being a build:
+one `scan` binary takes a `--capture-only` flag and is a capture node with it
+— no engine block assembled, fenced traffic and evidence relay only, and the
+registration hello announces `scan-capture`. The node capability's meaning on
+the control plane is unchanged; only the way a node comes to carry it moved
+from the compiler to the runtime.
+
+- The switch enters through the schema: `pkg/config/options.go` gains
+  `CaptureOnly` (a root flag, local, not remotely replaceable), and
+  `configFromOption` maps it onto the existing `appConfig.SkipEngines` —
+  the seam the tests already used, so the engine block skips through the
+  code path it always had.
+- The hello marker is a runtime read of that flag (`pkg/assembly/recipe.go`):
+  `--capture-only` reports `scan-capture`, absent flag reports nothing —
+  exactly what the two recipe twins reported, decided per launch instead of
+  per build. The recipe twins and the empty scanner-catalog twin are
+  deleted; `scanner_catalog.go` stays full in both modes so command parsing
+  and help are identical, and the refusal of a scanner run sits in
+  `runDirectScannerMode` right before an execution would load a profile
+  (help requests still answer).
+- The resource twins and their build-tag plumbing go with them: the
+  generator writes no tag line, `make resources` regenerates both
+  `template.go` files back to byte-identical upstream shape, and the two
+  empty resource twins are deleted. The guaranteed audit corpus note now
+  says what was always true: no mode strips it.
+- The engine Makefile drops the capture edition target; the shell builds one
+  scan binary and passes the flag at launch.
+- The test files the recipes used to exclude from the capture build simply
+  lose their tags — one binary means one test surface. New
+  `pkg/assembly/capture_test.go` states the runtime contract both ways:
+  switch on (no engines, hello marker, scanner refusal, help still served)
+  and switch off (engines assembled, no marker, no refusal).
+- `pkg/config/options.go` hook grows by one line (12/20). P4's and #24's
+  registrations shrink accordingly: their tag plumbing is gone upstream-
+  identical now.
+
+Tests: `go test -count=1 ./pkg/assembly/ ./pkg/config/ ./tools/resources/
+./tools/proton/resources/` green; `make resources` regenerates with zero
+diff; the binary answers `agent --help` with `--capture-only`; the tree-wide grep for the
+deleted recipe tags comes back empty. Rollback: revert
+the commits; the deleted twins return as files, nothing else references
+them.
 
 ## Superseded patches
 
