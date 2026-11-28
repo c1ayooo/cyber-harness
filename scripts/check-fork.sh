@@ -14,6 +14,8 @@
 #   manifest  go.mod / go.sum / Makefile / .gitmodules / .gitignore /
 #             .goreleaser.yml / editions.env (any directory) — registered per
 #             entry, no budget
+#   generated a regenerated data file (tools/*/resources/data/*.bin, written
+#             by make resources from the rules repo) — registered, no budget
 #   moved     an upstream file that is deleted or renamed in the fork (a whole
 #             file moved into a fork-owned package, 4zrcin docs/19 P6) — its
 #             upstream path must be registered, no budget. A rename is found
@@ -50,7 +52,7 @@ is_manifest() {
 }
 
 fail=0
-hook_ok=0 hook_over=0 hook_unreg=0 test_unreg=0 manifest_unreg=0 moved=0 moved_unreg=0
+hook_ok=0 hook_over=0 hook_unreg=0 test_unreg=0 manifest_unreg=0 generated_unreg=0 moved=0 moved_unreg=0
 printf '%-8s %-8s %-6s %s\n' added deleted status path
 while IFS=$'\t' read -r added deleted path; do
   [[ "$path" == *.pb.go ]] && continue
@@ -60,6 +62,14 @@ while IFS=$'\t' read -r added deleted path; do
     else
       state="manifest UNREGISTERED"
       (( manifest_unreg++ ))
+      (( STRICT )) && fail=1
+    fi
+  elif [[ "$path" == */resources/data/*.bin ]]; then
+    if grep -qxFe "$path" <<<"$registered"; then
+      state="generated ok"
+    else
+      state="generated UNREGISTERED"
+      (( generated_unreg++ ))
       (( STRICT )) && fail=1
     fi
   elif [[ "$path" == *_test.go || "$path" == *.md || "$path" == *.golden || "$path" == *.yaml || "$path" == *.yml ]]; then
@@ -105,8 +115,8 @@ while IFS=$'\t' read -r status from to; do
   printf '%-8s %-8s %-6s %s  [%s -> %s]\n' "-" "$status" "$status" "$from" "$state" "$to"
 done < <(git diff --name-status -M "$UPSTREAM...HEAD" --diff-filter=DR | sort -k2)
 
-printf 'hooks ok: %d | hooks over budget: %d | hooks unregistered: %d | tests/docs unregistered: %d | manifests unregistered: %d | upstream files moved: %d, unregistered: %d\n' \
-  "$hook_ok" "$hook_over" "$hook_unreg" "$test_unreg" "$manifest_unreg" "$moved" "$moved_unreg"
+printf 'hooks ok: %d | hooks over budget: %d | hooks unregistered: %d | tests/docs unregistered: %d | manifests unregistered: %d | generated data unregistered: %d | upstream files moved: %d, unregistered: %d\n' \
+  "$hook_ok" "$hook_over" "$hook_unreg" "$test_unreg" "$manifest_unreg" "$moved" "$moved_unreg" "$generated_unreg"
 
 if (( STRICT )); then
   exit "$fail"

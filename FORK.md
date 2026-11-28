@@ -149,6 +149,7 @@ file whose directory is excluded; it is removed, and `.gitignore` is upstream ag
   - tests and docs: `.github/workflows/ci.yml`, `.github/workflows/scanner-regression.yml`, `pkg/internal/architecture/architecture_test.go`
 - **4ztemplates: the rules source is the fork's maintenance branch (2026-11-28)**
   - manifests: `.gitmodules`
+  - generated data: `tools/proton/resources/data/found_filter_dir.bin`, `tools/proton/resources/data/found_keys.bin`, `tools/proton/resources/data/found_spray.bin` (written by `make resources`, docs/19 §5.3)
 
 ### Upstream files moved into fork-owned packages
 
