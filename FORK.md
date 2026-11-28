@@ -131,6 +131,8 @@ are registered without a budget (已决 24). Figures are added lines against
 - **#42 lint and formatting**
   - hooks: `core/tool/run_command_windows.go` (2)
   - tests and docs: `aop/mux_lifecycle_test.go`, `exts/scanner/prompt_cyber_test.go`, `exts/scanner/skills/skills_test.go`
+- **#43 the MCP alias bash-conflict rule is one function**
+  - hooks: `exts/mcp/extension.go` (2)
 - **fork notes**
   - tests and docs: `README.md`, `README_CN.md`
 - **dependencies** — the chainreactors modules resolve to the c1ayooo forks; the audit module follows patch 24
@@ -1034,6 +1036,18 @@ an upstream change on the new path.
     `exts/scanner/prompt_cyber_test.go`, `exts/scanner/skills/skills_test.go`.
     A `#nosec G702` justification on the fixed `taskkill` fallback, and
     spelling or alignment in three tests. No behavior. Rollback: revert.
+
+43. **`refactor(mcp): the alias bash-conflict rule is one function`** (2026-11-28, 4zrcin P2 / docs/19 已决 20)
+    `exts/mcp/extension.go`, fork-owned additions `exts/mcp/alias.go`, `exts/mcp/alias_test.go`.
+    Cause: the rule lived only inside `Extension.Load`, so a control plane that
+    edits MCP configuration (4zrcin's settings save) accepted aliases the scan
+    then refused at node start ("conflicts with a bash builtin or keyword").
+    The check moves to the exported `ValidateBashAlias` (fork-owned file, pure
+    addition) and `Load` calls it; the check and its error text are unchanged.
+    Regression: upstream's `TestAliasRejectsBashNamespaceConflictsBeforeConnecting`
+    passes unchanged, and `go test ./exts/mcp -run TestValidateBashAlias` pins
+    the helper. Rollback: inline the check in `Load` again and delete the two
+    new files.
 
 E3 revision (2026-11-27, entry at the bottom of this file) additionally
 touches `pkg/harness/base.go`, `pkg/harness/harness.go`,
