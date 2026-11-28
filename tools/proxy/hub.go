@@ -15,6 +15,7 @@ import (
 	"time"
 
 	traffic "github.com/chainreactors/cyber/aop/traffic"
+	"github.com/chainreactors/cyber/core/egress"
 	"github.com/chainreactors/cyber/core/hooks"
 	cfg "github.com/chainreactors/cyber/pkg/config"
 	mitmproxy "github.com/chainreactors/utils/mitmproxy/proxy"
@@ -68,9 +69,10 @@ type Hub struct {
 	// scopeJudge is the optional test-range judge; nil keeps the proxy a pure
 	// capture/routing relay with byte-identical behavior. The exemption hook
 	// names the requester's own plumbing: forwarded unjudged and uncaptured.
-	scopeJudge ScopeJudge
-	exemptMu   sync.Mutex
-	exempt     func(host string) bool
+	scopeJudge    ScopeJudge
+	exemptMu      sync.Mutex
+	exempt        func(host string) bool
+	sessionRoutes func(sessionID string) egress.Dial
 }
 
 // State returns the live egress selection capability. Lifecycle remains owned

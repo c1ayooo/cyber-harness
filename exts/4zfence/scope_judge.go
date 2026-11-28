@@ -66,7 +66,7 @@ func (j *ScopeJudge) JudgeScopeRequest(req scoperules.ScopeRequest) scoperules.S
 	// default-allow list (fork patch 37) sits between them: infrastructure
 	// the operator always permits is recorded and forwarded before the
 	// project fence can queue it as a pending asset.
-	scopes, globals := j.fence.stores()
+	scopes, globals, _ := j.fence.stores()
 	if globals != nil {
 		if rule, hit := globals.AllowDomainHit(req.Invocation.SessionID, requestHost(rawURL)); hit {
 			return j.allowGlobal(req, rule, scopeRequestFlowID(req.Call))
@@ -165,7 +165,7 @@ func (j *ScopeJudge) JudgeScopeConnect(req scoperules.ScopeRequest) scoperules.S
 		return scoperules.ScopeDecision{}
 	}
 	rawURL := scopeRequestURL(req.Call)
-	scopes, globals := j.fence.stores()
+	scopes, globals, _ := j.fence.stores()
 	if globals != nil {
 		if rule, hit := globals.AllowDomainHit(req.Invocation.SessionID, scoperules.RequestHost(rawURL)); hit {
 			return j.allowGlobal(req, rule, scopeRequestFlowID(req.Call))

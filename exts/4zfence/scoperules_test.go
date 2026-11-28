@@ -10,6 +10,7 @@ import (
 	agentsession "github.com/chainreactors/cyber/agent/session"
 	aop "github.com/chainreactors/cyber/aop"
 	"github.com/chainreactors/cyber/core/events"
+	"github.com/chainreactors/cyber/exts/4zfence/egressroutes"
 	"github.com/chainreactors/cyber/exts/4zfence/globalfence"
 	"github.com/chainreactors/cyber/exts/4zfence/scoperules"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -20,12 +21,12 @@ import (
 // act on its own tables (docs/19 E3-4).
 var testFence *Extension
 
-// installStores builds the test's fence extension with fresh scope and fence
-// tables. The real production path is the extension's Load; tests get the
-// same tables without constructing the whole extension.
+// installStores builds the test's fence extension with fresh scope, fence
+// and route tables. The real production path is the extension's Load; tests
+// get the same tables without constructing the whole extension.
 func installStores(t *testing.T) {
 	t.Helper()
-	testFence = &Extension{scopes: scoperules.NewStore(), globals: globalfence.NewStore()}
+	testFence = &Extension{scopes: scoperules.NewStore(), globals: globalfence.NewStore(), routes: egressroutes.NewStore()}
 	t.Cleanup(func() { testFence = nil })
 }
 

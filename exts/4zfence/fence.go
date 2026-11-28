@@ -1,9 +1,10 @@
 // Package fence is the 4zfence building block (4zrcin docs/19 P1-4): the
 // instance fence, the project scope rules, and the egress binding — the
 // control plane's per-turn policy payloads, their registration tables (the
-// scoperules and globalfence subpackages), and the session-lifecycle hooks
-// that keep the tables to live sessions. The proxy judges against what this
-// registers; the agent runtime itself carries none of it.
+// scoperules, globalfence and egressroutes subpackages), and the
+// session-lifecycle hooks that keep the tables to live sessions. The proxy
+// judges against what this registers; the agent runtime itself carries none
+// of it.
 //
 // The extension subscribes the runtime's SessionStart/SessionEnd hooks: a
 // child session inherits its parent's registrations on open (FailClosed — an
@@ -36,6 +37,7 @@ import (
 	"github.com/chainreactors/cyber/core/resource"
 	toolhooks "github.com/chainreactors/cyber/core/tool/hooks"
 
+	"github.com/chainreactors/cyber/exts/4zfence/egressroutes"
 	"github.com/chainreactors/cyber/exts/4zfence/globalfence"
 	"github.com/chainreactors/cyber/exts/4zfence/policy"
 	"github.com/chainreactors/cyber/exts/4zfence/scoperules"
@@ -63,6 +65,7 @@ type Extension struct {
 	// judge — through stores(). Close clears them.
 	scopes  *scoperules.Store
 	globals *globalfence.Store
+	routes  *egressroutes.Store
 
 	// The auto-mode repeated-rejection backoff state (upstream keeps the same
 	// map on its runtime): bounded diagnostic counters, never decisions.
@@ -108,10 +111,14 @@ func (e *Extension) Load(scope *extension.Scope) error {
 	// that can borrow them.
 	e.scopes = scoperules.NewStore()
 	e.globals = globalfence.NewStore()
+	e.routes = egressroutes.NewStore()
 	if err := extension.Provide[*scoperules.Store](scope, e.scopes); err != nil {
 		return err
 	}
 	if err := extension.Provide[*globalfence.Store](scope, e.globals); err != nil {
+		return err
+	}
+	if err := extension.Provide[*egressroutes.Store](scope, e.routes); err != nil {
 		return err
 	}
 	// The fence admission must subscribe before the guardrail extension, so
@@ -147,21 +154,42 @@ func (e *Extension) Close(_ context.Context) error {
 	if e.globals != nil {
 		e.globals.Clear()
 	}
-	e.scopes, e.globals = nil, nil
+	if e.routes != nil {
+		e.routes.ClearAll()
+	}
+	e.scopes, e.globals, e.routes = nil, nil, nil
 	return nil
 }
 
-// stores returns the session tables. Both are nil before Load and after
+// stores returns the session tables. All are nil before Load and after
 // Close: the fence then judges nothing, and an entry point that has to
 // register reports ErrNotLoaded instead of letting the registration go
 // nowhere.
-func (e *Extension) stores() (*scoperules.Store, *globalfence.Store) {
+func (e *Extension) stores() (*scoperules.Store, *globalfence.Store, *egressroutes.Store) {
 	if e == nil {
-		return nil, nil
+		return nil, nil, nil
 	}
 	e.mu.Lock()
 	defer e.mu.Unlock()
-	return e.scopes, e.globals
+	return e.scopes, e.globals, e.routes
+}
+
+// SessionRoutes returns the per-session egress lookup the proxy hub reads:
+// the fence's own route table, resolved at call time (the composition wires
+// this before Load, like the scope judge). Every lookup yields nil while the
+// extension holds no table — before Load and after Close — so the hub walks
+// the node default chain, exactly its answer to "no route for this session".
+func (e *Extension) SessionRoutes() func(sessionID string) egress.Dial {
+	if e == nil {
+		return nil
+	}
+	return func(sessionID string) egress.Dial {
+		_, _, routes := e.stores()
+		if routes == nil {
+			return nil
+		}
+		return routes.Lookup(sessionID)
+	}
 }
 
 // ErrNotLoaded is returned by the entry points that must register or copy
@@ -187,7 +215,7 @@ func Declare(resources *resource.Registry) error {
 // this turn's requests against them), then the egress binding. They are bound
 // to this extension, so they register with its own tables (docs/19 E3-4).
 func (e *Extension) TurnDecorators() []agentsession.RunTurnDecorator {
-	return []agentsession.RunTurnDecorator{e.fenceRulesDecorator, egressProxyDecorator}
+	return []agentsession.RunTurnDecorator{e.fenceRulesDecorator, e.egressProxyDecorator}
 }
 
 // inheritOnOpen copies the parent's fence registrations to the child session
@@ -199,7 +227,7 @@ func (e *Extension) inheritOnOpen(_ context.Context, ev agenthooks.SessionEvent)
 	if ev.ParentID == "" {
 		return struct{}{}, nil
 	}
-	scopes, globals := e.stores()
+	scopes, globals, _ := e.stores()
 	if scopes == nil || globals == nil {
 		return struct{}{}, ErrNotLoaded
 	}
@@ -227,11 +255,15 @@ var rotatingReasons = map[string]bool{
 // dropOnClose drops the session's fence registrations and its project proxy
 // binding when the session closes, so the tables hold only live sessions and
 // capacity is never exhausted by stale ids (fork fix P1-0). A rotation close
-// parks the registrations for the continuation's inheritance instead.
-// Unknown ids are a no-op; so is a close after the extension's own.
+// parks the rule registrations for the continuation's inheritance instead —
+// the egress binding is not parked: it rides every turn, so the continuation
+// re-binds from its own payload, and a cleared route falls back to the node
+// default. Unknown ids are a no-op; so is a close after the extension's own.
 func (e *Extension) dropOnClose(_ context.Context, ev agenthooks.SessionEvent) (struct{}, error) {
-	egress.ClearSessionRoute(ev.SessionID)
-	scopes, globals := e.stores()
+	scopes, globals, routes := e.stores()
+	if routes != nil {
+		routes.Clear(ev.SessionID)
+	}
 	if scopes == nil || globals == nil {
 		return struct{}{}, nil
 	}
@@ -256,10 +288,11 @@ func (e *Extension) fenceRulesDecorator(req *aop.RunTurnRequest, _ *agentsession
 }
 
 // egressProxyDecorator binds the session's outbound calls to the project
-// proxy the manifest held at dispatch time.
-func egressProxyDecorator(req *aop.RunTurnRequest, _ *agentsession.RunInput) error {
-	turnEgressProxy(req)
-	return nil
+// proxy the manifest held at dispatch time. A store-less extension refuses
+// the turn: a binding that went nowhere would run the session on the node
+// default chain as if no proxy existed.
+func (e *Extension) egressProxyDecorator(req *aop.RunTurnRequest, _ *agentsession.RunInput) error {
+	return e.turnEgressProxy(req)
 }
 
 // turnScopeRules registers the test-range rule set a control plane attached to
@@ -277,7 +310,7 @@ func (e *Extension) turnScopeRules(req *aop.RunTurnRequest) error {
 	if extension == nil {
 		return nil
 	}
-	scopes, _ := e.stores()
+	scopes, _, _ := e.stores()
 	if scopes == nil {
 		return ErrNotLoaded
 	}
@@ -303,7 +336,7 @@ func (e *Extension) turnGlobalFence(req *aop.RunTurnRequest) error {
 	if extension == nil {
 		return nil
 	}
-	_, globals := e.stores()
+	_, globals, _ := e.stores()
 	if globals == nil {
 		return ErrNotLoaded
 	}
@@ -319,34 +352,41 @@ func (e *Extension) turnGlobalFence(req *aop.RunTurnRequest) error {
 // turnEgressProxy binds this turn's session to the project proxy a control
 // plane attached. The binding rides every turn — a disabled draft included —
 // so a session that outlives the save learns the endpoint was switched off
-// and falls back to the node default. Registration lives in core/egress (same
-// pattern as scoperules): the session layer writes, the proxy hub reads, and
-// neither imports the other.
+// and falls back to the node default. Registration lives in this extension's
+// own route store (same pattern as the rule tables): the session layer
+// writes, the proxy hub reads through the seam, and neither imports the
+// other. A store-less extension refuses the turn with ErrNotLoaded — a
+// binding that went nowhere would run the session unfenced from its own
+// egress policy.
 //
 // NewClient needs the extra protocol factories (trojan/vmess/hysteria2/anytls/
 // clash) registered; those blank imports live in tools/proxy, which every
 // agent binary links, so the factories are in the registry by the time a turn
 // with such an endpoint arrives.
-func turnEgressProxy(req *aop.RunTurnRequest) {
+func (e *Extension) turnEgressProxy(req *aop.RunTurnRequest) error {
 	if req == nil {
-		return
+		return nil
 	}
 	extension := payloads.ExtensionWithURL(req.GetExtensions(), payloads.EgressProxyURLs)
 	if extension == nil {
-		return
+		return nil
+	}
+	_, _, routes := e.stores()
+	if routes == nil {
+		return ErrNotLoaded
 	}
 	sessionID := req.GetSessionId()
 	payload, ok := payloads.ParseEgressProxy(extension)
 	if !ok {
 		log.Printf("aop: ignore invalid egress proxy for session %s", sessionID)
-		egress.ClearSessionRoute(sessionID)
-		return
+		routes.Clear(sessionID)
+		return nil
 	}
 	// Disabled is a stored state the operator kept, not a deletion: clearing
 	// the route is exactly how "off" reaches a session that is already live.
 	if !payload.Enabled {
-		egress.ClearSessionRoute(sessionID)
-		return
+		routes.Clear(sessionID)
+		return nil
 	}
 	raw := payload.URL
 	if raw == "" {
@@ -368,14 +408,15 @@ func turnEgressProxy(req *aop.RunTurnRequest) {
 	endpoint, err := url.Parse(raw)
 	if err != nil {
 		log.Printf("aop: ignore invalid egress proxy url for session %s: %v", sessionID, err)
-		egress.ClearSessionRoute(sessionID)
-		return
+		routes.Clear(sessionID)
+		return nil
 	}
 	dial, err := proxyclient.NewClient(endpoint)
 	if err != nil {
 		log.Printf("aop: ignore undialable egress proxy for session %s: %v", sessionID, err)
-		egress.ClearSessionRoute(sessionID)
-		return
+		routes.Clear(sessionID)
+		return nil
 	}
-	egress.SetSessionRoute(sessionID, egress.Dial(dial))
+	routes.Set(sessionID, egress.Dial(dial))
+	return nil
 }

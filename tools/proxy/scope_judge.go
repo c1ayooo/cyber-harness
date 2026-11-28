@@ -20,6 +20,7 @@ import (
 	operationpb "github.com/chainreactors/cyber/aop/operation"
 	"github.com/chainreactors/cyber/aop/payloads"
 	traffic "github.com/chainreactors/cyber/aop/traffic"
+	"github.com/chainreactors/cyber/core/egress"
 	"github.com/chainreactors/cyber/core/operation"
 	mitmproxy "github.com/chainreactors/utils/mitmproxy/proxy"
 )
@@ -149,6 +150,20 @@ func (h *Hub) SetScopeJudge(judge ScopeJudge) {
 		return
 	}
 	h.scopeJudge = judge
+}
+
+// SetSessionRoutes installs the per-session egress lookup (4zrcin.EgressProxy,
+// patch 24): a session the control plane bound to its own project proxy dials
+// through that endpoint instead of the node default. An explicit per-call
+// dial (the `proxy <url> <cmd>` passthrough) still wins — precedence is
+// per-call > per-session > node default. A nil lookup, or one that answers
+// nil for the session, keeps the chain in State, byte-identical to the
+// upstream behavior. Safe before Start; the egress lease reads it per call.
+func (h *Hub) SetSessionRoutes(routes func(sessionID string) egress.Dial) {
+	if h == nil {
+		return
+	}
+	h.sessionRoutes = routes
 }
 
 // ---------------------------------------------------------------------------

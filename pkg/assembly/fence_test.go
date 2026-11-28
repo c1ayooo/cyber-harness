@@ -1,10 +1,26 @@
 package assembly
 
 import (
+	"context"
+	"net"
+	"net/http"
+	"net/http/httptest"
+	"net/url"
+	"sync/atomic"
 	"testing"
+	"time"
 
+	"github.com/chainreactors/cyber/core/egress"
+	"github.com/chainreactors/cyber/core/events"
+	"github.com/chainreactors/cyber/core/extension"
+	"github.com/chainreactors/cyber/core/hooks"
+	"github.com/chainreactors/cyber/core/namespaces"
+	"github.com/chainreactors/cyber/core/operation"
 	"github.com/chainreactors/cyber/core/resource"
+	coretool "github.com/chainreactors/cyber/core/tool"
 	fenceext "github.com/chainreactors/cyber/exts/4zfence"
+	fenceconfig "github.com/chainreactors/cyber/exts/4zfence/config"
+	"github.com/chainreactors/cyber/exts/4zfence/egressroutes"
 	guardrailext "github.com/chainreactors/cyber/exts/guardrail"
 	proxyext "github.com/chainreactors/cyber/exts/proxy"
 	cfg "github.com/chainreactors/cyber/pkg/config"
@@ -78,5 +94,90 @@ func TestFenceProviderAndJEVNeed(t *testing.T) {
 				t.Fatal("Proxy returned no extension")
 			}
 		})
+	}
+}
+
+// Judge.Proxy dresses the proxy with the fence extension's own session-route
+// table: the lookup it installs reads the store the fence loaded and
+// provided, so a route the fence registered for a live session serves that
+// session's calls, and a cleared route falls back to the node default — the
+// package-global registry is gone (docs/19 E4 round 2).
+func TestJudgeProxySessionRoutesShareTheFenceTable(t *testing.T) {
+	target := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer target.Close()
+
+	judge := Policy(fenceconfig.Config{}, guardrailext.Rules{})
+	var endpoint egress.Endpoint
+	var routes *egressroutes.Store
+	entries := append([]extension.Extension{
+		extension.Provided[*hooks.Registry](hooks.New()),
+		extension.Provided[*events.Stream](events.New()),
+		namespaces.New(),
+		coretool.NewCommandRegistry(),
+	}, judge.Ahead...)
+	// The composition order profile.go uses: judge.Proxy reads the fence's
+	// seam before any Load, so the lookup must resolve its table lazily.
+	entries = append(entries,
+		judge.Proxy(proxyext.Config{WorkDir: t.TempDir()}, ""),
+		extension.Func{LoadFunc: func(scope *extension.Scope) error {
+			value, err := extension.Use[egress.Endpoint](scope)
+			if err != nil {
+				return err
+			}
+			endpoint = value
+			store, err := extension.Use[*egressroutes.Store](scope)
+			if err != nil {
+				return err
+			}
+			routes = store
+			return nil
+		}},
+	)
+	set, err := extension.New(entries...)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := set.Load(t.Context()); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = set.Close(context.Background()) })
+	if routes == nil || endpoint == nil {
+		t.Fatal("the fence store or the proxy endpoint was not provided")
+	}
+
+	throughHub := func(sessionID, callID string) {
+		t.Helper()
+		ctx := operation.ContextWithInvocation(context.Background(), operation.Invocation{SessionID: sessionID, CallID: callID})
+		proxyURL, _, release := endpoint.Egress(ctx)
+		defer release()
+		parsed, err := url.Parse(proxyURL)
+		if err != nil {
+			t.Fatalf("parse proxy url: %v", err)
+		}
+		client := &http.Client{Transport: &http.Transport{Proxy: http.ProxyURL(parsed), DisableKeepAlives: true}, Timeout: 5 * time.Second}
+		resp, err := client.Get(target.URL)
+		if err != nil {
+			t.Fatalf("request through hub: %v", err)
+		}
+		resp.Body.Close()
+	}
+
+	var hits atomic.Int32
+	routes.Set("sess-judge", func(ctx context.Context, network, address string) (net.Conn, error) {
+		hits.Add(1)
+		return (&net.Dialer{}).DialContext(ctx, network, address)
+	})
+	throughHub("sess-judge", "tool-1")
+	if hits.Load() != 1 {
+		t.Fatalf("session route used %d times, want 1", hits.Load())
+	}
+
+	// Clearing the fence's own entry sends the session back to the default.
+	routes.Clear("sess-judge")
+	throughHub("sess-judge", "tool-2")
+	if hits.Load() != 1 {
+		t.Fatalf("cleared session still routed: %d hits", hits.Load())
 	}
 }

@@ -49,13 +49,17 @@ func Fence(resolved *cfg.Resolved, guardrail guardrailext.Config) Judge {
 func (j Judge) NeedsJEV() bool { return j.needsJEV }
 
 // Proxy dresses the traffic proxy with the judge (seam G2): the proxy's scope
-// judge is the fence's, and the node's own control plane — whatever server
-// URL it serves — is exempt from judging and capture (fork patch 36). An
-// empty URL (a profile without an agent server, such as the Web service
+// judge is the fence's, the node's own control plane — whatever server URL it
+// serves — is exempt from judging and capture (fork patch 36), and the
+// per-session egress routes are the fence's own table (E4 round 2). The seam
+// values are read at composition time, before any Load, so each is a lazy
+// view the fence resolves against its stores when a request or call arrives.
+// An empty URL (a profile without an agent server, such as the Web service
 // profile) exempts nothing.
 func (j Judge) Proxy(config proxyext.Config, serverURL string) *proxyext.Extension {
 	config.ScopeJudge = fenceext.NewScopeJudge(j.Fence)
 	config.RequestExemption = fenceext.ControlPlaneExemption(serverURL)
+	config.SessionRoutes = j.Fence.SessionRoutes()
 	return proxyext.New(config)
 }
 

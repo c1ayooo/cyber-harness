@@ -27,8 +27,12 @@ type Config struct {
 	// uncaptured — in the fork's composition, the fence's control-plane
 	// exemption. Nil exempts nothing.
 	RequestExemption func(host string) bool
-	Capture          bool
-	Storage          cfg.TrafficOptions
+	// SessionRoutes resolves the per-session egress binding — in the fork's
+	// composition, the fence extension's own route table. Nil means no
+	// per-session routing: every session keeps the node default chain.
+	SessionRoutes func(sessionID string) egress.Dial
+	Capture       bool
+	Storage       cfg.TrafficOptions
 }
 
 // Extension owns one proxy Resource and publishes it as the Endpoint
@@ -56,11 +60,12 @@ func (e *Extension) Load(scope *extension.Scope) error {
 	}
 	e.resource = resource
 	hub := resource.Hub
-	// Both are composition decisions carried on the config, not lookups this
-	// extension second-guesses: a missing judge here means the composition
-	// chose a judgeless relay, and loads as one.
+	// All three are composition decisions carried on the config, not lookups
+	// this extension second-guesses: a missing judge here means the
+	// composition chose a judgeless relay, and loads as one.
 	hub.SetScopeJudge(e.config.ScopeJudge)
 	hub.SetRequestExemption(e.config.RequestExemption)
+	hub.SetSessionRoutes(e.config.SessionRoutes)
 
 	binding, err := proxytool.TrafficNamespace(hub)
 	if err != nil {

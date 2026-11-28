@@ -25,6 +25,14 @@ func recordingDial(hits *atomic.Int32) egress.Dial {
 	}
 }
 
+// routeTable returns the in-test table the tests install through the hub's
+// SetSessionRoutes seam: the hub reads one function, here backed by a plain
+// map, so the tests exercise the seam the composition wires.
+func routeTable() (func(string) egress.Dial, map[string]egress.Dial) {
+	routes := map[string]egress.Dial{}
+	return func(sessionID string) egress.Dial { return routes[sessionID] }, routes
+}
+
 // A session the control plane bound to a project proxy dials through that
 // endpoint (here: a recording dialer), while a session without a binding keeps
 // the node default. Same hub, same target, independent sessions.
@@ -36,8 +44,9 @@ func TestSessionRouteOverridesDefaultChain(t *testing.T) {
 
 	hub := startHub(t, true)
 	var routed atomic.Int32
-	egress.SetSessionRoute("sess-routed", recordingDial(&routed))
-	t.Cleanup(func() { egress.ClearSessionRoute("sess-routed") })
+	lookup, routes := routeTable()
+	routes["sess-routed"] = recordingDial(&routed)
+	hub.SetSessionRoutes(lookup)
 
 	getThrough(t, attributedClient(t, hub, "sess-routed", "tool-1"), target.URL)
 	if routed.Load() != 1 {
@@ -63,13 +72,15 @@ func TestSessionRouteClearReturnsToDefault(t *testing.T) {
 
 	hub := startHub(t, true)
 	var routed atomic.Int32
-	egress.SetSessionRoute("sess-clear", recordingDial(&routed))
+	lookup, routes := routeTable()
+	routes["sess-clear"] = recordingDial(&routed)
+	hub.SetSessionRoutes(lookup)
 	getThrough(t, attributedClient(t, hub, "sess-clear", "tool-1"), target.URL)
 	if routed.Load() != 1 {
 		t.Fatalf("bound request skipped the route: %d hits", routed.Load())
 	}
 
-	egress.ClearSessionRoute("sess-clear")
+	delete(routes, "sess-clear")
 	getThrough(t, attributedClient(t, hub, "sess-clear", "tool-2"), target.URL)
 	if routed.Load() != 1 {
 		t.Fatalf("cleared session still routed: %d hits", routed.Load())
@@ -87,8 +98,9 @@ func TestPassthroughDialWinsOverSessionRoute(t *testing.T) {
 
 	hub := startHub(t, true)
 	var sessionHits, passthroughHits atomic.Int32
-	egress.SetSessionRoute("sess-pt", recordingDial(&sessionHits))
-	t.Cleanup(func() { egress.ClearSessionRoute("sess-pt") })
+	lookup, routes := routeTable()
+	routes["sess-pt"] = recordingDial(&sessionHits)
+	hub.SetSessionRoutes(lookup)
 
 	// Same session, but the call carries its own dial: the passthrough
 	// dialer must serve the real request, the session route must not.

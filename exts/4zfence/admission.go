@@ -49,7 +49,7 @@ func (e *Extension) admit(ctx context.Context, ev toolhooks.CallEvent) (toolhook
 	// quotes "rm -rf /" is a document, not one. Other calls skip the red lines
 	// but still reach the policy judge (docs/19 E3-3).
 	if commandLikeCall(ev.Call) {
-		if _, globals := e.stores(); globals != nil {
+		if _, globals, _ := e.stores(); globals != nil {
 			if rule, hit := globals.JudgeCommand(operation.InvocationFromContext(ctx).SessionID, commandText(ev.Call)); hit {
 				return e.redLine(ctx, ev, rule)
 			}
