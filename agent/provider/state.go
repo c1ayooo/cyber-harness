@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/chainreactors/cyber/core/telemetry"
-	types "github.com/chainreactors/cyber/core/types"
 	"strings"
 	"sync"
 	"time"
@@ -125,11 +124,7 @@ func (s *State) Reload(ctx context.Context, config ProviderConfig, logger teleme
 	s.owned = append(s.owned, p)
 	s.mu.Unlock()
 	revision := s.install(p, *resolved, Health{State: HealthConfigured, CheckedAt: time.Now()})
-	// Activation is the one probe that decides whether this node gets a provider
-	// at all: failing it makes the caller discard the candidate and keep the
-	// provider-disabled profile, so every session then fails with "agent provider
-	// is nil". Give it the same budget as a real request instead of the 5s
-	// liveness window; slow-but-working gateways take 3-7s for the first token.
+	// Activation gets the full request budget, not the 5s liveness window: see probe.
 	health := probe(ctx, *resolved, logger, llmProbeTimeout)
 	s.mu.Lock()
 	if s.revision == revision {
@@ -157,12 +152,8 @@ func (s *State) Update(ctx context.Context, config ProviderConfig, logger teleme
 	}
 	s.mu.RLock()
 	revision := s.revision
-	// The same call serves two situations. Replacing a live provider is a
-	// degradation-safe operation (a failed probe keeps the previous client), so
-	// it keeps the fast liveness window. Activating the first provider is not:
-	// the caller has nothing to fall back on, and rejecting a slow-but-working
-	// endpoint leaves the node provider-disabled for every session. Give the
-	// first activation the full request budget.
+	// Replacing a live provider is degradation-safe (a failed probe keeps the
+	// previous client); activating the first one has no fallback. See probe.
 	activating := s.provider == nil
 	s.mu.RUnlock()
 	p, resolved, err := initProvider(config, logger)
@@ -283,51 +274,14 @@ func initProvider(provCfg ProviderConfig, logger telemetry.Logger) (Provider, *P
 	return llmProvider, resolved, nil
 }
 
-// startupLLMProbeTimeout bounds the fast, non-blocking probe used when a live
-// configuration is being replaced (Update). Activation of a configured provider
-// uses the full request budget (see Reload): a gateway whose first token takes
-// several seconds is slow, not misconfigured, and rejecting it left the node
-// provider-disabled for every session.
+// startupLLMProbeTimeout bounds Update's fast replacement probe; activation uses
+// the full request budget. The why lives with probe in probe_budget.go.
 const startupLLMProbeTimeout = 5 * time.Second
 
 // Probe runs one connectivity test with the short liveness budget. It is the
 // check a live configuration change must pass before it replaces the client.
 func Probe(ctx context.Context, provCfg ProviderConfig, logger telemetry.Logger) Health {
 	return probe(ctx, provCfg, logger, startupLLMProbeTimeout)
-}
-
-func probe(ctx context.Context, provCfg ProviderConfig, logger telemetry.Logger, timeout time.Duration) Health {
-	if logger == nil {
-		logger = telemetry.NopLogger()
-	}
-	health := Health{State: HealthConfigured, CheckedAt: time.Now()}
-	probeCtx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
-
-	result, err := TestLLM(probeCtx, &types.LLMProbeRequest{
-		Provider: provCfg.Provider,
-		BaseUrl:  provCfg.BaseURL,
-		ApiKey:   provCfg.APIKey,
-		Model:    provCfg.Model,
-		Proxy:    provCfg.Proxy,
-	}, "")
-	if err != nil {
-		health.State = HealthFailed
-		health.Error = err.Error()
-		logger.Warnf("%s", telemetry.StartupLine("fail", "llm", fmt.Sprintf("%s · %s", llmConfigLabel(provCfg.Provider, provCfg.Model), err.Error())))
-		return health
-	}
-	health.LatencyMs = result.LatencyMs
-	if !result.Ok {
-		health.State = HealthFailed
-		health.Error = result.Error
-		logger.Warnf("%s", telemetry.StartupLine("fail", "llm", fmt.Sprintf("%s · %dms · %s", llmConfigLabel(result.Provider, result.Model), result.LatencyMs, result.Error)))
-		return health
-	}
-
-	health.State = HealthReady
-	logger.Infof("%s", telemetry.StartupOK("llm", fmt.Sprintf("%s · %dms", llmConfigLabel(result.Provider, result.Model), result.LatencyMs)))
-	return health
 }
 
 func llmConfigLabel(providerName, model string) string {

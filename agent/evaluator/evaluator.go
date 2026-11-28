@@ -71,16 +71,9 @@ type Request struct {
 
 type Evaluator struct {
 	cfg Config
-	// lastModel is the model the endpoint reported serving the most recent
-	// judgement. An endpoint that routes can answer with a different name than
-	// the one asked for, and that name is the only handle on why a usage field is
-	// missing. Read it through LastModel; it is not a judgement input.
+	// lastModel is the served-by name of the last judgement; see LastModel in usage.go.
 	lastModel string
 }
-
-// LastModel returns the model name the endpoint reported for the most recent
-// judgement, empty when the endpoint did not report one.
-func (e *Evaluator) LastModel() string { return e.lastModel }
 
 func New(cfg Config) *Evaluator {
 	if cfg.MaxRetries <= 0 {
@@ -95,11 +88,8 @@ func New(cfg Config) *Evaluator {
 	return &Evaluator{cfg: cfg}
 }
 
-// Evaluate judges one round and returns the tokens that judgement cost. The
-// usage is returned rather than logged away: an evaluator call is a model call
-// on the same connection, so leaving it out of the run's usage makes every
-// reported cost systematically low. A nil usage stays nil — an unknown figure
-// must read as unknown, not as a fabricated zero.
+// Evaluate judges one round and returns the tokens the judgement cost; a nil
+// usage stays nil (unknown is not zero). The why lives in usage.go.
 func (e *Evaluator) Evaluate(ctx context.Context, req Request) (*Verdict, *aop.TokenUsage, error) {
 	trace := buildTrace(req.Messages, req.Output, req.Turns, req.ContextTokens, e.cfg.ContextWindow)
 	if e.cfg.Prompts == nil {
@@ -121,8 +111,7 @@ func (e *Evaluator) Evaluate(ctx context.Context, req Request) (*Verdict, *aop.T
 	var usage *aop.TokenUsage
 	for attempt := 0; attempt < e.cfg.MaxRetries; attempt++ {
 		v, attemptUsage, err := e.call(ctx, systemResult.Prompt, requestPrompt)
-		// Every attempt that reached the provider consumed tokens, including the
-		// failed ones: a retry is not free.
+		// Every attempt that reached the provider consumed tokens: a retry is not free.
 		usage = addTokenUsage(usage, attemptUsage)
 		if err == nil {
 			return v, usage, nil
@@ -138,26 +127,6 @@ func (e *Evaluator) Evaluate(ctx context.Context, req Request) (*Verdict, *aop.T
 		}
 	}
 	return nil, usage, fmt.Errorf("evaluate failed after %d attempts: %w", e.cfg.MaxRetries, lastErr)
-}
-
-// addTokenUsage sums two usage records. A nil next leaves total untouched, so
-// "the provider did not report usage" and "usage was zero" stay distinguishable.
-func addTokenUsage(total, next *aop.TokenUsage) *aop.TokenUsage {
-	if next == nil {
-		return total
-	}
-	if total == nil {
-		total = &aop.TokenUsage{Detail: map[string]uint64{}}
-	}
-	if total.Detail == nil {
-		total.Detail = map[string]uint64{}
-	}
-	total.InputTokens += next.InputTokens
-	total.OutputTokens += next.OutputTokens
-	total.TotalTokens += next.TotalTokens
-	total.Detail["cache_read"] += next.Detail["cache_read"]
-	total.Detail["cache_write"] += next.Detail["cache_write"]
-	return total
 }
 
 var verdictTool = func() *aop.ToolDefinition {
