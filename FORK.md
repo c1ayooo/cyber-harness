@@ -1635,15 +1635,16 @@ the way this repo's `tianwu/fixes` is upstream plus additions; the fork's
 `master` stays a mirror of upstream and carries nothing of ours. The
 branch exists and is pushed; it holds no rule of ours yet.
 
-The pinned commit does not move: it is still `cc5dd3f6`, which is in the
-branch's history, so `make resources` regenerates from the submodule with
-zero diff and every embedded rule is what it was. Upstream's `master` is
-11 commits past the pin — 296 files under `found/`, `services/`,
-`spray/` and `zombie/`, none under `fingers/` or `neutron/` and none of
-the three top-level YAML files. Taking those 11 commits is a rules
-upgrade: checkout the branch tip in the submodule, `make resources`,
-commit the three proton files that change (docs/19 §5.2 measured them)
-and run the proton regression. It is a separate step, not taken here.
+The pin follows the branch. It was `cc5dd3f6` when the submodule first
+read from the fork; on the same day it moved to `73d28d7`, the tip of
+`4z/rules`, which is upstream `master` — eleven commits under `found/`,
+`services/`, `spray/` and `zombie/`, none under `fingers/` or `neutron/`
+and none of the three top-level YAML files. Three proton files changed
+with it (`found_keys`, `found_spray`, `found_filter_dir`), the three
+4zrcin docs/19 §5.2 had measured; the other sixteen stayed byte for
+byte. That is the shape of every rules upgrade: move the submodule to
+the branch tip, `make resources`, commit the data it reports, and run
+the proton suites and the scanner functional regression the CI runs.
 
 `.gitmodules` is the only upstream file this touches, and the check reads
 it as a manifest. A clone made before this change keeps the old URL in
