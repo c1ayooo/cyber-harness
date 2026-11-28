@@ -70,7 +70,7 @@ are registered without a budget (已决 24). Figures are added lines against
   - hooks: `agent/provider/state.go` (15)
   - tests and docs: `agent/provider/state_test.go`
 - **#5 exclude agent tools via CYBER_EXCLUDE_TOOLS**
-  - hooks: `cmd/cyber-scan/cli.go` (3)
+  - moved to `pkg/assembly` (docs/19 P6): `cmd/cyber-scan/cli.go`
 - **#6 native command invocation directories**
   - hooks: `tools/gogo/gogo.go` (10), `tools/katana/katana.go` (7), `tools/neutron/neutron.go` (15), `tools/proton/command.go` (3), `tools/scan/command.go` (1), `tools/spray/spray.go` (1), `tools/toolargs/resolve.go` (15), `tools/zombie/zombie.go` (1)
   - tests and docs: `tools/gogo/gogo_test.go`, `tools/neutron/neutron_test.go`, `tools/scan/command_test.go`
@@ -85,17 +85,17 @@ are registered without a budget (已决 24). Figures are added lines against
 - **#10 OpenCode Go conversation routing**
   - hooks: `agent/agent.go` (2), `agent/provider/openai.go` (12), `agent/task.go` (1)
 - **#11 scanner fixtures and Windows manifest alignment** — and the 2026-11-16 alignment with the rc10 hub/scan split
-  - tests and docs: `cmd/cyber-scan/manifest_test.go`, `exts/scanner/testdata/prompt_main_system.golden`, `exts/scanner/testdata/prompt_scanner_system.golden`
+  - tests and docs: `exts/scanner/testdata/prompt_main_system.golden`, `exts/scanner/testdata/prompt_scanner_system.golden`
 - **#12 session-stable system prompt**
   - hooks: `exts/prompt/defaults.go` (7)
   - tests and docs: `agent/session/prompt_test.go`
 - **#14 isolate configuration-precedence tests**
   - tests and docs: `pkg/config/loader_test.go`
 - **#15–#18 control-plane goal, recap off, external MCP, pluggable judges** — composition root
-  - hooks: `cmd/cyber-scan/config.go` (18), `cmd/cyber-scan/profile.go` (26, over budget)
-  - tests and docs: `cmd/cyber-scan/config_test.go`, `docs/configuration.md`, `docs/user/tools.md`
+  - moved to `pkg/assembly` (docs/19 P6): `cmd/cyber-scan/config.go`, `cmd/cyber-scan/profile.go`
+  - tests and docs: `docs/configuration.md`, `docs/user/tools.md`
 - **#17 external MCP servers**
-  - hooks: `cmd/cyber-scan/extensions.go` (30, over budget), `cmd/cyber-scan/ioa_composition.go` (10)
+  - moved to `pkg/assembly` (docs/19 P6): `cmd/cyber-scan/extensions.go`, `cmd/cyber-scan/ioa_composition.go`
 - **#20 both fork extension namespaces**
   - hooks: `agent/session/protocol.go` (4)
 - **#22 the Hub becomes an embeddable library**
@@ -103,19 +103,19 @@ are registered without a budget (已决 24). Figures are added lines against
 - **#23 the capture node fences, audits and ships evidence**
   - hooks: `tools/resources/resources.go` (8)
 - **#24 the capture recipe: resources and engines compile out**
-  - hooks: `cmd/cyber-scan/discovery.go` (2), `cmd/cyber-scan/scanner_catalog.go` (2), `tools/proton/resources/template.go` (2), `tools/resources/template.go` (2), `tools/resources/templates_gen.go` (4)
-  - tests and docs: `cmd/cyber-scan/cli_recon_test.go`, `cmd/cyber-scan/cli_test.go`, `cmd/cyber-scan/imports_test.go`, `cmd/cyber-scan/modes_test.go`, `cmd/cyber-scan/task_lifecycle_test.go`, `tools/resources/resources_test.go`
+  - hooks: `tools/proton/resources/template.go` (2), `tools/resources/template.go` (2), `tools/resources/templates_gen.go` (4)
+  - tests and docs: `tools/resources/resources_test.go`
   - manifests: `cmd/audit/go.mod`, `cmd/audit/go.sum`, `go.mod`
 - **#25 the capture recipe announces itself in the hello**
-  - hooks: `cmd/cyber-scan/agent_transport.go` (2)
+  - moved to `pkg/assembly` (docs/19 P6): `cmd/cyber-scan/agent_transport.go`
 - **#21–#37 scope rules, proxy seam, instance fence** — the proxy side of seam G2
-  - hooks: `cmd/cyber-scan/profile.go` (26, over budget), `tools/proxy/config.go` (7), `tools/proxy/hub.go` (6), `tools/proxy/hub_traffic.go` (9), `tools/proxy/mitm.go` (15)
+  - hooks: `tools/proxy/config.go` (7), `tools/proxy/hub.go` (6), `tools/proxy/hub_traffic.go` (9), `tools/proxy/mitm.go` (15)
   - tests and docs: `tools/proxy/mitm_test.go`
 - **E3 round (2026-11-27, docs/19 appendix E)** — seams G1 and G4, the evidence switch, the judge block, SubmitReview (G3), the verdict sidecar hook, the Policy slot in the base composition
-  - hooks: `agent/session/dependencies.go` (3), `agent/session/protocol.go` (4), `agent/session/runtime.go` (17), `agent/session/session.go` (20), `cmd/cyber-scan/extensions.go` (30, over budget), `cmd/cyber-scan/profile.go` (26, over budget), `exts/guardrail/runtime.go` (9), `exts/observe/extension.go` (3), `exts/proxy/extension.go` (15), `pkg/config/options.go` (11), `pkg/harness/base.go` (11)
+  - hooks: `agent/session/dependencies.go` (3), `agent/session/protocol.go` (4), `agent/session/runtime.go` (17), `agent/session/session.go` (20), `exts/guardrail/runtime.go` (9), `exts/observe/extension.go` (3), `exts/proxy/extension.go` (15), `pkg/config/options.go` (11), `pkg/harness/base.go` (11)
   - tests and docs: `docs/configuration.md`, `exts/observe/extension_test.go`
 - **fence section migration (已决 15/19/20)**
-  - hooks: `cmd/cyber-scan/ioa_composition.go` (10), `pkg/config/resolved.go` (4), `pkg/config/sections.go` (14)
+  - hooks: `pkg/config/resolved.go` (4), `pkg/config/sections.go` (14)
 - **#38 evaluator usage accounting**
   - hooks: `agent/evaluator/evaluator.go` (20), `agent/evaluator/loop.go` (13), `agent/provider/anthropic.go` (3), `agent/provider/openai.go` (12)
   - tests and docs: `agent/evaluator/loop_test.go`
@@ -142,6 +142,24 @@ are registered without a budget (已决 24). Figures are added lines against
 (`.gitignore` has `/scripts/`), so it is tracked by force-add and updated with
 `git add -u`. The negation the fork once added to `.gitignore` cannot re-include a
 file whose directory is excluded; it is removed, and `.gitignore` is upstream again.
+
+
+- **P6 scan assembly moved (2026-11-28)**
+  - hooks: `cmd/cyber-scan/main.go`
+  - tests and docs: `.github/workflows/ci.yml`, `.github/workflows/scanner-regression.yml`, `pkg/internal/architecture/architecture_test.go`
+
+### Upstream files moved into fork-owned packages
+
+Whole upstream files relocated into a fork-owned package (docs/19 P6). Their upstream
+path is registered here so `scripts/check-fork.sh` can tell a deliberate move from an
+accidental deletion; the content is upstream's plus the registered hooks, byte for
+byte apart from the package clause. A merge with upstream follows the rename and lands
+an upstream change on the new path.
+
+`cmd/cyber-scan` → `pkg/assembly` (the scan command's assembly, 2026-11-28):
+
+- hooks: `cmd/cyber-scan/agent_transport.go`, `cmd/cyber-scan/browser.go`, `cmd/cyber-scan/bundle.yaml`, `cmd/cyber-scan/bundle_external.go`, `cmd/cyber-scan/bundle_spec_generated.go`, `cmd/cyber-scan/cli.go`, `cmd/cyber-scan/config.go`, `cmd/cyber-scan/config_commands.go`, `cmd/cyber-scan/discovery.go`, `cmd/cyber-scan/extensions.go`, `cmd/cyber-scan/http_serve.go`, `cmd/cyber-scan/inbox.go`, `cmd/cyber-scan/ioa.go`, `cmd/cyber-scan/ioa_composition.go`, `cmd/cyber-scan/mode_profile.go`, `cmd/cyber-scan/modes.go`, `cmd/cyber-scan/pidlock.go`, `cmd/cyber-scan/pidlock_unix.go`, `cmd/cyber-scan/pidlock_windows.go`, `cmd/cyber-scan/profile.go`, `cmd/cyber-scan/record_absent.go`, `cmd/cyber-scan/record_linked.go`, `cmd/cyber-scan/scanner_catalog.go`, `cmd/cyber-scan/scanner_mode.go`, `cmd/cyber-scan/stdio.go`
+- tests and docs: `cmd/cyber-scan/architecture_test.go`, `cmd/cyber-scan/bundle_test.go`, `cmd/cyber-scan/cli_fuzz_test.go`, `cmd/cyber-scan/cli_recon_test.go`, `cmd/cyber-scan/cli_test.go`, `cmd/cyber-scan/composition_test.go`, `cmd/cyber-scan/config_commands_test.go`, `cmd/cyber-scan/config_test.go`, `cmd/cyber-scan/gateway_test.go`, `cmd/cyber-scan/http_serve_test.go`, `cmd/cyber-scan/imports_record_test.go`, `cmd/cyber-scan/imports_test.go`, `cmd/cyber-scan/inbox_e2e_test.go`, `cmd/cyber-scan/inbox_test.go`, `cmd/cyber-scan/ioa_test.go`, `cmd/cyber-scan/jev_profile_flow_test.go`, `cmd/cyber-scan/jev_profile_test.go`, `cmd/cyber-scan/manifest_test.go`, `cmd/cyber-scan/modes_test.go`, `cmd/cyber-scan/pidlock_test.go`, `cmd/cyber-scan/profile_test.go`, `cmd/cyber-scan/provider_reload_test.go`, `cmd/cyber-scan/record_declaration_test.go`, `cmd/cyber-scan/scanner_available_test.go`, `cmd/cyber-scan/task_lifecycle_test.go`
 
 1. **`fix(session): deliver continued turn input to the inbox`**
    `agent/session/session.go`.
@@ -1508,6 +1526,54 @@ known machine-bound failures under Tests; `gofmt`/`go vet` clean; the capture
 recipe (`emptyresources captureonly`) builds.
 Rollback: revert the commits.
 
+## P6: the scan command's assembly is importable (2026-11-28)
+
+4zrcin docs/19 P6, step 1 (G6, 已决 31). The whole cyber-scan command —
+CLI, modes, profile, extensions, tests — moves from `cmd/cyber-scan` into
+`pkg/assembly`, the package that already held the engine recipe and the
+judge block. An embedding control plane runs the same node from the same
+assembly: its `zrcin node` verb calls `assembly.Exec`, and the `scan`
+binary's entry is the same call behind a process shell. The assembly is
+written once.
+
+What changed, and nothing else:
+
+- 60 files moved with `git mv`; names kept. 57 are byte-identical to their
+  originals once the package clause and the two mechanical renames below
+  are normalized away (checked by script against the previous tip).
+- `runCLI` is exported as `Run`; `cyber()` became
+  `Exec(args, stdin, stdout, stderr)`, which installs the interrupt
+  handling and returns — the error line and the exit code stay with the
+  caller. `cmd/cyber-scan/main.go` is that process shell.
+- The package no longer imports itself: `assembly.Engines`, `Judge` and
+  the rest are plain identifiers. The fork-owned `discovery_full.go`
+  dropped its copy of `intValue`, which the moved upstream `discovery.go`
+  also declares.
+- Tests that look at the composition by directory or by path follow it:
+  `TestCompositionUsesNoInitRegistration` walks `pkg/assembly` as well,
+  the reusable-layer test forbids `/pkg/assembly`, and the installation
+  table's host-manager case names the new path. The `go list -deps
+  ./cmd/cyber-scan` probes keep working — the thin entry's closure is the
+  package's — and fail loudly rather than skip when a path is wrong.
+- `ARSENAL_CONFIG` and the bundle `go:generate` directive point at the
+  package; the CI workflows test `./pkg/assembly/...` beside the command.
+
+What this costs, recorded rather than hidden: 50 upstream files under
+`cmd/cyber-scan` are renamed in the fork. `scripts/check-fork.sh` reports
+them as a fourth class, `moved`, and fails in strict mode unless the
+upstream path is registered — the list is under "Upstream files moved
+into fork-owned packages". A merge with upstream follows the rename and
+lands an upstream change on the new path, so upstream's edits to the
+command keep merging the way they did. The two composition-root files
+that were over the hook budget, `cmd/cyber-scan/profile.go` (26) and
+`extensions.go` (30), are fork-owned now: no upstream file is over budget.
+
+Tests: `go test ./pkg/assembly ./cmd/cyber-scan ./pkg/internal/architecture`
+under the default recipe and `-tags "emptyresources captureonly"` under
+the capture recipe, all green; both scan binaries build and answer
+`--version`; full `go test ./...` green except the failures under Tests.
+Rollback: revert the commits — a pure move reverts as a pure move.
+
 ## Superseded patches
 
 These commits were on `tianwu/fixes` and are intentionally **not** carried after
@@ -1569,7 +1635,8 @@ Rules for every change to this fork, whoever makes it:
   count but still registered; `go.mod` and `go.sum` are accounted line by
   line). The logic lives in fork-owned files: `exts/4z*`, `pkg/assembly`,
   `aop/payloads`. Register each changed upstream file by exact path under
-  "Local patches". `make check-fork` prints the verdict table;
+  "Local patches"; a whole upstream file moved into a fork-owned package is
+  registered under "Upstream files moved into fork-owned packages". `make check-fork` prints the verdict table;
   `make check-fork STRICT=1` fails on an unregistered file or an over-budget
   hook. The hooks over budget today, and why, are recorded in 4zrcin's
   `docs/19-decoupling-plan.md`, appendix E.
@@ -1578,9 +1645,9 @@ Rules for every change to this fork, whoever makes it:
 - **State travels through the extension.** Pass it with `Provide`/`Use` on
   the scope, keep it on the extension instance, and clear it when the
   extension closes.
-- **Compose 4z behaviour in the product root.** Today only `cmd/cyber-scan`
-  passes the 4z blocks, through `pkg/assembly`; `cmd/agent` and `cmd/audit`
-  compose none.
+- **Compose 4z behaviour in the product root.** Today only the scan command
+  passes the 4z blocks, through its assembly in `pkg/assembly`; `cmd/agent`
+  and `cmd/audit` compose none.
 - **Before pushing, run the full `go test ./...`** and compare the result
   with the failures listed under "Tests": those predate the work, anything
   else is a regression. A change to fence admission also passes
