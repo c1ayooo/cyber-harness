@@ -2,8 +2,7 @@
 //
 // The built-in high-risk command corpus (fork patch 23b): the guaranteed
 // audit patterns, compiled at generation time. No build tag — the corpus
-// ships in every binary form, including the resource-stripped
-// scan-capture recipe.
+// ships in every binary form, including a --capture-only node.
 
 package resources
 

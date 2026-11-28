@@ -2,8 +2,8 @@
 #
 # 保底审计的模式集：外传与破坏类命令，guardrail 在任何策略配置（含无
 # provider 的 capture 节点）下无条件产生审计记录，reason 带 `builtin.` 前缀。
-# 这份语料永远嵌入二进制，不随 emptyresources 裁剪（与 templates bundle
-# 不同：模板是能力，保底审计是责任）。
+# 这份语料永远嵌入二进制，任何运行模式（含 --capture-only 的节点）都不裁剪
+# 它（与 templates bundle 不同：模板是能力，保底审计是责任）。
 #
 # 字段：id（审计 reason 里的稳定标识）、pattern（Go 正则，对命令文本匹配）、
 # desc（人话描述，审计行直接呈现）。pattern 在生成期编译验证。

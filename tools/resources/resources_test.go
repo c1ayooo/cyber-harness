@@ -1,5 +1,3 @@
-//go:build !emptyresources
-
 package resources
 
 import (

@@ -3,8 +3,7 @@
 // builtin_gen.go compiles the built-in high-risk command corpus
 // (guardrail_builtin.yaml) into a Go file the guardrail runtime embeds. Fork
 // patch 23b (docs/04): the guaranteed audit corpus must always ship in the
-// binary — unlike the templates bundle it carries no build tag, because the
-// scan-capture recipe strips the template resources but never the audit duty.
+// binary — the audit duty is not a capability, no build tag or mode strips it.
 //
 // Patterns are compiled at generation time: an invalid regex fails here, not
 // on the proxy data path.
@@ -55,8 +54,7 @@ func main() {
 	b.WriteString("//\n")
 	b.WriteString("// The built-in high-risk command corpus (fork patch 23b): the guaranteed\n")
 	b.WriteString("// audit patterns, compiled at generation time. No build tag — the corpus\n")
-	b.WriteString("// ships in every binary form, including the resource-stripped\n")
-	b.WriteString("// scan-capture recipe.\n\n")
+	b.WriteString("// ships in every binary form, including a --capture-only node.\n\n")
 	b.WriteString("package resources\n\n")
 	b.WriteString("import \"regexp\"\n\n")
 	b.WriteString("// BuiltinPattern is one guaranteed-audit command pattern.\ntype BuiltinPattern struct {\n\tID      string\n\tPattern *regexp.Regexp\n\tDesc    string\n}\n\n")
