@@ -1722,12 +1722,16 @@ out; a file the engines refuse leaves the previous version running and says so
 in its reason. An instance POC with a built-in id takes the built-in's place,
 as an instance fingerprint with a built-in name already did.
 
-**go.mod, one line, plus two in go.sum.** The sdk resolve is the pushed
-commit: `github.com/chainreactors/sdk => github.com/c1ayooo/4zgears
+**go.mod, four lines; go.sum gains six and loses eight.** The sdk resolve is the
+pushed commit: `github.com/chainreactors/sdk => github.com/c1ayooo/4zgears
 v0.3.4-0.20261128085002-6d95d1bd74c1` (was `github.com/c1ayooo/sdk
-v0.3.4-0.20260708104745-dcad8620f5e9`). The shell's go.mod carries the same
-line. While the branch was still unpushed that line read `../4zgears`, a
-sibling checkout. A workspace file was tried before that and does not work
+v0.3.4-0.20260708104745-dcad8620f5e9`). The repository was renamed to
+`c1ayooo/4zgears`, so its three sub-modules (`sdk/gogo`, `sdk/spray`,
+`sdk/zombie`) resolve under the new name at the commit they already pinned;
+the bytes are what the old name served. go.sum carries the six lines for the
+new paths and no longer the eight for the old one. The shell's go.mod carries
+the same four lines. While the branch was still unpushed the sdk line read
+`../4zgears`, a sibling checkout. A workspace file was tried before that and does not work
 here: workspace mode
 loads the full module graph, which brings back a stale `genproto` that
 collides with the split one, and go.work has no exclude directive.

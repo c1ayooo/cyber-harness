@@ -194,6 +194,12 @@ github.com/buger/jsonparser v1.1.2/go.mod h1:6RYKKt7H4d4+iWqouImQ9R2FZql3VbhNgx2
 github.com/bwesterb/go-ristretto v1.2.0/go.mod h1:fUIoIZaG73pV5biE2Blr2xEzDoMj7NFEuV9ekS419A0=
 github.com/c1ayooo/4zgears v0.3.4-0.20261128085002-6d95d1bd74c1 h1:uQ9jpt5QD2Dqp6KSKNwfJwN77t9Xw8IARDhIE87mgyk=
 github.com/c1ayooo/4zgears v0.3.4-0.20261128085002-6d95d1bd74c1/go.mod h1:SkcTgyo+bDEV44sLBX2+1G0UfmDdJaRCkqnyc5rEdmo=
+github.com/c1ayooo/4zgears/gogo v0.0.0-20260708104745-dcad8620f5e9 h1:ADlw71MFVRS+yBEj+9M1jsmuwwa1pohMmfqxUqxPrWI=
+github.com/c1ayooo/4zgears/gogo v0.0.0-20260708104745-dcad8620f5e9/go.mod h1:2s9c3JVh33o+RLK/ATVoHPtLsln7oq3EZRCu6IIwFok=
+github.com/c1ayooo/4zgears/spray v0.0.0-20260708104745-dcad8620f5e9 h1:ImUIdWNZ6fbyUpMPPbHvuiIbRW41aMHsB65+Lbkn7IA=
+github.com/c1ayooo/4zgears/spray v0.0.0-20260708104745-dcad8620f5e9/go.mod h1:rb6iY0hDiAvyPc3YuzlrcNV8vyMqWnz9SJUOi6LJbpY=
+github.com/c1ayooo/4zgears/zombie v0.0.0-20260708104745-dcad8620f5e9 h1:vyXGBjyAKxLFbp9AXAXhhOaVZuXo0V37omzzTPjHpfc=
+github.com/c1ayooo/4zgears/zombie v0.0.0-20260708104745-dcad8620f5e9/go.mod h1:Up0+yz0/VttlaIyjXQbAizFWGOD29/AjgnnpJ/wYMT8=
 github.com/c1ayooo/crtm v0.0.3-0.20260924103954-9432523918ae h1:5cCjRlHQ7c1izAGF/FHbLo7KhR8zhPu6u1mT+/xDQVg=
 github.com/c1ayooo/crtm v0.0.3-0.20260924103954-9432523918ae/go.mod h1:+T3JvsT0teBxi4+ValZTYWCDIwM8inbx57+nQfMFkbA=
 github.com/c1ayooo/files v0.0.0-20240716182835-7884ee1e77f0 h1:UA42+5djIXEo/NbrO+atWmw9bx4pDXuGUqgfpBqSWXg=
@@ -224,14 +230,6 @@ github.com/c1ayooo/proxyclient v1.1.1-0.20260728110701-74504679dc47 h1:v7qoZOTRS
 github.com/c1ayooo/proxyclient v1.1.1-0.20260728110701-74504679dc47/go.mod h1:DPIRtV3QMlIvdoHAn55XFxSZCn5XW1uuLx2PaKeKcwE=
 github.com/c1ayooo/proxyclient/extra v0.0.0-20260527160727-36cf133952c3 h1:ki/Pjwtxlbzmym/L/XZb2KZak7KStj/7qht1HHuTuUA=
 github.com/c1ayooo/proxyclient/extra v0.0.0-20260527160727-36cf133952c3/go.mod h1:4BG8xIxTebn0VoOTEwQ2pmYIB3K2qwGINxnRHALBNZg=
-github.com/c1ayooo/sdk v0.3.4-0.20260708104745-dcad8620f5e9 h1:TNEeWYgu2Y4yQQSrmIBs3IB+Oh5RlH1v9wZSheR1/k0=
-github.com/c1ayooo/sdk v0.3.4-0.20260708104745-dcad8620f5e9/go.mod h1:SkcTgyo+bDEV44sLBX2+1G0UfmDdJaRCkqnyc5rEdmo=
-github.com/c1ayooo/sdk/gogo v0.0.0-20260708104745-dcad8620f5e9 h1:cDfF/KYr2JcLN32HD3epSx7OrB809B09Ug/mrSXrWWM=
-github.com/c1ayooo/sdk/gogo v0.0.0-20260708104745-dcad8620f5e9/go.mod h1:2s9c3JVh33o+RLK/ATVoHPtLsln7oq3EZRCu6IIwFok=
-github.com/c1ayooo/sdk/spray v0.0.0-20260708104745-dcad8620f5e9 h1:9SDRQO03dhdMwVsQXftminc1eFjb0Iy1fC+y3fuD0Yg=
-github.com/c1ayooo/sdk/spray v0.0.0-20260708104745-dcad8620f5e9/go.mod h1:rb6iY0hDiAvyPc3YuzlrcNV8vyMqWnz9SJUOi6LJbpY=
-github.com/c1ayooo/sdk/zombie v0.0.0-20260708104745-dcad8620f5e9 h1:NmVgv5QKFAZGhzxVT0kVd8/2cXoejqSlQXCRj6nlgu4=
-github.com/c1ayooo/sdk/zombie v0.0.0-20260708104745-dcad8620f5e9/go.mod h1:Up0+yz0/VttlaIyjXQbAizFWGOD29/AjgnnpJ/wYMT8=
 github.com/c1ayooo/spray v1.3.3-0.20260704194611-7ce7b850d447 h1:Kkl7pkzqC94aP59Cv/YN+71fS7rnaeeCuhQzrP6UHmk=
 github.com/c1ayooo/spray v1.3.3-0.20260704194611-7ce7b850d447/go.mod h1:QT+vmYNPBmiemn+MJ5oNDNFSM/w0LNxtM5VhpI7RNNA=
 github.com/c1ayooo/tui/console v0.0.0-20260712082522-2ba36ad7841f h1:LuhaT1mPlWZNT+gsok+DBlfCc++ATeO7TCYQ/+zHS+o=

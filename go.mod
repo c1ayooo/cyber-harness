@@ -394,9 +394,9 @@ replace (
 	github.com/chainreactors/proxyclient => github.com/c1ayooo/proxyclient v1.1.1-0.20260728110701-74504679dc47
 	github.com/chainreactors/proxyclient/extra => github.com/c1ayooo/proxyclient/extra v0.0.0-20260527160727-36cf133952c3
 	github.com/chainreactors/sdk => github.com/c1ayooo/4zgears v0.3.4-0.20261128085002-6d95d1bd74c1
-	github.com/chainreactors/sdk/gogo => github.com/c1ayooo/sdk/gogo v0.0.0-20260708104745-dcad8620f5e9
-	github.com/chainreactors/sdk/spray => github.com/c1ayooo/sdk/spray v0.0.0-20260708104745-dcad8620f5e9
-	github.com/chainreactors/sdk/zombie => github.com/c1ayooo/sdk/zombie v0.0.0-20260708104745-dcad8620f5e9
+	github.com/chainreactors/sdk/gogo => github.com/c1ayooo/4zgears/gogo v0.0.0-20260708104745-dcad8620f5e9
+	github.com/chainreactors/sdk/spray => github.com/c1ayooo/4zgears/spray v0.0.0-20260708104745-dcad8620f5e9
+	github.com/chainreactors/sdk/zombie => github.com/c1ayooo/4zgears/zombie v0.0.0-20260708104745-dcad8620f5e9
 	github.com/chainreactors/spray => github.com/c1ayooo/spray v1.3.3-0.20260704194611-7ce7b850d447
 	github.com/chainreactors/tui/console => github.com/c1ayooo/tui/console v0.0.0-20260712082522-2ba36ad7841f
 	github.com/chainreactors/tui/readline => github.com/c1ayooo/tui/readline v0.0.0-20261010062516-bb32632d1a4e
