@@ -61,29 +61,29 @@ are registered without a budget (已决 24). Figures are added lines against
 - **#1 continued turn input to the inbox**
   - hooks: `agent/session/session.go` (20)
 - **#2 resolved context_window with token usage**
-  - hooks: `agent/loop.go` (8), `agent/retry.go` (69, over budget)
+  - hooks: `agent/loop.go` (8), `agent/retry.go` (20)
   - tests and docs: `agent/loop_test.go`, `agent/retry_test.go`
 - **#3 per-session working directory** — includes the 2026-11-20 follow-up: the work dir is read on every turn, and curl creates a missing parent directory before writing
-  - hooks: `agent/agent.go` (27), `agent/loop.go` (8), `agent/session/protocol.go` (4), `agent/session/session.go` (20), `agent/types.go` (11), `tools/curl/client.go` (32), `tools/curl/cookies.go` (8), `tools/files/fs.go` (8), `tools/files/list.go` (8), `tools/files/range.go` (8), `tools/playwright/browser.go` (9), `tools/playwright/interact.go` (2), `tools/playwright/recorder.go` (1), `tools/playwright/session.go` (5), `tools/playwright/storage.go` (2)
+  - hooks: `agent/agent.go` (2), `agent/loop.go` (8), `agent/session/protocol.go` (4), `agent/session/session.go` (20), `agent/types.go` (11), `tools/curl/client.go` (14), `tools/curl/cookies.go` (8), `tools/files/fs.go` (8), `tools/files/list.go` (8), `tools/files/range.go` (8), `tools/playwright/browser.go` (9), `tools/playwright/interact.go` (2), `tools/playwright/recorder.go` (1), `tools/playwright/session.go` (5), `tools/playwright/storage.go` (2)
   - tests and docs: `tools/curl/client_test.go`, `tools/playwright/browser_test.go`
 - **#4 activate a slow but working endpoint**
-  - hooks: `agent/provider/state.go` (30, over budget)
+  - hooks: `agent/provider/state.go` (15)
   - tests and docs: `agent/provider/state_test.go`
 - **#5 exclude agent tools via CYBER_EXCLUDE_TOOLS**
   - hooks: `cmd/cyber-scan/cli.go` (3)
 - **#6 native command invocation directories**
-  - hooks: `tools/gogo/gogo.go` (10), `tools/katana/katana.go` (7), `tools/neutron/neutron.go` (65, over budget), `tools/proton/command.go` (3), `tools/scan/command.go` (1), `tools/spray/spray.go` (1), `tools/toolargs/resolve.go` (15), `tools/zombie/zombie.go` (1)
+  - hooks: `tools/gogo/gogo.go` (10), `tools/katana/katana.go` (7), `tools/neutron/neutron.go` (15), `tools/proton/command.go` (3), `tools/scan/command.go` (1), `tools/spray/spray.go` (1), `tools/toolargs/resolve.go` (15), `tools/zombie/zombie.go` (1)
   - tests and docs: `tools/gogo/gogo_test.go`, `tools/neutron/neutron_test.go`, `tools/scan/command_test.go`
 - **#7 null device arguments and environment contracts** — includes the 2026-11-20 change that passes the per-turn tool environment through the invocation context instead of the process-level baseEnv
-  - hooks: `core/operation/operation.go` (24), `tools/terminal/bash.go` (24)
+  - hooks: `core/operation/operation.go` (0), `tools/terminal/bash.go` (3)
   - tests and docs: `exts/scanner/testdata/prompt_main_system.golden`, `exts/scanner/testdata/prompt_scanner_system.golden`, `exts/skills/assets/runtime/arsenal.md`, `tools/terminal/bash_test.go`
 - **#8 externally scheduled AOP mailboxes** — the native file contracts of the same 2026-11-06 change
   - hooks: `tools/files/tools.go` (2)
 - **#9 fail fast on quota-exhausted 429**
-  - hooks: `agent/provider/errors.go` (28, over budget), `agent/provider/types.go` (25, over budget), `agent/retry.go` (69, over budget)
+  - hooks: `agent/provider/errors.go` (0), `agent/provider/types.go` (9), `agent/retry.go` (20)
   - tests and docs: `agent/provider/errors_test.go`, `agent/retry_test.go`
 - **#10 OpenCode Go conversation routing**
-  - hooks: `agent/agent.go` (27), `agent/provider/openai.go` (42), `agent/task.go` (1)
+  - hooks: `agent/agent.go` (2), `agent/provider/openai.go` (12), `agent/task.go` (1)
 - **#11 scanner fixtures and Windows manifest alignment** — and the 2026-11-16 alignment with the rc10 hub/scan split
   - tests and docs: `cmd/cyber-scan/manifest_test.go`, `exts/scanner/testdata/prompt_main_system.golden`, `exts/scanner/testdata/prompt_scanner_system.golden`
 - **#12 session-stable system prompt**
@@ -117,16 +117,16 @@ are registered without a budget (已决 24). Figures are added lines against
 - **fence section migration (已决 15/19/20)**
   - hooks: `cmd/cyber-scan/ioa_composition.go` (10), `pkg/config/resolved.go` (4), `pkg/config/sections.go` (14)
 - **#38 evaluator usage accounting**
-  - hooks: `agent/evaluator/evaluator.go` (51), `agent/evaluator/loop.go` (42), `agent/provider/anthropic.go` (3), `agent/provider/openai.go` (42)
+  - hooks: `agent/evaluator/evaluator.go` (20), `agent/evaluator/loop.go` (13), `agent/provider/anthropic.go` (3), `agent/provider/openai.go` (12)
   - tests and docs: `agent/evaluator/loop_test.go`
 - **#39 aopws close frame**
-  - hooks: `pkg/aopws/stream.go` (96)
+  - hooks: `pkg/aopws/stream.go` (28, over budget)
   - tests and docs: `pkg/aopws/stream_test.go`
 - **#40 ioa send refuses its own session**
   - hooks: `tools/ioa/commands.go` (19)
   - tests and docs: `exts/ioa/client/assets/cyber/okf/runtime/ioa-send.md`, `tools/ioa/commands_test.go`
 - **#41 TLS version switch and POSIX drive paths**
-  - hooks: `core/tool/run_command.go` (28), `tools/curl/client.go` (32), `tools/curl/curl.go` (2), `tools/curl/parse.go` (16), `tools/terminal/bash.go` (24)
+  - hooks: `core/tool/run_command.go` (7), `tools/curl/client.go` (14), `tools/curl/curl.go` (2), `tools/curl/parse.go` (16), `tools/terminal/bash.go` (3)
   - tests and docs: `core/tool/run_command_test.go`, `tools/curl/client_test.go`
 - **#42 lint and formatting**
   - hooks: `core/tool/run_command_windows.go` (2)
@@ -1398,6 +1398,47 @@ Tests: `go test ./...` — every touched package green (`agent/session`,
 under Tests; `scripts/acceptance/fence-parity.sh` reports 16 identical
 verdicts; `make scan-capture` builds.
 Rollback: revert the commits.
+
+Second round (2026-11-28): the fourteen fix-class files were compressed the
+same way — fork-added top-level declarations move verbatim to same-package
+fork-owned files, long call-site comments shrink to one-line pointers with the
+rationale moved into the moved declarations' docs, and fork struct fields sit
+at gofmt alignment boundaries so upstream lines keep their bytes. No test file
+changed; behavior is identical.
+
+| upstream file | before | after |
+|---|---|---|
+| `core/operation/operation.go` | 24 | 0, identical to upstream |
+| `tools/terminal/bash.go` | 24 | 3 |
+| `agent/provider/errors.go` | 28 | 0, identical to upstream |
+| `agent/provider/types.go` | 25 | 9 |
+| `agent/agent.go` | 27 | 2 |
+| `core/tool/run_command.go` | 28 | 7 |
+| `agent/provider/state.go` | 30 | 15 |
+| `tools/curl/client.go` | 32 | 14 |
+| `agent/evaluator/loop.go` | 42 | 13 |
+| `agent/provider/openai.go` | 42 | 12 |
+| `agent/evaluator/evaluator.go` | 51 | 20 |
+| `tools/neutron/neutron.go` | 65 | 15 |
+| `agent/retry.go` | 69 | 20 |
+| `pkg/aopws/stream.go` | 96 | 28, over budget |
+
+The declarations landed in `core/operation/toolenv.go`,
+`tools/terminal/toolenv.go`, `agent/provider/quota.go`,
+`core/tool/drivepath.go`, `agent/provider/probe_budget.go` (the suggested
+`probe.go` name was taken), `tools/curl/scratch.go`, `agent/evaluator/usage.go`,
+`agent/provider/openai_headers.go`, `agent/workdir.go`,
+`tools/neutron/coverage.go`, `agent/retry_conn.go` and `pkg/aopws/close.go`.
+
+Thirteen of the fourteen are at or under budget. `pkg/aopws/stream.go` stays at
+28: what remains is the call sites themselves — the `markFailure`
+instrumentation in `Recv`, `Send`, `ping` and `Close`, the four close-plan
+fields on `Stream` and the `errors` import — none of which can move without
+wrapping functions the rules forbid. `agent/evaluator/evaluator.go` and
+`agent/retry.go` sit exactly at 20; their remainder is the signature-changed
+`Evaluate`/`call` bodies and the retry-branch call sites. The two remaining
+over-budget files, `cmd/cyber-scan/profile.go` and `cmd/cyber-scan/extensions.go`,
+are the first round's composition root and are untouched here.
 
 ## Superseded patches
 
